@@ -1,4 +1,4 @@
-import { useLayoutEffect, useReducer, useRef } from 'react';
+import { useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { advanceState, createInitialState, getStageCopy } from './state.js';
 import visionHouse from '../assets/vision-house.jpg';
@@ -21,7 +21,9 @@ const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').mat
 
 export default function App() {
   const [state, dispatch] = useReducer(advanceState, undefined, createInitialState);
+  const [hasStarted, setHasStarted] = useState(false);
   const appRef = useRef(null);
+  const entryRef = useRef(null);
   const visionTargetRef = useRef(null);
   const houseBaseRef = useRef(null);
   const houseGlitchRef = useRef(null);
@@ -263,6 +265,39 @@ export default function App() {
     if (action) dispatch(action);
   }
 
+  function handleStart() {
+    startAudio();
+    runIntroTimeline();
+
+    if (reduceMotion) {
+      setHasStarted(true);
+      return;
+    }
+
+    const entry = entryRef.current;
+    entry.classList.add('is-departing');
+    gsap.timeline()
+      .to(entry.querySelectorAll('.entry-status, .entry-copy, .entry-start, .entry-footer'), {
+        opacity: 0,
+        y: -14,
+        duration: 0.28,
+        stagger: 0.025,
+        ease: 'power2.in',
+      })
+      .to(entry.querySelector('.entry-reticle'), {
+        scale: 4.2,
+        opacity: 0.08,
+        duration: 0.78,
+        ease: 'power3.in',
+      }, '<0.04')
+      .to(entry, {
+        clipPath: 'inset(50% 0 50% 0)',
+        duration: 0.82,
+        ease: 'power4.inOut',
+      }, '<0.16');
+    window.setTimeout(() => setHasStarted(true), 1100);
+  }
+
   function handleReset() {
     resetReveal();
     dispatch('RESET');
@@ -280,7 +315,8 @@ export default function App() {
   }
 
   return (
-    <main id="screening-app" ref={appRef} data-stage={state.stage} className="relative isolate flex min-h-svh flex-col overflow-hidden">
+    <>
+      <main id="screening-app" ref={appRef} data-stage={state.stage} className="relative isolate flex min-h-svh flex-col overflow-hidden" aria-hidden={!hasStarted} inert={!hasStarted ? true : undefined}>
       <div className="grain absolute inset-0 pointer-events-none" aria-hidden="true" />
       <div className="scanline absolute inset-0 pointer-events-none" aria-hidden="true" />
       <div className="screen-filter absolute inset-0 pointer-events-none" aria-hidden="true" />
@@ -405,6 +441,46 @@ export default function App() {
       <audio id="ambient-audio" ref={ambientAudioRef} loop preload="none" aria-hidden="true" onError={() => appRef.current?.classList.add('audio-unavailable')}>
         <source src="https://web.hycdn.cn/arknights/official/_next/static/media/audio/bgm.ea4286.mp3" type="audio/mpeg" />
       </audio>
-    </main>
+      </main>
+
+      {!hasStarted && (
+        <section ref={entryRef} className="entry-gate" aria-labelledby="entry-title">
+          <div className="entry-noise" aria-hidden="true" />
+
+          <header className="entry-status">
+            <div className="entry-lockup">
+              <span className="entry-mark" aria-hidden="true" />
+              <span><b>PRTS</b><small>PERSONAL RECORD TERMINAL</small></span>
+            </div>
+            <span className="entry-sequence">SYS / 00</span>
+          </header>
+
+          <div className="entry-core">
+            <div className="entry-reticle" aria-hidden="true">
+              <span className="entry-reticle-ring" />
+              <span className="entry-reticle-ring entry-reticle-ring-inner" />
+              <span className="entry-reticle-cross" />
+            </div>
+
+            <div className="entry-copy">
+              <p className="entry-kicker">RHODES ISLAND / OPTICAL SERVICE</p>
+              <h1 id="entry-title"><span>PRTS</span><strong>验光终端</strong></h1>
+              <p className="entry-intro">保持设备与双眼平齐，进入后请注视视野中央。</p>
+            </div>
+
+            <button className="entry-start" type="button" onClick={handleStart}>
+              <span className="entry-start-index" aria-hidden="true">01</span>
+              <span className="entry-start-label"><strong>开始验光</strong><small>BEGIN OPTICAL TEST</small></span>
+              <span className="entry-start-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+
+          <footer className="entry-footer">
+            <span>OPTICAL ARRAY / RI-07</span>
+            <span className="entry-ready"><i aria-hidden="true" /> TERMINAL READY</span>
+          </footer>
+        </section>
+      )}
+    </>
   );
 }
