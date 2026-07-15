@@ -26,6 +26,7 @@ test('drift advances to reveal and reveal resets cleanly', () => {
 
   state = advanceState(state, 'CONTINUE');
   expect(state).toEqual({ stage: 'reveal', muted: false });
+  expect(advanceState(state, 'START')).toBe(state);
 
   state = advanceState(state, 'RESET');
   expect(state).toEqual(createInitialState());

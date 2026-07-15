@@ -263,8 +263,7 @@ export default function App() {
     if (action) dispatch(action);
   }
 
-  function handleRevealActivate() {
-    if (state.stage !== 'reveal') return;
+  function handleReset() {
     resetReveal();
     dispatch('RESET');
   }
@@ -336,7 +335,7 @@ export default function App() {
             </div>
           </button>
 
-          <button id="reveal-scene" className="reveal-scene absolute z-[3] block border-0 bg-transparent p-0" type="button" aria-label={state.stage === 'reveal' ? '点击普瑞赛斯影像重新校准' : '异常影像'} aria-hidden={state.stage !== 'reveal'} tabIndex={state.stage === 'reveal' ? 0 : -1} onClick={handleRevealActivate}>
+          <div id="reveal-scene" className="reveal-scene absolute z-[3] block" aria-hidden={state.stage !== 'reveal'}>
             <div id="prts-portrait" ref={prtsPortraitRef} className="prts-portrait absolute isolate overflow-hidden" aria-hidden="true">
               <img id="prts-image" className="prts-image relative block h-full w-full" src={prtsClose} alt="" />
               <span ref={prtsImageScanRef} className="prts-image-scan pointer-events-none absolute" aria-hidden="true" />
@@ -375,7 +374,7 @@ export default function App() {
               </g>
               <path className="originum-frame-glint" filter="url(#edge-glow)" d="M153 13L92 83M18 191L62 242M167 13L231 87M302 191L263 236" aria-hidden="true" />
             </svg>
-          </button>
+          </div>
         </section>
 
         <div className="visual-meta visual-meta-bottom relative z-10 flex items-center" aria-hidden="true">
@@ -392,6 +391,12 @@ export default function App() {
         </div>
         <h1 id="stage-title">{copy.title}</h1>
         <p id="stage-note" className="stage-note">{copy.note}</p>
+        {state.stage === 'reveal' && (
+          <button className="reset-button" type="button" onClick={handleReset} aria-label="重置并返回第一个画面">
+            <span>RESET</span>
+            <small aria-hidden="true">R-00</small>
+          </button>
+        )}
         <p className="screening-note">FICTIONAL VISUAL EFFECT / NOT A MEDICAL TEST</p>
       </section>
 
