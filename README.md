@@ -36,15 +36,19 @@ npm run build
 - GSAP：通过 npm 安装，用于房屋失焦、异常转场和最终影像时间线。
 - `assets/prts-close.jpg`：最终画面唯一使用的普瑞赛斯图像，以焦点蒙版突出头部并模糊边缘。
 - `assets/vision-house.jpg`：前三幕共用的经典远距房屋视野，依次呈现清晰、失焦和异常扭曲。
+- `assets/official-terminal-blueprint.jpg`、`assets/official-terminal-grid.jpg`、`assets/official-rhodes-island.png`：来自 Arknights Global Fan Kit / 官网公开资源包，用于入口蓝图、检测底纹和罗德岛标记。
 - 源石菱形：内联 SVG 分段折角与位移滤镜；揭示时左右收束，稳定后偶发短促撕扯，不遮挡人物。
-- 字体：从明日方舟官网 CDN 下载到 `fonts/`，来源为官网的 Bender、Novecentosanswide 和 Source Han Sans SC 文件。
+- 字体：从明日方舟官网 CDN 下载到 `fonts/`，来源为官网的 Bender、Novecentosanswide 和 Source Han Sans SC 文件，并使用其真实 Bold 字重。
 - 粒子纹理与遮罩：引用明日方舟官网 CDN，加载失败时由 CSS 渐变替代。
 - 环境音：用户首次点击后才尝试播放官网 CDN BGM；浏览器禁止播放或资源失败时静默降级。
 
 资源来源参考：
 
 - 官网：https://ak.hypergryph.com/#index
+- Fan Kit：https://www.arknights.global/fankit
 - Wiki：https://ak.mooncell.wiki/w/首页
+
+Fan Kit 素材仅用于本非商业同人体验；公开发布或制作周边前需再次核对官方条款。
 
 ## Fallback behavior
 
