@@ -4,15 +4,21 @@
 
 前三阶段采用明日方舟式冷白/炭黑工业终端视觉，以青色表示系统反馈、红色表示异常；最终影像保持独立的深色揭示风格。
 
-## Local preview
+## Development
 
-从当前目录启动静态服务器：
+安装依赖并启动 Vite：
 
 ```powershell
-py -m http.server 4173 --directory frontend
+npm install
+npm run dev
 ```
 
-打开 `http://127.0.0.1:4173/`，建议用 390×844 左右的移动端视口预览。
+建议用 390×844 左右的移动端视口预览。
+
+```powershell
+npm test
+npm run build
+```
 
 ## Interaction contract
 
@@ -25,7 +31,9 @@ py -m http.server 4173 --directory frontend
 
 ## Resources
 
-- GSAP 3.12.5：通过 jsDelivr 引入，用于房屋失焦、异常转场和最终影像时间线。
+- React：负责页面渲染与交互状态连接。
+- Tailwind CSS：负责常规布局工具类；复杂阶段效果、伪元素和关键帧保留在 `src/index.css`。
+- GSAP：通过 npm 安装，用于房屋失焦、异常转场和最终影像时间线。
 - `assets/prts-close.jpg`：最终画面唯一使用的普瑞赛斯图像，以焦点蒙版突出头部并模糊边缘。
 - `assets/vision-house.jpg`：前三幕共用的经典远距房屋视野，依次呈现清晰、失焦和异常扭曲。
 - 源石菱形：内联 SVG 分段折角与位移滤镜；揭示时左右收束，稳定后偶发短促撕扯，不遮挡人物。

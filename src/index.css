@@ -1,25 +1,27 @@
+@import "tailwindcss";
+
 @font-face {
   font-family: Bender;
-  src: url('./fonts/Bender-Regular.6950ba72.woff2') format('woff2');
+  src: url('../fonts/Bender-Regular.6950ba72.woff2') format('woff2');
   font-display: swap;
 }
 
 @font-face {
   font-family: Bender;
-  src: url('./fonts/Bender-Bold.b4c7998a.woff2') format('woff2');
+  src: url('../fonts/Bender-Bold.b4c7998a.woff2') format('woff2');
   font-weight: 700;
   font-display: swap;
 }
 
 @font-face {
   font-family: Novecento;
-  src: url('./fonts/Novecentosanswide-Medium.7a5c757a.woff2') format('woff2');
+  src: url('../fonts/Novecentosanswide-Medium.7a5c757a.woff2') format('woff2');
   font-display: swap;
 }
 
 @font-face {
   font-family: SourceHan;
-  src: url('./fonts/SourceHanSansSC-Regular.25e7e46d.woff2') format('woff2');
+  src: url('../fonts/SourceHanSansSC-Regular.25e7e46d.woff2') format('woff2');
   font-display: swap;
 }
 
@@ -41,6 +43,7 @@
 
 * {
   box-sizing: border-box;
+  border-style: none;
 }
 
 html,
@@ -54,6 +57,7 @@ body {
 body {
   color: var(--graphite);
   font-family: var(--sans);
+  line-height: normal;
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -664,7 +668,7 @@ button:focus-visible {
 .prts-portrait::before {
   z-index: 0;
   opacity: 0.72;
-  background: url('./assets/prts-close.jpg') 50% 21% / cover no-repeat;
+  background: url('../assets/prts-close.jpg') 50% 21% / cover no-repeat;
   filter: blur(14px) grayscale(0.72) brightness(0.46) contrast(1.32);
   transform: scale(1.12);
 }
@@ -882,18 +886,6 @@ button:focus-visible {
 #screening-app[data-stage='drift'] .copy-block::before,
 #screening-app[data-stage='drift'] .visual-meta::before {
   background: var(--red);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 #screening-app[data-stage='drift'] .scanline {
