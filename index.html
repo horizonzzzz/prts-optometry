@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#dce1e2" />
+    <meta
+      name="description"
+      content="A fictional visual screening experience inspired by Arknights.">
+    <title>VISION SCREENING // 00</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23252a2d' d='M16 1 29 16 16 31 3 16 16 1Z'/%3E%3Cpath fill='%23e9e9e3' d='m16 7 7 9-7 9-7-9 7-9Z'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://web.hycdn.cn" />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link rel="stylesheet" href="./styles.css" />
+    <script defer src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  </head>
+  <body>
+    <main id="screening-app" data-stage="intro">
+      <div class="grain" aria-hidden="true"></div>
+      <div class="scanline" aria-hidden="true"></div>
+      <div class="screen-filter" aria-hidden="true"></div>
+      <div class="screen-flash" aria-hidden="true"></div>
+
+      <header class="top-bar">
+        <div class="brand-lockup">
+          <span class="rhodes-watermark" aria-hidden="true"></span>
+          <div>
+            <p class="brand-name">PRTS</p>
+            <p class="brand-sub">PERSONAL RECORD TERMINAL</p>
+          </div>
+        </div>
+
+        <div class="top-readout">
+          <span class="stage-code" id="stage-code">01 / 04</span>
+          <button id="mute-toggle" class="icon-button" type="button" aria-pressed="false" aria-label="开启声音">
+            <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span class="icon-button-label">SOUND</span>
+          </button>
+        </div>
+      </header>
+
+      <div class="system-rail" aria-hidden="true">
+        <span>RI-07</span>
+        <span>OPTICAL CONTROL</span>
+        <span>PRTS // LIVE</span>
+      </div>
+
+      <section class="screen-body" aria-label="视觉筛查体验">
+        <div class="visual-meta" aria-hidden="true">
+          <span>OPTICAL ARRAY</span>
+          <span class="meta-rule"></span>
+          <span id="signal-line">SIGNAL / STABLE</span>
+        </div>
+
+        <section class="visual-stage" aria-label="远距视觉检测">
+          <div class="visual-halo" aria-hidden="true"></div>
+          <button id="vision-target" class="vision-frame" type="button" aria-label="开始校准">
+            <span class="corner corner-tl" aria-hidden="true"></span>
+            <span class="corner corner-tr" aria-hidden="true"></span>
+            <span class="corner corner-bl" aria-hidden="true"></span>
+            <span class="corner corner-br" aria-hidden="true"></span>
+
+            <div id="vision-visual" class="vision-visual house-scene" role="img" aria-label="圆形视野中的田野与远处房屋">
+              <div class="house-viewport">
+                <img class="house-image house-image-base" src="./assets/vision-house.jpg" alt="" draggable="false" />
+                <img class="house-image house-image-glitch" src="./assets/vision-house.jpg" alt="" draggable="false" aria-hidden="true" />
+                <span class="house-vignette" aria-hidden="true"></span>
+                <span class="house-reticle" aria-hidden="true"></span>
+              </div>
+            </div>
+          </button>
+
+          <button id="reveal-scene" class="reveal-scene" type="button" aria-label="点击影像重新校准" aria-hidden="true" tabindex="-1">
+            <div class="prts-portrait" id="prts-portrait" aria-hidden="true">
+              <img class="prts-image" id="prts-image" src="./assets/prts-close.jpg" alt="" />
+              <span class="prts-image-scan" aria-hidden="true"></span>
+            </div>
+
+            <svg class="originum-frame" id="originum-frame" viewBox="0 0 320 360" role="img" aria-labelledby="originum-title originum-description">
+              <title id="originum-title">源石菱形中的 PRTS 影像</title>
+              <desc id="originum-description">普瑞赛斯的面部影像出现在分段破碎并持续扰动的源石菱形中。</desc>
+              <defs>
+                <filter id="unstable-edge" x="-20%" y="-20%" width="140%" height="140%">
+                  <feTurbulence type="fractalNoise" baseFrequency=".012 .07" numOctaves="2" seed="8" result="noise">
+                    <animate attributeName="baseFrequency" values=".012 .07;.02 .045;.009 .09;.012 .07" dur="1.8s" repeatCount="indefinite" />
+                  </feTurbulence>
+                  <feDisplacementMap in="SourceGraphic" in2="noise" scale="4" xChannelSelector="R" yChannelSelector="B">
+                    <animate attributeName="scale" values="2;7;3;9;2" dur="1.1s" repeatCount="indefinite" />
+                  </feDisplacementMap>
+                </filter>
+                <filter id="edge-glow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="2.4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <g class="originum-frame-glitch" filter="url(#unstable-edge)" aria-hidden="true">
+                <g class="originum-half originum-half-left">
+                  <path class="originum-frame-shadow" d="M153 13L18 169M18 191L153 347" />
+                  <path class="originum-frame-edge" d="M153 13L92 83M73 105L18 169M18 191L62 242M81 264L153 347" />
+                  <path class="originum-frame-chip" d="M82 86L58 108L72 117ZM49 120L28 142L37 151ZM61 250L76 267L62 278Z" />
+                </g>
+                <g class="originum-half originum-half-right">
+                  <path class="originum-frame-shadow" d="M167 13L302 169M302 191L167 347" />
+                  <path class="originum-frame-edge" d="M167 13L231 87M249 108L302 169M302 191L263 236M244 258L167 347" />
+                  <path class="originum-frame-chip" d="M239 88L262 108L249 119ZM271 122L293 145L282 153ZM258 247L245 263L258 275Z" />
+                </g>
+                <path class="originum-frame-echo originum-frame-echo-left" d="M154 25L31 168M31 192L154 335" />
+                <path class="originum-frame-echo originum-frame-echo-right" d="M166 25L289 168M289 192L166 335" />
+              </g>
+              <path class="originum-frame-glint" filter="url(#edge-glow)" d="M153 13L92 83M18 191L62 242M167 13L231 87M302 191L263 236" aria-hidden="true" />
+            </svg>
+          </button>
+        </section>
+
+        <div class="visual-meta visual-meta-bottom" aria-hidden="true">
+          <span>FOCAL DISTANCE / 30 CM</span>
+          <span class="meta-rule"></span>
+          <span id="phase-readout">PHASE / 00</span>
+        </div>
+      </section>
+
+      <section class="copy-block reveal-caption" aria-labelledby="stage-title">
+        <div class="copy-heading">
+          <p class="stage-eyebrow" id="stage-eyebrow">INTAKE / 视觉筛查</p>
+          <span class="copy-index" aria-hidden="true">01</span>
+        </div>
+        <h1 id="stage-title">请确认你的视野</h1>
+        <p class="stage-note" id="stage-note">请将手机保持在眼前约 30 cm</p>
+        <p class="screening-note">FICTIONAL VISUAL EFFECT / NOT A MEDICAL TEST</p>
+      </section>
+
+      <p id="announcer" class="sr-only" aria-live="polite"></p>
+
+      <audio id="ambient-audio" loop preload="none" aria-hidden="true">
+        <source src="https://web.hycdn.cn/arknights/official/_next/static/media/audio/bgm.ea4286.mp3" type="audio/mpeg" />
+      </audio>
+    </main>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
