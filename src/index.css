@@ -803,8 +803,8 @@ button:focus-visible {
 }
 
 .copy-block {
-  width: min(100%, 520px);
-  margin: 0 auto;
+  width: calc(100% - 12px);
+  margin: 0 0 0 12px;
   padding: 9px 10px 0 13px;
   border-top: 5px solid var(--graphite);
   border-left: 1px solid var(--graphite);
@@ -1060,6 +1060,8 @@ button:focus-visible {
 }
 
 #screening-app[data-stage='reveal'] .copy-block {
+  width: 100%;
+  margin: 0;
   padding: 6px 0 0;
   border: 0;
   background: transparent;
