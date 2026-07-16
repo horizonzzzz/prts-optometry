@@ -53,7 +53,7 @@
 #screening-app::after {
   inset: 8% 0 15%;
   opacity: 0.12;
-  background: url('https://web.hycdn.cn/arknights/official/_next/static/media/common_mask.55fff2e9.png') center / cover no-repeat;
+  background: url('../../../assets/common_mask.55fff2e9.png') center / cover no-repeat;
   mix-blend-mode: multiply;
 }
 
@@ -67,7 +67,7 @@
 
 .grain {
   opacity: 0.045;
-  background-image: url('https://web.hycdn.cn/arknights/official/_next/static/media/particle.f4b76a4f.png');
+  background-image: url('../../../assets/particle.f4b76a4f.png');
   background-position: 50% 36%;
   background-size: 420px;
   mix-blend-mode: multiply;

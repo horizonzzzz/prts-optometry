@@ -3,6 +3,7 @@ import { gsap } from 'gsap';
 import { advanceState, createInitialState, getStageCopy, type Action, type Stage } from './state';
 import visionHouse from '../assets/vision-house.jpg';
 import prtsClose from '../assets/prts-close.jpg';
+import ambientAudio from '../assets/audio/bgm.ea4286.mp3';
 
 const actionByStage: Readonly<Partial<Record<Stage, Action>>> = Object.freeze({
   intro: 'START',
@@ -517,7 +518,7 @@ export default function App() {
       <p id="announcer" className="sr-only" aria-live="polite">{copy.eyebrow}，{copy.title}。{copy.note}</p>
 
       <audio id="ambient-audio" ref={ambientAudioRef} loop preload="none" aria-hidden="true" onError={() => appRef.current?.classList.add('audio-unavailable')}>
-        <source src="https://web.hycdn.cn/arknights/official/_next/static/media/audio/bgm.ea4286.mp3" type="audio/mpeg" />
+        <source src={ambientAudio} type="audio/mpeg" />
       </audio>
       </main>
 
