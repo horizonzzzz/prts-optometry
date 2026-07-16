@@ -1,0 +1,191 @@
+#screening-app[data-stage='drift'] .stage-eyebrow,
+#screening-app[data-stage='drift'] .stage-note {
+  color: var(--red);
+}
+
+#screening-app[data-stage='drift'] .copy-block::before,
+#screening-app[data-stage='drift'] .visual-meta::before {
+  background: var(--red);
+}
+
+#screening-app[data-stage='drift'] .scanline {
+  opacity: 0.4;
+}
+
+#screening-app[data-stage='drift'] {
+  color: #edf2f1;
+  background:
+    radial-gradient(circle at 52% 49%, rgba(184, 43, 56, 0.34), rgba(8, 12, 14, 0.08) 35%, rgba(8, 12, 14, 0.96) 72%),
+    linear-gradient(135deg, #111719, #080c0e 68%);
+}
+
+#screening-app[data-stage='drift']::before {
+  opacity: 0.42;
+  background-image:
+    linear-gradient(rgba(237, 242, 241, 0.075) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(237, 242, 241, 0.075) 1px, transparent 1px);
+}
+
+#screening-app[data-stage='drift'] .system-rail,
+#screening-app[data-stage='drift'] .visual-meta,
+#screening-app[data-stage='drift'] .stage-note,
+#screening-app[data-stage='drift'] .screening-note {
+  color: rgba(237, 242, 241, 0.62);
+}
+
+#screening-app[data-stage='drift'] .screen-body {
+  border-left-color: var(--red);
+}
+
+#screening-app[data-stage='drift'] .visual-halo {
+  border-color: rgba(237, 242, 241, 0.42);
+  background: rgba(8, 12, 14, 0.46);
+  box-shadow: 11px 11px 0 rgba(184, 43, 56, 0.24), -5px -5px 0 rgba(0, 167, 189, 0.2);
+}
+
+#screening-app[data-stage='calibrate'] .house-image-base {
+  filter: blur(3.5px) contrast(1.03) saturate(0.95);
+  transform: scale(1.015);
+}
+
+#screening-app[data-stage='calibrate'] .house-reticle {
+  opacity: 0.48;
+}
+
+#screening-app[data-stage='drift'] .house-image-base {
+  filter: blur(2px) brightness(0.38) contrast(1.35) saturate(0.65);
+  transform: scale(1.025);
+}
+
+#screening-app[data-stage='drift'] .house-image-glitch {
+  opacity: 0.86;
+  animation: house-distort 0.68s steps(3, end) infinite alternate;
+}
+
+#screening-app[data-stage='drift'] .house-vignette {
+  opacity: 0.84;
+}
+
+#screening-app[data-stage='drift'] .house-reticle {
+  opacity: 0.06;
+}
+
+#screening-app[data-stage='drift'] .copy-block {
+  border-color: rgba(237, 242, 241, 0.62);
+  background: linear-gradient(90deg, rgba(8, 12, 14, 0.82), rgba(8, 12, 14, 0.12));
+}
+
+#screening-app[data-stage='drift'] .copy-index {
+  color: #edf2f1;
+}
+
+#screening-app[data-stage='drift'] .vision-halo,
+#screening-app.is-drifting .visual-halo {
+  border-color: rgba(181, 54, 61, 0.38);
+  box-shadow: 0 0 0 18px rgba(181, 54, 61, 0.035), 0 0 70px rgba(181, 54, 61, 0.11);
+}
+
+@keyframes house-distort {
+  0% { transform: translateX(-12px) scaleX(1.28) skewY(-10deg); }
+  45% { transform: translateX(9px) scaleX(0.78) skewY(12deg); }
+  70% { transform: translateX(-6px) scaleX(1.16) skewY(-7deg); }
+  100% { transform: translateX(12px) scaleX(0.76) skewY(11deg); }
+}
+
+#screening-app[data-stage='reveal'] {
+  color: var(--ice);
+  background:
+    radial-gradient(circle at 50% 41%, rgba(46, 80, 83, 0.48), rgba(13, 17, 18, 0.94) 48%, var(--night) 100%),
+    var(--night);
+}
+
+#screening-app[data-stage='reveal']::before {
+  opacity: 0.08;
+  background-image: linear-gradient(rgba(220, 233, 228, 0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(220, 233, 228, 0.12) 1px, transparent 1px);
+}
+
+#screening-app[data-stage='reveal']::after {
+  opacity: 0.18;
+  mix-blend-mode: screen;
+}
+
+#screening-app[data-stage='reveal'] .brand-sub,
+#screening-app[data-stage='reveal'] .stage-code,
+#screening-app[data-stage='reveal'] .visual-meta,
+#screening-app[data-stage='reveal'] .copy-index,
+#screening-app[data-stage='reveal'] .stage-note,
+#screening-app[data-stage='reveal'] .screening-note,
+#screening-app[data-stage='reveal'] .icon-button {
+  color: rgba(220, 233, 228, 0.58);
+}
+
+#screening-app[data-stage='reveal'] .system-rail,
+#screening-app[data-stage='reveal'] .visual-stage::after {
+  display: none;
+}
+
+#screening-app[data-stage='reveal'] .top-bar {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+#screening-app[data-stage='reveal'] .top-bar::after,
+#screening-app[data-stage='reveal'] .copy-block::before {
+  display: none;
+}
+
+#screening-app[data-stage='reveal'] .screen-body {
+  margin-top: 0;
+  padding-left: 0;
+  border-left: 0;
+}
+
+#screening-app[data-stage='reveal'] .visual-meta::before {
+  display: none;
+}
+
+#screening-app[data-stage='reveal'] .copy-block {
+  width: 100%;
+  margin: 0;
+  padding: 6px 0 0;
+  border: 0;
+  background: transparent;
+}
+
+#screening-app[data-stage='reveal'] .copy-index {
+  color: rgba(220, 233, 228, 0.58);
+  font-size: 8px;
+  font-weight: 400;
+  opacity: 1;
+}
+
+#screening-app[data-stage='reveal'] .stage-eyebrow {
+  color: #d9ece7;
+}
+
+#screening-app[data-stage='reveal'] .rhodes-watermark {
+  filter: none;
+  opacity: 0.68;
+}
+
+#screening-app[data-stage='reveal'] .vision-frame {
+  opacity: 0;
+  visibility: hidden;
+  transform: scale(1.06);
+}
+
+#screening-app[data-stage='reveal'] .visual-halo {
+  opacity: 0;
+}
+
+#screening-app[data-stage='reveal'] .reveal-scene,
+#screening-app.is-revealing .reveal-scene,
+#screening-app.is-complete .reveal-scene {
+  visibility: visible;
+  opacity: 1;
+  transform: scale(1);
+}
+
+#screening-app.is-complete .originum-frame {
+  opacity: 1;
+}

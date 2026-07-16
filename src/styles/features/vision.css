@@ -1,0 +1,210 @@
+.screen-body {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  flex: 1;
+  min-height: 0;
+  margin-top: 5px;
+  padding-left: 9px;
+  border-left: 3px solid var(--graphite);
+}
+
+.visual-meta {
+  gap: 8px;
+  color: var(--muted);
+  font-size: 8px;
+  line-height: 1;
+}
+
+.visual-meta-bottom {
+  align-self: end;
+  margin-bottom: 4px;
+}
+
+.visual-meta::before {
+  width: 5px;
+  height: 5px;
+  content: '';
+  background: var(--cyan);
+}
+
+.visual-meta-bottom::before {
+  background: var(--cyan);
+}
+
+.meta-rule {
+  display: block;
+  width: 26px;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+
+.visual-stage {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 300px;
+  overflow: visible;
+}
+
+.visual-stage::before {
+  position: absolute;
+  top: 8%;
+  left: 0;
+  z-index: -1;
+  color: rgba(23, 28, 31, 0.08);
+  content: '01';
+  font-family: var(--wide);
+  font-size: clamp(92px, 31vw, 150px);
+  line-height: 0.8;
+}
+
+#screening-app[data-stage='calibrate'] .visual-stage::before { content: '02'; }
+#screening-app[data-stage='drift'] .visual-stage::before { content: '03'; color: rgba(184, 43, 56, 0.12); }
+
+.visual-stage::after {
+  position: absolute;
+  right: -20px;
+  bottom: 10%;
+  padding: 5px 24px 4px 9px;
+  color: #f3f5f4;
+  content: 'OPTICAL MODULE // ACTIVE';
+  background: var(--graphite);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+  font-family: var(--display);
+  font-size: 7px;
+  letter-spacing: 0.14em;
+}
+
+.visual-halo {
+  position: absolute;
+  width: min(80vw, 330px);
+  aspect-ratio: 1;
+  border: 2px solid var(--graphite);
+  border-radius: 0;
+  background: rgba(245, 247, 246, 0.64);
+  box-shadow: 11px 11px 0 rgba(23, 28, 31, 0.12), -5px -5px 0 rgba(0, 167, 189, 0.24);
+  opacity: 1;
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  transition: border-color 0.55s ease, box-shadow 0.55s ease, transform 0.8s ease;
+}
+
+.vision-frame {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: min(78vw, 320px);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  aspect-ratio: 1;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.6s ease, transform 0.7s ease;
+}
+
+.visual-stage:has(.vision-frame:hover) .visual-halo {
+  border-color: var(--cyan);
+  box-shadow: 14px 14px 0 rgba(23, 28, 31, 0.16), -5px -5px 0 rgba(0, 167, 189, 0.48);
+}
+
+.vision-frame:focus-visible {
+  outline: 1px solid rgba(181, 54, 61, 0.72);
+  outline-offset: 10px;
+}
+
+.vision-frame:active {
+  transform: scale(0.985);
+}
+
+.vision-frame:disabled {
+  cursor: default;
+}
+
+.vision-frame::after {
+  position: absolute;
+  inset: 4%;
+  content: '';
+  border: 1px dashed rgba(23, 28, 31, 0.25);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: target-breathe 2.8s ease-in-out infinite;
+}
+
+@keyframes target-breathe {
+  0%, 100% { opacity: 0.28; transform: scale(0.98); }
+  50% { opacity: 0.7; transform: scale(1.02); }
+}
+
+.vision-visual {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border: 8px solid #080c0e;
+  border-radius: 50%;
+  background: #080c0e;
+  box-shadow: 0 0 0 1px rgba(0, 167, 189, 0.46), inset 0 0 28px rgba(0, 0, 0, 0.38);
+}
+
+.house-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  background: #080c0e;
+  isolation: isolate;
+}
+
+.house-image {
+  position: absolute;
+  top: -4.9%;
+  left: -37.8%;
+  display: block;
+  width: 175.6%;
+  max-width: none;
+  height: 109.8%;
+  object-fit: fill;
+  pointer-events: none;
+  user-select: none;
+  transform-origin: center;
+  will-change: filter, transform;
+}
+
+.house-image-base {
+  filter: contrast(1.03) saturate(0.95);
+}
+
+.house-image-glitch {
+  z-index: 2;
+  opacity: 0;
+  filter: brightness(0.5) contrast(1.8) saturate(0.48);
+  mask-image: radial-gradient(ellipse 8% 5% at 50% 50%, #000 0 42%, rgba(0, 0, 0, 0.92) 62%, transparent 100%);
+  will-change: opacity, transform;
+}
+
+.house-vignette,
+.house-reticle {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: block;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.house-vignette {
+  opacity: 0.12;
+  background: radial-gradient(circle, transparent 48%, rgba(2, 5, 6, 0.85) 100%);
+  transition: opacity 0.55s ease;
+}
+
+.house-reticle {
+  opacity: 0.24;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 12px), rgba(235, 246, 244, 0.76) calc(50% - 12px) calc(50% - 5px), transparent calc(50% - 5px) calc(50% + 5px), rgba(235, 246, 244, 0.76) calc(50% + 5px) calc(50% + 12px), transparent calc(50% + 12px)) 50% 50% / 42px 1px no-repeat,
+    linear-gradient(transparent calc(50% - 12px), rgba(235, 246, 244, 0.76) calc(50% - 12px) calc(50% - 5px), transparent calc(50% - 5px) calc(50% + 5px), rgba(235, 246, 244, 0.76) calc(50% + 5px) calc(50% + 12px), transparent calc(50% + 12px)) 50% 50% / 1px 42px no-repeat;
+}
