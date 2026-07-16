@@ -125,12 +125,10 @@ export default function App() {
     if (reduceMotion) return;
 
     activeTimeline.current?.kill();
-    activeTimeline.current = gsap.timeline()
+    activeTimeline.current = gsap.timeline({ repeat: -1, yoyo: true, repeatDelay: 0.12 })
       .fromTo(houseBaseRef.current,
-        { filter: 'blur(0px) contrast(1.03) saturate(.95)', scale: 1 },
-        { filter: 'blur(12px) contrast(1.03) saturate(.95)', scale: 1.035, duration: 0.32, ease: 'power2.in' })
-      .to(houseBaseRef.current,
-        { filter: 'blur(3.5px) contrast(1.03) saturate(.95)', scale: 1.015, duration: 0.42, ease: 'power2.out' });
+        { filter: 'blur(3.5px) contrast(1.03) saturate(.95)', scale: 1.015 },
+        { filter: 'blur(9px) contrast(1.03) saturate(.95)', scale: 1.03, duration: 1.05, ease: 'sine.inOut' });
   }
 
   function runDriftTimeline() {
