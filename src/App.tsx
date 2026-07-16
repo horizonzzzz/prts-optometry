@@ -6,8 +6,8 @@ import prtsClose from '../assets/prts-close.jpg';
 import ambientAudio from '../assets/audio/bgm.ea4286.mp3';
 import revealAudio from '../assets/audio/luanxu.mp3';
 
-const AMBIENT_VOLUME = 0.14;
-const REVEAL_VOLUME = 0.17;
+const AMBIENT_VOLUME = 0.35;
+const REVEAL_VOLUME = 0.5;
 
 const actionByStage: Readonly<Partial<Record<Stage, Action>>> = Object.freeze({
   intro: 'START',
