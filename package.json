@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview",
+    "preview": "npm run build && wrangler dev",
     "test": "vitest run",
-    "typecheck": "tsc -b --pretty false"
+    "typecheck": "tsc -b --pretty false",
+    "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
     "gsap": "3.12.5",
@@ -16,6 +17,7 @@
     "react-dom": "^19.2.7"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.45.0",
     "@types/node": "^26.1.1",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
@@ -23,6 +25,7 @@
     "sass": "^1.101.0",
     "typescript": "^7.0.2",
     "vite": "^8.1.4",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "wrangler": "^4.111.0"
   }
 }
