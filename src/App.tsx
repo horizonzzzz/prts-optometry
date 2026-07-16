@@ -1,16 +1,16 @@
 import { useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { advanceState, createInitialState, getStageCopy } from './state.js';
+import { advanceState, createInitialState, getStageCopy, type Action, type Stage } from './state';
 import visionHouse from '../assets/vision-house.jpg';
 import prtsClose from '../assets/prts-close.jpg';
 
-const actionByStage = Object.freeze({
+const actionByStage: Readonly<Partial<Record<Stage, Action>>> = Object.freeze({
   intro: 'START',
   calibrate: 'CONFIRM',
   drift: 'CONTINUE',
 });
 
-const stageMeta = Object.freeze({
+const stageMeta: Readonly<Record<Stage, Readonly<{ code: string; index: string; signal: string }>>> = Object.freeze({
   intro: Object.freeze({ code: '01 / 04', index: '01', signal: 'SIGNAL / STABLE' }),
   calibrate: Object.freeze({ code: '02 / 04', index: '02', signal: 'SIGNAL / CALIBRATING' }),
   drift: Object.freeze({ code: '03 / 04', index: '03', signal: 'SIGNAL / DUAL' }),
@@ -22,20 +22,20 @@ const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').mat
 export default function App() {
   const [state, dispatch] = useReducer(advanceState, undefined, createInitialState);
   const [hasStarted, setHasStarted] = useState(false);
-  const appRef = useRef(null);
-  const entryRef = useRef(null);
-  const visionTargetRef = useRef(null);
-  const houseBaseRef = useRef(null);
-  const houseGlitchRef = useRef(null);
-  const screenFlashRef = useRef(null);
-  const prtsPortraitRef = useRef(null);
-  const prtsImageScanRef = useRef(null);
-  const originumFrameRef = useRef(null);
-  const ambientAudioRef = useRef(null);
-  const activeTimeline = useRef(null);
-  const flashTimer = useRef(null);
-  const flashSequenceTimer = useRef(null);
-  const revealCompleteTimer = useRef(null);
+  const appRef = useRef<HTMLElement>(null);
+  const entryRef = useRef<HTMLElement>(null);
+  const visionTargetRef = useRef<HTMLButtonElement>(null);
+  const houseBaseRef = useRef<HTMLImageElement>(null);
+  const houseGlitchRef = useRef<HTMLImageElement>(null);
+  const screenFlashRef = useRef<HTMLDivElement>(null);
+  const prtsPortraitRef = useRef<HTMLDivElement>(null);
+  const prtsImageScanRef = useRef<HTMLSpanElement>(null);
+  const originumFrameRef = useRef<SVGSVGElement>(null);
+  const ambientAudioRef = useRef<HTMLAudioElement>(null);
+  const activeTimeline = useRef<gsap.core.Timeline | gsap.core.Tween | null>(null);
+  const flashTimer = useRef<number | null>(null);
+  const flashSequenceTimer = useRef<number | null>(null);
+  const revealCompleteTimer = useRef<number | null>(null);
   const audioStarted = useRef(false);
   const initialized = useRef(false);
   const previousStage = useRef(state.stage);
@@ -46,8 +46,8 @@ export default function App() {
     return originumFrameRef.current?.querySelectorAll('.originum-half') ?? [];
   }
 
-  function setStageClasses(stage) {
-    const app = appRef.current;
+  function setStageClasses(stage: Stage) {
+    const app = appRef.current!;
     app.classList.toggle('is-drifting', stage === 'drift');
     app.classList.toggle('is-revealing', stage === 'reveal');
     app.classList.toggle('is-complete', false);
@@ -63,7 +63,7 @@ export default function App() {
 
     playResult?.catch(() => {
       audioStarted.current = false;
-      appRef.current.classList.add('audio-unavailable');
+      appRef.current!.classList.add('audio-unavailable');
     });
   }
 
@@ -76,7 +76,7 @@ export default function App() {
   }
 
   function runIntroTimeline() {
-    const app = appRef.current;
+    const app = appRef.current!;
     if (reduceMotion) {
       app.classList.add('is-entering');
       window.setTimeout(() => app.classList.remove('is-entering'), 460);
@@ -92,7 +92,7 @@ export default function App() {
   }
 
   function runCalibrationTimeline() {
-    const app = appRef.current;
+    const app = appRef.current!;
     if (reduceMotion) {
       app.classList.add('is-entering');
       window.setTimeout(() => app.classList.remove('is-entering'), 420);
@@ -110,7 +110,7 @@ export default function App() {
 
   function runDriftTimeline() {
     if (reduceMotion) {
-      appRef.current.classList.add('is-drifting');
+      appRef.current!.classList.add('is-drifting');
       return;
     }
 
@@ -124,10 +124,10 @@ export default function App() {
   }
 
   function triggerRevealFlash() {
-    const app = appRef.current;
-    const screenFlash = screenFlashRef.current;
-    window.clearTimeout(flashTimer.current);
-    window.clearTimeout(flashSequenceTimer.current);
+    const app = appRef.current!;
+    const screenFlash = screenFlashRef.current!;
+    window.clearTimeout(flashTimer.current ?? undefined);
+    window.clearTimeout(flashSequenceTimer.current ?? undefined);
     app.classList.remove('is-flashing', 'is-gsap-flash', 'is-script-flash');
     screenFlash.style.opacity = '0';
     void app.offsetWidth;
@@ -146,7 +146,7 @@ export default function App() {
         .to(screenFlash, { opacity: 0, duration: 0.14, ease: 'power1.out' });
     } else {
       app.classList.add('is-script-flash');
-      const frames = [[0.92, 0], [0.05, 80], [0.68, 95], [0.04, 100], [0.42, 105], [0, 140]];
+      const frames: Array<[number, number]> = [[0.92, 0], [0.05, 80], [0.68, 95], [0.04, 100], [0.42, 105], [0, 140]];
       let frameIndex = 0;
       const playFrame = () => {
         const [opacity, delay] = frames[frameIndex++];
@@ -163,9 +163,9 @@ export default function App() {
   }
 
   function runRevealTimeline() {
-    const app = appRef.current;
-    const portrait = prtsPortraitRef.current;
-    const frame = originumFrameRef.current;
+    const app = appRef.current!;
+    const portrait = prtsPortraitRef.current!;
+    const frame = originumFrameRef.current!;
     app.classList.add('is-revealing');
     triggerRevealFlash();
 
@@ -173,7 +173,7 @@ export default function App() {
       portrait.style.opacity = '1';
       portrait.style.transform = 'scale(1)';
       frame.style.opacity = '1';
-      window.clearTimeout(revealCompleteTimer.current);
+      window.clearTimeout(revealCompleteTimer.current ?? undefined);
       revealCompleteTimer.current = window.setTimeout(() => {
         app.classList.remove('is-revealing');
         app.classList.add('is-complete');
@@ -195,7 +195,7 @@ export default function App() {
         { opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.68, ease: 'power3.out' })
       .set(frame, { opacity: 1 }, '<0.04')
       .fromTo(originumHalves(),
-        { x: (index) => index ? 52 : -52 },
+        { x: (index: number) => index ? 52 : -52 },
         { x: 0, duration: 0.34, stagger: 0.025, ease: 'power3.inOut' }, '<')
       .fromTo(frame,
         { scale: 1.08, rotation: 1.4 },
@@ -204,13 +204,13 @@ export default function App() {
   }
 
   function resetReveal() {
-    const app = appRef.current;
-    const screenFlash = screenFlashRef.current;
+    const app = appRef.current!;
+    const screenFlash = screenFlashRef.current!;
     const halves = originumHalves();
     activeTimeline.current?.kill();
-    window.clearTimeout(flashTimer.current);
-    window.clearTimeout(flashSequenceTimer.current);
-    window.clearTimeout(revealCompleteTimer.current);
+    window.clearTimeout(flashTimer.current ?? undefined);
+    window.clearTimeout(flashSequenceTimer.current ?? undefined);
+    window.clearTimeout(revealCompleteTimer.current ?? undefined);
     activeTimeline.current = null;
     flashTimer.current = null;
     flashSequenceTimer.current = null;
@@ -233,15 +233,15 @@ export default function App() {
     app.classList.remove('is-drifting', 'is-revealing', 'is-complete', 'is-entering', 'is-flashing', 'is-gsap-flash', 'is-script-flash');
     gsap.killTweensOf(screenFlash);
     gsap.set(screenFlash, { clearProps: 'all' });
-    prtsPortraitRef.current.style.opacity = '0';
-    prtsPortraitRef.current.style.transform = 'scale(0.92)';
-    originumFrameRef.current.style.opacity = '0';
-    prtsImageScanRef.current.style.opacity = '0';
-    prtsImageScanRef.current.style.transform = 'translateX(-110%)';
+    prtsPortraitRef.current!.style.opacity = '0';
+    prtsPortraitRef.current!.style.transform = 'scale(0.92)';
+    originumFrameRef.current!.style.opacity = '0';
+    prtsImageScanRef.current!.style.opacity = '0';
+    prtsImageScanRef.current!.style.transform = 'translateX(-110%)';
     stopAudio();
   }
 
-  function runStageTransition(from, to) {
+  function runStageTransition(from: Stage, to: Stage) {
     if (to === 'intro') return runIntroTimeline();
     if (from === 'intro' && to === 'calibrate') return runCalibrationTimeline();
     if (to === 'drift') return runDriftTimeline();
@@ -274,7 +274,7 @@ export default function App() {
       return;
     }
 
-    const entry = entryRef.current;
+    const entry = entryRef.current!;
     entry.classList.add('is-departing');
     gsap.timeline()
       .to(entry.querySelectorAll('.entry-status, .entry-copy, .entry-start, .entry-footer'), {
