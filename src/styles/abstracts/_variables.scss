@@ -1,0 +1,31 @@
+// Design tokens — CSS custom properties remain the runtime source of truth.
+// SCSS variables mirror hex values for future module reuse.
+
+$color-clinic: #dce1e2;
+$color-clinic-shadow: #aeb8ba;
+$color-graphite: #171c1f;
+$color-muted: #59666b;
+$color-cyan: #00a7bd;
+$color-red: #b82b38;
+$color-night: #0d1112;
+$color-ice: #dce9e4;
+
+$font-sans: SourceHan, 'Noto Sans SC', sans-serif;
+$font-display: Bender, 'Arial Narrow', sans-serif;
+$font-wide: Novecento, Bender, sans-serif;
+
+:root {
+  --clinic: #dce1e2;
+  --clinic-shadow: #aeb8ba;
+  --graphite: #171c1f;
+  --muted: #59666b;
+  --cyan: #00a7bd;
+  --red: #b82b38;
+  --night: #0d1112;
+  --ice: #dce9e4;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --sans: SourceHan, 'Noto Sans SC', sans-serif;
+  --display: Bender, 'Arial Narrow', sans-serif;
+  --wide: Novecento, Bender, sans-serif;
+}
