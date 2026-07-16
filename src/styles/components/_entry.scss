@@ -1,23 +1,27 @@
 .entry-gate {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 100;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr) auto;
   min-width: 320px;
+  height: 100svh;
   min-height: 100svh;
-  padding: calc(18px + var(--safe-top)) max(20px, calc((100vw - 680px) / 2)) calc(20px + var(--safe-bottom));
+  max-height: 100svh;
+  padding: calc(18px + var(--safe-top)) max(20px, calc((100vw - 680px) / 2)) calc(24px + var(--safe-bottom));
   color: #e8edeb;
   background:
-    linear-gradient(180deg, rgba(8, 12, 13, 0.24), rgba(8, 12, 13, 0.7) 58%, rgba(8, 12, 13, 0.96) 88%),
-    linear-gradient(90deg, rgba(8, 12, 13, 0.48), transparent 82%),
+    linear-gradient(180deg, rgba(8, 12, 13, 0.42), rgba(8, 12, 13, 0.78) 52%, rgba(8, 12, 13, 0.98) 88%),
+    linear-gradient(90deg, rgba(8, 12, 13, 0.56), transparent 82%),
     url('../../../assets/official-terminal-blueprint.jpg') center / cover no-repeat,
     #101516;
   isolation: isolate;
-  overflow: hidden;
-  clip-path: inset(0);
-  will-change: clip-path;
-  animation: entry-boot 0.42s ease-out both;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  opacity: 1;
+  clip-path: inset(0% 0% 0% 0%);
+  animation: entry-boot 0.52s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .entry-gate::before,
@@ -366,11 +370,35 @@
 
 .entry-gate.is-departing {
   pointer-events: none;
+  animation: none;
+  will-change: opacity, clip-path;
+}
+
+.entry-gate.is-departing::after,
+.entry-gate.is-departing .entry-core::before,
+.entry-gate.is-departing .entry-core::after,
+.entry-gate.is-departing .entry-noise {
+  opacity: 0;
+  animation: none;
+}
+
+.entry-gate.is-departing .entry-reticle {
+  animation: none;
+  will-change: transform, opacity;
 }
 
 @keyframes entry-boot {
-  from { opacity: 0; filter: brightness(2); }
-  to { opacity: 1; filter: brightness(1); }
+  from {
+    opacity: 0;
+    filter: brightness(1.35) saturate(0.9);
+    transform: scale(1.012);
+  }
+
+  to {
+    opacity: 1;
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
 }
 
 @keyframes entry-rule {

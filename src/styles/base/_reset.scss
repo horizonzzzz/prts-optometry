@@ -8,6 +8,22 @@ body {
   min-width: 320px;
   min-height: 100%;
   margin: 0;
+  background: #101516;
+}
+
+#root {
+  min-height: 100svh;
+  background: #101516;
+}
+
+.app-root {
+  position: relative;
+  min-height: 100svh;
+  isolation: isolate;
+  background: #101516;
+}
+
+.app-root.is-live {
   background: var(--clinic);
 }
 

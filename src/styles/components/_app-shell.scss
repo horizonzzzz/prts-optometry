@@ -14,6 +14,28 @@
   transition: background 0.72s ease, color 0.72s ease;
 }
 
+#screening-app.is-gated:not(.is-handoff) {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#screening-app.is-handoff {
+  visibility: visible;
+  pointer-events: none;
+  will-change: opacity, filter;
+}
+
+#screening-app.is-handoff .top-bar,
+#screening-app.is-handoff .copy-block,
+#screening-app.is-handoff .vision-frame {
+  will-change: opacity, transform;
+}
+
+#screening-app.is-handoff .screen-filter {
+  backdrop-filter: none;
+}
+
 #screening-app::before,
 #screening-app::after {
   position: absolute;
@@ -94,10 +116,6 @@
 }
 
 #screening-app.is-gsap-flash .screen-flash {
-  animation: none !important;
-}
-
-#screening-app.is-script-flash .screen-flash {
   animation: none !important;
 }
 
