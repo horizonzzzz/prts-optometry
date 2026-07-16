@@ -58,8 +58,20 @@
 }
 
 #screening-app[data-stage='drift'] .house-image-glitch {
-  opacity: 0.86;
-  animation: house-distort 0.68s steps(3, end) infinite alternate;
+  opacity: 0.74;
+  mix-blend-mode: screen;
+  animation: house-tv-tear 0.72s steps(6, end) infinite;
+}
+
+#screening-app[data-stage='drift'] .house-viewport::before {
+  opacity: 0.42;
+  animation: tv-static 0.16s steps(4, end) infinite;
+}
+
+#screening-app[data-stage='drift'] .house-viewport::after {
+  z-index: 5;
+  opacity: 0.64;
+  animation: tv-roll 1.28s steps(12, end) infinite;
 }
 
 #screening-app[data-stage='drift'] .house-vignette {
@@ -85,11 +97,24 @@
   box-shadow: 0 0 0 18px rgba(181, 54, 61, 0.035), 0 0 70px rgba(181, 54, 61, 0.11);
 }
 
-@keyframes house-distort {
-  0% { transform: translateX(-12px) scaleX(1.28) skewY(-10deg); }
-  45% { transform: translateX(9px) scaleX(0.78) skewY(12deg); }
-  70% { transform: translateX(-6px) scaleX(1.16) skewY(-7deg); }
-  100% { transform: translateX(12px) scaleX(0.76) skewY(11deg); }
+@keyframes house-tv-tear {
+  0%, 100% { transform: translate3d(0, 0, 0) scaleX(1.01); }
+  18% { transform: translate3d(-13px, 0, 0) scaleX(1.08) skewX(-1.2deg); }
+  36% { transform: translate3d(8px, 1px, 0) scaleX(0.94) skewX(0.8deg); }
+  57% { transform: translate3d(-5px, -1px, 0) scaleX(1.05) skewX(-0.6deg); }
+  79% { transform: translate3d(11px, 0, 0) scaleX(0.97) skewX(1deg); }
+}
+
+@keyframes tv-static {
+  0%, 100% { transform: translate3d(0, 0, 0); background-position: 0 0, 0 0; }
+  25% { transform: translate3d(-1px, 1px, 0); background-position: 0 1px, -2px 0; }
+  50% { transform: translate3d(1px, -1px, 0); background-position: 0 -1px, 2px 0; }
+  75% { transform: translate3d(-1px, 0, 0); background-position: 0 0, -1px 0; }
+}
+
+@keyframes tv-roll {
+  0% { transform: translateY(-20%); }
+  100% { transform: translateY(330%); }
 }
 
 #screening-app[data-stage='reveal'] {

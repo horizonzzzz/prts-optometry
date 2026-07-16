@@ -159,6 +159,37 @@
   isolation: isolate;
 }
 
+.house-viewport::before,
+.house-viewport::after {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  content: '';
+  pointer-events: none;
+  opacity: 0;
+}
+
+.house-viewport::before {
+  background-image:
+    repeating-linear-gradient(to bottom, rgba(235, 246, 244, 0.2) 0 1px, transparent 1px 4px),
+    repeating-linear-gradient(90deg, rgba(0, 167, 189, 0.1) 0 1px, transparent 1px 7px);
+  background-position: 0 0, 0 0;
+  background-size: 100% 4px, 100% 100%;
+  mix-blend-mode: screen;
+}
+
+.house-viewport::after {
+  top: -32%;
+  bottom: auto;
+  height: 36%;
+  background:
+    linear-gradient(to bottom, transparent 0 22%, rgba(237, 242, 241, 0.18) 22% 32%, rgba(0, 167, 189, 0.3) 32% 38%, rgba(181, 54, 61, 0.24) 38% 44%, transparent 44% 100%),
+    repeating-linear-gradient(to bottom, transparent 0 6px, rgba(235, 246, 244, 0.14) 6px 7px, transparent 7px 12px);
+  box-shadow: 0 0 22px rgba(220, 246, 239, 0.22);
+  mix-blend-mode: screen;
+}
+
 .house-image {
   position: absolute;
   top: -4.9%;
@@ -181,8 +212,9 @@
 .house-image-glitch {
   z-index: 2;
   opacity: 0;
-  filter: brightness(0.5) contrast(1.8) saturate(0.48);
-  mask-image: radial-gradient(ellipse 8% 5% at 50% 50%, #000 0 42%, rgba(0, 0, 0, 0.92) 62%, transparent 100%);
+  filter: brightness(0.5) contrast(1.8) saturate(0.48) hue-rotate(-14deg);
+  -webkit-mask-image: repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 16px);
+  mask-image: repeating-linear-gradient(to bottom, #000 0 5px, transparent 5px 16px);
   will-change: opacity, transform;
 }
 
