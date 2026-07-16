@@ -1,4 +1,20 @@
-const COPY = Object.freeze({
+export type Stage = 'intro' | 'calibrate' | 'drift' | 'reveal';
+
+export type Action = 'START' | 'CONFIRM' | 'CONTINUE' | 'RESET' | 'TOGGLE_MUTE' | string;
+
+export type AppState = {
+  stage: Stage;
+  muted: boolean;
+};
+
+export type StageCopy = {
+  eyebrow: string;
+  title: string;
+  note: string;
+  actionLabel: string;
+};
+
+const COPY: Readonly<Record<Stage, Readonly<StageCopy>>> = Object.freeze({
   intro: Object.freeze({
     eyebrow: 'INTAKE / 远距辨认',
     title: '请注视远处的房屋',
@@ -25,15 +41,15 @@ const COPY = Object.freeze({
   }),
 });
 
-export function createInitialState() {
+export function createInitialState(): AppState {
   return { stage: 'intro', muted: false };
 }
 
-export function getStageCopy(state) {
+export function getStageCopy(state: AppState): StageCopy {
   return COPY[state.stage] ?? COPY.intro;
 }
 
-export function advanceState(state, action) {
+export function advanceState(state: AppState, action: Action): AppState {
   if (action === 'TOGGLE_MUTE') {
     return { ...state, muted: !state.muted };
   }
