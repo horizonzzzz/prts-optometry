@@ -1,4 +1,4 @@
-import { useLayoutEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { advanceState, createInitialState, getStageCopy, type Action, type Stage } from './state';
 import visionHouse from '../assets/vision-house.jpg';
@@ -17,11 +17,14 @@ const stageMeta: Readonly<Record<Stage, Readonly<{ code: string; index: string; 
   reveal: Object.freeze({ code: '04 / 04', index: '04', signal: 'SIGNAL / RETURNED' }),
 });
 
-const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+const reduceMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
 
 export default function App() {
   const [state, dispatch] = useReducer(advanceState, undefined, createInitialState);
   const [hasStarted, setHasStarted] = useState(false);
+  const [entryMounted, setEntryMounted] = useState(true);
+  const [isEntryDeparting, setIsEntryDeparting] = useState(false);
+  const [reduceMotion, setReduceMotion] = useState(() => reduceMotionQuery?.matches ?? false);
   const appRef = useRef<HTMLElement>(null);
   const entryRef = useRef<HTMLElement>(null);
   const visionTargetRef = useRef<HTMLButtonElement>(null);
@@ -34,13 +37,27 @@ export default function App() {
   const ambientAudioRef = useRef<HTMLAudioElement>(null);
   const activeTimeline = useRef<gsap.core.Timeline | gsap.core.Tween | null>(null);
   const flashTimer = useRef<number | null>(null);
-  const flashSequenceTimer = useRef<number | null>(null);
   const revealCompleteTimer = useRef<number | null>(null);
   const audioStarted = useRef(false);
   const initialized = useRef(false);
   const previousStage = useRef(state.stage);
   const copy = getStageCopy(state);
   const meta = stageMeta[state.stage];
+
+  useEffect(() => {
+    if (!reduceMotionQuery) return;
+    const handleChange = () => setReduceMotion(reduceMotionQuery.matches);
+    reduceMotionQuery.addEventListener?.('change', handleChange);
+    return () => reduceMotionQuery.removeEventListener?.('change', handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!hasStarted || entryMounted) return;
+    const focusTimer = window.setTimeout(() => {
+      appRef.current?.focus({ preventScroll: true });
+    }, 50);
+    return () => window.clearTimeout(focusTimer);
+  }, [hasStarted, entryMounted]);
 
   function originumHalves() {
     return originumFrameRef.current?.querySelectorAll('.originum-half') ?? [];
@@ -63,7 +80,7 @@ export default function App() {
 
     playResult?.catch(() => {
       audioStarted.current = false;
-      appRef.current!.classList.add('audio-unavailable');
+      appRef.current?.classList.add('audio-unavailable');
     });
   }
 
@@ -76,12 +93,7 @@ export default function App() {
   }
 
   function runIntroTimeline() {
-    const app = appRef.current!;
-    if (reduceMotion) {
-      app.classList.add('is-entering');
-      window.setTimeout(() => app.classList.remove('is-entering'), 460);
-      return;
-    }
+    if (reduceMotion) return;
 
     activeTimeline.current?.kill();
     activeTimeline.current = gsap.timeline().fromTo(
@@ -92,12 +104,7 @@ export default function App() {
   }
 
   function runCalibrationTimeline() {
-    const app = appRef.current!;
-    if (reduceMotion) {
-      app.classList.add('is-entering');
-      window.setTimeout(() => app.classList.remove('is-entering'), 420);
-      return;
-    }
+    if (reduceMotion) return;
 
     activeTimeline.current?.kill();
     activeTimeline.current = gsap.timeline()
@@ -127,37 +134,24 @@ export default function App() {
     const app = appRef.current!;
     const screenFlash = screenFlashRef.current!;
     window.clearTimeout(flashTimer.current ?? undefined);
-    window.clearTimeout(flashSequenceTimer.current ?? undefined);
-    app.classList.remove('is-flashing', 'is-gsap-flash', 'is-script-flash');
+    gsap.killTweensOf(screenFlash);
+    app.classList.remove('is-flashing', 'is-gsap-flash');
     screenFlash.style.opacity = '0';
-    void app.offsetWidth;
-    app.classList.add('is-flashing');
+    if (reduceMotion) return;
 
-    if (!reduceMotion) {
-      app.classList.add('is-gsap-flash');
-      gsap.killTweensOf(screenFlash);
-      gsap.timeline()
-        .set(screenFlash, { opacity: 0, background: '#effff8' })
-        .to(screenFlash, { opacity: 0.94, duration: 0.07, ease: 'steps(1)' })
-        .to(screenFlash, { opacity: 0.04, duration: 0.1, ease: 'none' })
-        .to(screenFlash, { opacity: 0.72, background: '#dfe9ff', duration: 0.08, ease: 'steps(1)' })
-        .to(screenFlash, { opacity: 0.06, duration: 0.1, ease: 'none' })
-        .to(screenFlash, { opacity: 0.46, background: '#ffedf0', duration: 0.08, ease: 'steps(1)' })
-        .to(screenFlash, { opacity: 0, duration: 0.14, ease: 'power1.out' });
-    } else {
-      app.classList.add('is-script-flash');
-      const frames: Array<[number, number]> = [[0.92, 0], [0.05, 80], [0.68, 95], [0.04, 100], [0.42, 105], [0, 140]];
-      let frameIndex = 0;
-      const playFrame = () => {
-        const [opacity, delay] = frames[frameIndex++];
-        screenFlash.style.opacity = String(opacity);
-        if (frameIndex < frames.length) flashSequenceTimer.current = window.setTimeout(playFrame, delay);
-      };
-      playFrame();
-    }
+    void app.offsetWidth;
+    app.classList.add('is-flashing', 'is-gsap-flash');
+    gsap.timeline()
+      .set(screenFlash, { opacity: 0, background: '#effff8' })
+      .to(screenFlash, { opacity: 0.94, duration: 0.07, ease: 'steps(1)' })
+      .to(screenFlash, { opacity: 0.04, duration: 0.1, ease: 'none' })
+      .to(screenFlash, { opacity: 0.72, background: '#dfe9ff', duration: 0.08, ease: 'steps(1)' })
+      .to(screenFlash, { opacity: 0.06, duration: 0.1, ease: 'none' })
+      .to(screenFlash, { opacity: 0.46, background: '#ffedf0', duration: 0.08, ease: 'steps(1)' })
+      .to(screenFlash, { opacity: 0, duration: 0.14, ease: 'power1.out' });
 
     flashTimer.current = window.setTimeout(() => {
-      app.classList.remove('is-flashing', 'is-gsap-flash', 'is-script-flash');
+      app.classList.remove('is-flashing', 'is-gsap-flash');
       screenFlash.style.opacity = '0';
     }, 760);
   }
@@ -209,11 +203,9 @@ export default function App() {
     const halves = originumHalves();
     activeTimeline.current?.kill();
     window.clearTimeout(flashTimer.current ?? undefined);
-    window.clearTimeout(flashSequenceTimer.current ?? undefined);
     window.clearTimeout(revealCompleteTimer.current ?? undefined);
     activeTimeline.current = null;
     flashTimer.current = null;
-    flashSequenceTimer.current = null;
     revealCompleteTimer.current = null;
 
     gsap.killTweensOf([
@@ -230,7 +222,7 @@ export default function App() {
     gsap.set(halves, { clearProps: 'all' });
     gsap.set([houseBaseRef.current, houseGlitchRef.current], { clearProps: 'all' });
 
-    app.classList.remove('is-drifting', 'is-revealing', 'is-complete', 'is-entering', 'is-flashing', 'is-gsap-flash', 'is-script-flash');
+    app.classList.remove('is-drifting', 'is-revealing', 'is-complete', 'is-flashing', 'is-gsap-flash');
     gsap.killTweensOf(screenFlash);
     gsap.set(screenFlash, { clearProps: 'all' });
     prtsPortraitRef.current!.style.opacity = '0';
@@ -250,6 +242,15 @@ export default function App() {
 
   useLayoutEffect(() => setStageClasses(state.stage), [state]);
 
+  useLayoutEffect(() => () => {
+    activeTimeline.current?.kill();
+    activeTimeline.current = null;
+    window.clearTimeout(flashTimer.current ?? undefined);
+    window.clearTimeout(revealCompleteTimer.current ?? undefined);
+    const screenFlash = screenFlashRef.current;
+    if (screenFlash) gsap.killTweensOf(screenFlash);
+  }, []);
+
   useLayoutEffect(() => {
     if (!initialized.current) {
       initialized.current = true;
@@ -265,37 +266,103 @@ export default function App() {
     if (action) dispatch(action);
   }
 
+  function finishEntry(playIntro = false) {
+    const app = appRef.current;
+    if (app) {
+      app.classList.remove('is-handoff');
+      gsap.set([
+        app,
+        app.querySelector('.top-bar'),
+        app.querySelector('.copy-block'),
+        visionTargetRef.current,
+      ], { clearProps: 'all' });
+    }
+
+    setIsEntryDeparting(false);
+    setHasStarted(true);
+    setEntryMounted(false);
+    if (playIntro) runIntroTimeline();
+  }
+
   function handleStart() {
+    if (hasStarted || entryRef.current?.classList.contains('is-departing')) return;
+
     startAudio();
-    runIntroTimeline();
 
     if (reduceMotion) {
-      setHasStarted(true);
+      finishEntry(true);
       return;
     }
 
-    const entry = entryRef.current!;
+    const entry = entryRef.current;
+    const app = appRef.current;
+    if (!entry || !app) {
+      finishEntry(true);
+      return;
+    }
+
+    const reticle = entry.querySelector('.entry-reticle');
+    const entryChrome = entry.querySelectorAll('.entry-status, .entry-footer, .entry-copy, .entry-start');
+    const handoffPanels = [
+      app.querySelector('.top-bar'),
+      app.querySelector('.copy-block'),
+    ];
+
+    setIsEntryDeparting(true);
     entry.classList.add('is-departing');
-    gsap.timeline()
-      .to(entry.querySelectorAll('.entry-status, .entry-copy, .entry-start, .entry-footer'), {
+    app.classList.add('is-handoff');
+
+    gsap.set(entry, { opacity: 1, clipPath: 'inset(0% 0% 0% 0%)' });
+    gsap.set(app, { opacity: 0, filter: 'blur(10px) brightness(1.08)' });
+    gsap.set(handoffPanels, { opacity: 0, y: 14 });
+    gsap.set(visionTargetRef.current, { opacity: 0.4, scale: 0.92 });
+
+    activeTimeline.current?.kill();
+    activeTimeline.current = gsap.timeline({
+      onComplete: finishEntry,
+    })
+      .to(entryChrome, {
         opacity: 0,
-        y: -14,
+        y: -12,
         duration: 0.28,
         stagger: 0.025,
         ease: 'power2.in',
       })
-      .to(entry.querySelector('.entry-reticle'), {
-        scale: 4.2,
-        opacity: 0.08,
+      .to(reticle, {
+        scale: 3.6,
+        opacity: 0.12,
         duration: 0.78,
         ease: 'power3.in',
       }, '<0.04')
       .to(entry, {
-        clipPath: 'inset(50% 0 50% 0)',
+        clipPath: 'inset(50% 0% 50% 0%)',
         duration: 0.82,
         ease: 'power4.inOut',
-      }, '<0.16');
-    window.setTimeout(() => setHasStarted(true), 1100);
+      }, '<0.14')
+      .to(entry, {
+        opacity: 0,
+        duration: 0.28,
+        ease: 'power1.out',
+      }, '>-0.22')
+      .to(app, {
+        opacity: 1,
+        filter: 'blur(0px) brightness(1)',
+        duration: 0.7,
+        ease: 'power2.out',
+      }, '<0.08')
+      .to(handoffPanels, {
+        opacity: 1,
+        y: 0,
+        duration: 0.48,
+        stagger: 0.04,
+        ease: 'power2.out',
+      }, '<0.1')
+      .to(visionTargetRef.current, {
+        opacity: 1,
+        scale: 1,
+        duration: 0.58,
+        ease: 'power2.out',
+      }, '<0.04');
   }
 
   function handleReset() {
@@ -315,8 +382,19 @@ export default function App() {
   }
 
   return (
-    <>
-      <main id="screening-app" ref={appRef} data-stage={state.stage} aria-hidden={!hasStarted} inert={!hasStarted ? true : undefined}>
+    <div className={`app-root${hasStarted ? ' is-live' : ' is-entry'}`}>
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {isEntryDeparting ? '正在进入验光界面。' : ''}
+      </p>
+      <main
+        id="screening-app"
+        ref={appRef}
+        tabIndex={-1}
+        data-stage={state.stage}
+        className={hasStarted ? undefined : 'is-gated'}
+        aria-hidden={!hasStarted}
+        inert={!hasStarted ? true : undefined}
+      >
       <div className="grain" aria-hidden="true" />
       <div className="scanline" aria-hidden="true" />
       <div className="screen-filter" aria-hidden="true" />
@@ -443,7 +521,7 @@ export default function App() {
       </audio>
       </main>
 
-      {!hasStarted && (
+      {entryMounted && (
         <section ref={entryRef} className="entry-gate" aria-labelledby="entry-title">
           <div className="entry-noise" aria-hidden="true" />
 
@@ -481,6 +559,6 @@ export default function App() {
           </footer>
         </section>
       )}
-    </>
+    </div>
   );
 }
