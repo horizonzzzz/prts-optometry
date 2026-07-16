@@ -1,0 +1,200 @@
+.top-bar,
+.visual-meta,
+.copy-block {
+  position: relative;
+  z-index: 10;
+}
+
+.top-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  min-height: 48px;
+  padding-bottom: 9px;
+  border-bottom: 4px solid var(--graphite);
+}
+
+#screening-app:not([data-stage='reveal']) .top-bar {
+  margin: calc(-16px - var(--safe-top)) -20px 0;
+  padding: calc(14px + var(--safe-top)) 20px 10px;
+  color: #f4f6f5;
+  background: var(--graphite);
+}
+
+.top-bar::after {
+  position: absolute;
+  right: 0;
+  bottom: -4px;
+  width: 24%;
+  height: 4px;
+  content: '';
+  background: var(--cyan);
+}
+
+#screening-app:not([data-stage='reveal']) .brand-sub,
+#screening-app:not([data-stage='reveal']) .icon-button {
+  color: rgba(244, 246, 245, 0.64);
+}
+
+#screening-app:not([data-stage='reveal']) .rhodes-watermark {
+  background: #f4f6f5;
+}
+
+#screening-app:not([data-stage='reveal']) .rhodes-watermark::after {
+  background: var(--graphite);
+}
+
+#screening-app:not([data-stage='reveal']) .stage-code {
+  color: var(--graphite);
+  background: var(--cyan);
+}
+
+.brand-lockup,
+.top-readout,
+.copy-heading,
+.visual-meta {
+  display: flex;
+  align-items: center;
+}
+
+.brand-lockup {
+  gap: 10px;
+}
+
+.rhodes-watermark {
+  position: relative;
+  display: block;
+  width: 30px;
+  height: 26px;
+  flex: 0 0 auto;
+  background: currentColor;
+  -webkit-mask: url('../../../assets/official-rhodes-island.png') center / contain no-repeat;
+  mask: url('../../../assets/official-rhodes-island.png') center / contain no-repeat;
+  opacity: 1;
+}
+
+.rhodes-watermark::after {
+  display: none;
+}
+
+.brand-name,
+.brand-sub,
+.stage-eyebrow,
+.stage-code,
+.visual-meta,
+.screening-note,
+.icon-button-label,
+.copy-index {
+  font-family: var(--display);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.brand-name,
+.brand-sub {
+  margin: 0;
+}
+
+.brand-name {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.brand-sub {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 8px;
+  letter-spacing: 0.2em;
+  line-height: 1;
+}
+
+.top-readout {
+  gap: 12px;
+}
+
+.stage-code {
+  padding: 5px 7px 4px;
+  color: #f3f5f4;
+  background: var(--graphite);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.icon-button:hover,
+.icon-button[aria-pressed='true'] {
+  color: var(--red);
+}
+
+.sound-bars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  width: 16px;
+  height: 16px;
+}
+
+.sound-bars i {
+  display: block;
+  width: 2px;
+  height: 5px;
+  background: currentColor;
+  transform-origin: center;
+  transition: height 0.2s ease;
+}
+
+.sound-bars i:nth-child(2) {
+  height: 12px;
+}
+
+.sound-bars i:nth-child(3) {
+  height: 8px;
+}
+
+.icon-button[aria-pressed='true'] .sound-bars i {
+  height: 2px;
+}
+
+.icon-button-label {
+  font-size: 8px;
+}
+
+.system-rail {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  margin-top: 7px;
+  color: var(--muted);
+  font-family: var(--display);
+  font-size: 7px;
+  letter-spacing: 0.16em;
+}
+
+.system-rail span:nth-child(2) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.system-rail span:nth-child(2)::before,
+.system-rail span:nth-child(2)::after {
+  height: 1px;
+  flex: 1;
+  content: '';
+  background: var(--clinic-shadow);
+}

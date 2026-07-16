@@ -316,68 +316,68 @@ export default function App() {
 
   return (
     <>
-      <main id="screening-app" ref={appRef} data-stage={state.stage} className="relative isolate flex min-h-svh flex-col overflow-hidden" aria-hidden={!hasStarted} inert={!hasStarted ? true : undefined}>
-      <div className="grain absolute inset-0 pointer-events-none" aria-hidden="true" />
-      <div className="scanline absolute inset-0 pointer-events-none" aria-hidden="true" />
-      <div className="screen-filter absolute inset-0 pointer-events-none" aria-hidden="true" />
-      <div ref={screenFlashRef} className="screen-flash absolute inset-0 pointer-events-none" aria-hidden="true" />
+      <main id="screening-app" ref={appRef} data-stage={state.stage} aria-hidden={!hasStarted} inert={!hasStarted ? true : undefined}>
+      <div className="grain" aria-hidden="true" />
+      <div className="scanline" aria-hidden="true" />
+      <div className="screen-filter" aria-hidden="true" />
+      <div ref={screenFlashRef} className="screen-flash" aria-hidden="true" />
 
-      <header className="top-bar relative z-10 flex items-start justify-between">
-        <div className="brand-lockup flex items-center">
-          <span className="rhodes-watermark block" aria-hidden="true" />
+      <header className="top-bar">
+        <div className="brand-lockup">
+          <span className="rhodes-watermark" aria-hidden="true" />
           <div>
             <p className="brand-name">PRTS</p>
             <p className="brand-sub">PERSONAL RECORD TERMINAL</p>
           </div>
         </div>
 
-        <div className="top-readout flex items-center">
+        <div className="top-readout">
           <span id="stage-code" className="stage-code">{meta.code}</span>
-          <button id="mute-toggle" className="icon-button inline-flex items-center" type="button" aria-pressed={state.muted} aria-label={state.muted ? '打开声音' : '关闭声音'} onClick={handleMute}>
-            <span className="sound-bars inline-flex items-center" aria-hidden="true"><i /><i /><i /></span>
+          <button id="mute-toggle" className="icon-button" type="button" aria-pressed={state.muted} aria-label={state.muted ? '打开声音' : '关闭声音'} onClick={handleMute}>
+            <span className="sound-bars" aria-hidden="true"><i /><i /><i /></span>
             <span className="icon-button-label">SOUND</span>
           </button>
         </div>
       </header>
 
-      <div className="system-rail relative z-10 grid" aria-hidden="true">
+      <div className="system-rail" aria-hidden="true">
         <span>RI-07</span>
         <span>OPTICAL CONTROL</span>
         <span>PRTS // LIVE</span>
       </div>
 
-      <section className="screen-body relative grid min-h-0 flex-1" aria-label="视觉筛查体验">
-        <div className="visual-meta relative z-10 flex items-center" aria-hidden="true">
+      <section className="screen-body" aria-label="视觉筛查体验">
+        <div className="visual-meta" aria-hidden="true">
           <span>OPTICAL ARRAY</span>
-          <span className="meta-rule block" />
+          <span className="meta-rule" />
           <span id="signal-line">{meta.signal}</span>
         </div>
 
-        <section className="visual-stage relative grid place-items-center overflow-visible" aria-label="远距视觉检测">
-          <div className="visual-halo absolute aspect-square" aria-hidden="true" />
-          <button id="vision-target" ref={visionTargetRef} className="vision-frame relative z-[2] block aspect-square cursor-pointer border-0 bg-transparent p-0" type="button" aria-label={copy.actionLabel} disabled={state.stage === 'reveal'} onClick={handleVisionActivate}>
+        <section className="visual-stage" aria-label="远距视觉检测">
+          <div className="visual-halo" aria-hidden="true" />
+          <button id="vision-target" ref={visionTargetRef} className="vision-frame" type="button" aria-label={copy.actionLabel} disabled={state.stage === 'reveal'} onClick={handleVisionActivate}>
             <span className="corner corner-tl" aria-hidden="true" />
             <span className="corner corner-tr" aria-hidden="true" />
             <span className="corner corner-bl" aria-hidden="true" />
             <span className="corner corner-br" aria-hidden="true" />
 
-            <div id="vision-visual" className="vision-visual house-scene relative block h-full w-full overflow-hidden rounded-full" role="img" aria-label="圆形视野中的田野与远处房屋">
-              <div className="house-viewport absolute inset-0 isolate overflow-hidden">
-                <img ref={houseBaseRef} className="house-image house-image-base pointer-events-none absolute block max-w-none select-none" src={visionHouse} alt="" draggable="false" />
-                <img ref={houseGlitchRef} className="house-image house-image-glitch pointer-events-none absolute block max-w-none select-none" src={visionHouse} alt="" draggable="false" aria-hidden="true" />
-                <span className="house-vignette absolute inset-0 block pointer-events-none" aria-hidden="true" />
-                <span className="house-reticle absolute inset-0 block pointer-events-none" aria-hidden="true" />
+            <div id="vision-visual" className="vision-visual house-scene" role="img" aria-label="圆形视野中的田野与远处房屋">
+              <div className="house-viewport">
+                <img ref={houseBaseRef} className="house-image house-image-base" src={visionHouse} alt="" draggable="false" />
+                <img ref={houseGlitchRef} className="house-image house-image-glitch" src={visionHouse} alt="" draggable="false" aria-hidden="true" />
+                <span className="house-vignette" aria-hidden="true" />
+                <span className="house-reticle" aria-hidden="true" />
               </div>
             </div>
           </button>
 
-          <div id="reveal-scene" className="reveal-scene absolute z-[3] block" aria-hidden={state.stage !== 'reveal'}>
-            <div id="prts-portrait" ref={prtsPortraitRef} className="prts-portrait absolute isolate overflow-hidden" aria-hidden="true">
-              <img id="prts-image" className="prts-image relative block h-full w-full" src={prtsClose} alt="" />
-              <span ref={prtsImageScanRef} className="prts-image-scan pointer-events-none absolute" aria-hidden="true" />
+          <div id="reveal-scene" className="reveal-scene" aria-hidden={state.stage !== 'reveal'}>
+            <div id="prts-portrait" ref={prtsPortraitRef} className="prts-portrait" aria-hidden="true">
+              <img id="prts-image" className="prts-image" src={prtsClose} alt="" />
+              <span ref={prtsImageScanRef} className="prts-image-scan" aria-hidden="true" />
             </div>
 
-            <svg id="originum-frame" ref={originumFrameRef} className="originum-frame absolute inset-0 block h-full w-full overflow-visible pointer-events-none" viewBox="0 0 320 360" role="img" aria-labelledby="originum-title originum-description">
+            <svg id="originum-frame" ref={originumFrameRef} className="originum-frame" viewBox="0 0 320 360" role="img" aria-labelledby="originum-title originum-description">
               <title id="originum-title">源石菱形中的 PRTS 影像</title>
               <desc id="originum-description">普瑞赛斯的面部影像出现在分段破碎并持续扰动的源石菱形中。</desc>
               <defs>
@@ -413,15 +413,15 @@ export default function App() {
           </div>
         </section>
 
-        <div className="visual-meta visual-meta-bottom relative z-10 flex items-center" aria-hidden="true">
+        <div className="visual-meta visual-meta-bottom" aria-hidden="true">
           <span>FOCAL DISTANCE / 30 CM</span>
-          <span className="meta-rule block" />
+          <span className="meta-rule" />
           <span id="phase-readout">PHASE / {meta.index}</span>
         </div>
       </section>
 
-      <section className="copy-block reveal-caption relative z-10" aria-labelledby="stage-title">
-        <div className="copy-heading flex items-center justify-between">
+      <section className="copy-block reveal-caption" aria-labelledby="stage-title">
+        <div className="copy-heading">
           <p id="stage-eyebrow" className="stage-eyebrow">{copy.eyebrow}</p>
           <span className="copy-index" aria-hidden="true">{meta.index}</span>
         </div>
