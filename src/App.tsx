@@ -4,6 +4,10 @@ import { advanceState, createInitialState, getStageCopy, type Action, type Stage
 import visionHouse from '../assets/vision-house.jpg';
 import prtsClose from '../assets/prts-close.jpg';
 import ambientAudio from '../assets/audio/bgm.ea4286.mp3';
+import revealAudio from '../assets/audio/luanxu.mp3';
+
+const AMBIENT_VOLUME = 0.14;
+const REVEAL_VOLUME = 0.17;
 
 const actionByStage: Readonly<Partial<Record<Stage, Action>>> = Object.freeze({
   intro: 'START',
@@ -40,6 +44,7 @@ export default function App() {
   const flashTimer = useRef<number | null>(null);
   const revealCompleteTimer = useRef<number | null>(null);
   const audioStarted = useRef(false);
+  const audioPlayAttempt = useRef(0);
   const initialized = useRef(false);
   const previousStage = useRef(state.stage);
   const copy = getStageCopy(state);
@@ -71,15 +76,25 @@ export default function App() {
     app.classList.toggle('is-complete', false);
   }
 
-  function startAudio(muted = state.muted) {
+  function startAudio(muted = state.muted, restart = false) {
     const audio = ambientAudioRef.current;
-    if (audioStarted.current || muted || !audio) return;
+    if (muted || !audio || (!restart && audioStarted.current)) return;
 
-    audio.volume = 0.14;
+    if (restart) {
+      audioPlayAttempt.current += 1;
+      audio.pause();
+      audio.currentTime = 0;
+      audio.load();
+      audioStarted.current = false;
+    }
+
+    audio.volume = state.stage === 'reveal' ? REVEAL_VOLUME : AMBIENT_VOLUME;
+    const playAttempt = ++audioPlayAttempt.current;
     const playResult = audio.play();
     audioStarted.current = true;
 
     playResult?.catch(() => {
+      if (playAttempt !== audioPlayAttempt.current) return;
       audioStarted.current = false;
       appRef.current?.classList.add('audio-unavailable');
     });
@@ -88,8 +103,10 @@ export default function App() {
   function stopAudio() {
     const audio = ambientAudioRef.current;
     if (!audio) return;
+    audioPlayAttempt.current += 1;
     audio.pause();
     audio.currentTime = 0;
+    audio.volume = AMBIENT_VOLUME;
     audioStarted.current = false;
   }
 
@@ -238,7 +255,10 @@ export default function App() {
     if (to === 'intro') return runIntroTimeline();
     if (from === 'intro' && to === 'calibrate') return runCalibrationTimeline();
     if (to === 'drift') return runDriftTimeline();
-    if (to === 'reveal') runRevealTimeline();
+    if (to === 'reveal') {
+      startAudio(state.muted, true);
+      runRevealTimeline();
+    }
   }
 
   useLayoutEffect(() => setStageClasses(state.stage), [state]);
@@ -517,9 +537,7 @@ export default function App() {
 
       <p id="announcer" className="sr-only" aria-live="polite">{copy.eyebrow}，{copy.title}。{copy.note}</p>
 
-      <audio id="ambient-audio" ref={ambientAudioRef} loop preload="none" aria-hidden="true" onError={() => appRef.current?.classList.add('audio-unavailable')}>
-        <source src={ambientAudio} type="audio/mpeg" />
-      </audio>
+      <audio id="ambient-audio" ref={ambientAudioRef} src={state.stage === 'reveal' ? revealAudio : ambientAudio} loop preload="none" aria-hidden="true" onError={() => appRef.current?.classList.add('audio-unavailable')} />
       </main>
 
       {entryMounted && (
