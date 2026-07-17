@@ -10,27 +10,34 @@ import {
 } from '../state';
 import { createPixiVisionScene, type PixiVisionScene } from './createPixiVisionScene';
 
-const ACTION_BY_STAGE: Record<string, Action> = {
+const ACTION_BY_STAGE: Partial<Record<string, Action>> = {
   intro: 'START',
   calibrate: 'CONFIRM',
   drift: 'CONTINUE',
-  reveal: 'RESET',
 };
 
+const AMBIENT_VOLUME = 0.35;
+const REVEAL_VOLUME = 0.5;
+
 export default function PixiVisionPage() {
-  const [state, dispatch] = useReducer(advanceState, createInitialState());
+  const [state, dispatch] = useReducer(advanceState, undefined, createInitialState);
   const [started, setStarted] = useState(false);
+  const [entryDeparting, setEntryDeparting] = useState(false);
   const [ready, setReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
   const sceneRef = useRef<PixiVisionScene | null>(null);
+  const reducedMotionRef = useRef(false);
   const ambientRef = useRef<HTMLAudioElement | null>(null);
   const revealRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const update = () => setReducedMotion(query.matches);
+    const update = () => {
+      reducedMotionRef.current = query.matches;
+      setReducedMotion(query.matches);
+    };
 
     update();
     query.addEventListener?.('change', update);
@@ -40,10 +47,11 @@ export default function PixiVisionPage() {
   useEffect(() => {
     const ambient = new Audio(ambientAudio);
     ambient.loop = true;
-    ambient.volume = 0.24;
+    ambient.preload = 'none';
 
     const reveal = new Audio(revealAudio);
-    reveal.volume = 0.42;
+    reveal.loop = true;
+    reveal.preload = 'none';
 
     ambientRef.current = ambient;
     revealRef.current = reveal;
@@ -64,7 +72,7 @@ export default function PixiVisionPage() {
 
     let cancelled = false;
 
-    createPixiVisionScene({ host, reducedMotion })
+    createPixiVisionScene({ host, reducedMotion: reducedMotionRef.current })
       .then((scene) => {
         if (cancelled) {
           scene.destroy();
@@ -94,53 +102,63 @@ export default function PixiVisionPage() {
 
   useEffect(() => {
     if (!ready) return;
-    sceneRef.current?.setStarted(started);
-  }, [ready, started]);
-
-  useEffect(() => {
-    if (!ready) return;
     sceneRef.current?.setStage(state.stage);
-  }, [ready, state.stage]);
+    sceneRef.current?.setMuted(state.muted);
+  }, [ready, state.stage, state.muted]);
 
   useEffect(() => {
     const ambient = ambientRef.current;
-    if (!ambient || !started) return;
+    const reveal = revealRef.current;
+    if (!ambient || !reveal || !started) return;
 
     if (state.muted) {
       ambient.pause();
+      reveal.pause();
       return;
     }
 
+    if (state.stage === 'reveal') {
+      ambient.pause();
+      reveal.volume = REVEAL_VOLUME;
+      reveal.currentTime = 0;
+      void reveal.play().catch(() => undefined);
+      return;
+    }
+
+    reveal.pause();
+    ambient.volume = AMBIENT_VOLUME;
     void ambient.play().catch(() => undefined);
-  }, [started, state.muted]);
-
-  useEffect(() => {
-    const reveal = revealRef.current;
-    if (!reveal || !started || state.stage !== 'reveal' || state.muted) return;
-
-    reveal.currentTime = 0;
-    void reveal.play().catch(() => undefined);
   }, [started, state.muted, state.stage]);
 
   const copy = getStageCopy(state);
-  const actionLabel = started ? copy.actionLabel : '启动视觉终端';
 
-  function handleStart() {
-    setStarted(true);
-    sceneRef.current?.setStarted(true);
+  function startAmbientAudio() {
+    const ambient = ambientRef.current;
+    if (!ambient || state.muted) return;
+    ambient.volume = AMBIENT_VOLUME;
+    void ambient.play().catch(() => undefined);
   }
 
-  function handleAction() {
-    if (!started) {
-      handleStart();
-      return;
-    }
+  function handleStart() {
+    if (!ready || error || started || entryDeparting) return;
+    startAmbientAudio();
+    setEntryDeparting(true);
+    sceneRef.current?.setStarted(true, () => {
+      setStarted(true);
+      setEntryDeparting(false);
+    });
+  }
 
+  function handleVisionActivate() {
+    if (!ready || error || !started || entryDeparting || state.stage === 'reveal') return;
     const action = ACTION_BY_STAGE[state.stage];
-    if (action === 'RESET') {
-      sceneRef.current?.reset();
-    }
-    dispatch(action);
+    if (action) dispatch(action);
+  }
+
+  function handleReset() {
+    if (!ready) return;
+    sceneRef.current?.reset();
+    dispatch('RESET');
   }
 
   function handleMute() {
@@ -148,32 +166,53 @@ export default function PixiVisionPage() {
   }
 
   return (
-    <main className="pixi-page" data-stage={state.stage} data-started={started}>
+    <main className="pixi-page" data-stage={state.stage} data-started={started} data-entry-departing={entryDeparting} aria-label="视觉筛查体验">
       <div ref={canvasHostRef} className="pixi-canvas-host" aria-hidden="true" />
 
       <div className="pixi-ui">
-        <div className="pixi-brand">ORIGINUM / PRTS</div>
         <Link className="pixi-back" to="/">
           ORIGINAL DOM
         </Link>
         <button
-          className="pixi-sound"
+          className="pixi-sound-hit"
           type="button"
           onClick={handleMute}
+          aria-pressed={state.muted}
           aria-label={state.muted ? '打开声音' : '关闭声音'}
+          disabled={!started || !ready}
         >
-          {state.muted ? 'SOUND / OFF' : 'SOUND / ON'}
+          <span className="pixi-sr-only">{state.muted ? '打开声音' : '关闭声音'}</span>
         </button>
       </div>
 
-      <div className="pixi-controls">
-        <button className="pixi-primary" type="button" onClick={handleAction} disabled={Boolean(error)}>
-          {actionLabel}
-        </button>
-      </div>
+      <button
+        className="pixi-hit pixi-entry-hit"
+        type="button"
+        onClick={handleStart}
+        disabled={started || entryDeparting || !ready || Boolean(error)}
+        aria-label="开始验光"
+      />
 
-      <p className="pixi-sr-only" aria-live="polite">
-        {copy.eyebrow}。{copy.title}。{copy.note}
+      <button
+        className="pixi-hit pixi-vision-hit"
+        type="button"
+        onClick={handleVisionActivate}
+        disabled={!started || entryDeparting || !ready || Boolean(error) || state.stage === 'reveal'}
+        aria-label={copy.actionLabel}
+      />
+
+      {state.stage === 'reveal' && (
+        <button
+          className="pixi-hit pixi-reset-hit"
+          type="button"
+          onClick={handleReset}
+          disabled={!ready}
+          aria-label="重置并返回第一个画面"
+        />
+      )}
+
+      <p className="pixi-sr-only" aria-live="polite" aria-atomic="true">
+        {entryDeparting ? '正在进入验光界面。' : `${copy.eyebrow}。${copy.title}。${copy.note}`}
       </p>
 
       {error && <p className="pixi-error">{error}</p>}
