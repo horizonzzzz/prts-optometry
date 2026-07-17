@@ -5,6 +5,7 @@ import rhodesAsset from '../../assets/official-rhodes-island.png';
 import particleAsset from '../../assets/particle.f4b76a4f.png';
 import portraitAsset from '../../assets/prts-close.jpg';
 import houseAsset from '../../assets/vision-house.jpg';
+import { gsap } from 'gsap';
 import {
   Application,
   Assets,
@@ -154,6 +155,10 @@ export function getCopyHeight(height: number, reveal: boolean) {
   return 154;
 }
 
+export function getSoundBarHeights(muted: boolean) {
+  return muted ? [2, 2, 2] : [5, 12, 8];
+}
+
 export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion, onEntryReady }: SceneOptions) {
   const app = new Application();
   try {
@@ -229,7 +234,15 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   const stageCodeBg = new Graphics();
   const stageCode = addText('01 / 04', new TextStyle({ fill: 0xf3f5f4, fontFamily: 'Bender, sans-serif', fontSize: 10, fontWeight: '700', letterSpacing: 1.2 }));
   const soundLabel = addText('SOUND', new TextStyle({ fill: 0x59666b, fontFamily: 'Bender, sans-serif', fontSize: 8, letterSpacing: 1.2 }));
-  const soundBars = new Graphics();
+  const soundBars = new Container();
+  const soundBarItems = [0, 1, 2].map((index) => {
+    const bar = new Graphics().rect(0, -6, 2, 12).fill(0xffffff);
+    bar.position.x = index * 4;
+    bar.alpha = 0.78;
+    bar.roundPixels = true;
+    soundBars.addChild(bar);
+    return bar;
+  });
   const railLeft = addText('RI-07', new TextStyle({ fill: 0x59666b, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.2 }));
   const railMiddle = addText('OPTICAL CONTROL', new TextStyle({ fill: 0x59666b, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.2 }));
   const railRight = addText('PRTS // LIVE', new TextStyle({ fill: 0x59666b, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.2 }));
@@ -403,6 +416,8 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   let entryBootComplete = false;
   let entryButtonBaseY = 0;
   let entryReticleBaseScale = 1;
+  let currentMuted: boolean | null = null;
+  let soundTimeline: gsap.core.Timeline | null = null;
 
   function drawScreenGrid(graphics: Graphics, x: number, y: number, gridWidth: number, gridHeight: number, alpha: number) {
     graphics.clear();
@@ -599,8 +614,11 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     setCssVar(host, '--pixi-vision-left', visionX - visionWidth / 2);
     setCssVar(host, '--pixi-vision-top', visionY - visionWidth / 2);
     setCssVar(host, '--pixi-vision-size', visionWidth);
-    setCssVar(host, '--pixi-sound-left', panelX + panelWidth - padding - 42);
-    setCssVar(host, '--pixi-sound-top', currentStage === 'reveal' ? 15 : 15);
+    const soundRight = panelX + panelWidth - padding;
+    const soundLeft = soundRight - soundLabel.width - 24;
+    setCssVar(host, '--pixi-sound-left', soundLeft);
+    setCssVar(host, '--pixi-sound-top', 2);
+    setCssVar(host, '--pixi-sound-width', soundRight - soundLeft);
   }
 
   function drawCopy(copyTopValue: number, contentWidth: number, contentX: number) {
@@ -802,7 +820,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     topBar.rect(panelX, 0, panelWidth, headerHeight).fill({ color: currentStage === 'reveal' ? COLORS.night : COLORS.graphite, alpha: currentStage === 'reveal' ? 0.15 : 1 });
     topBar.rect(panelX, headerHeight - 4, panelWidth, 4).fill({ color: currentStage === 'reveal' ? COLORS.night : COLORS.graphite, alpha: 1 });
     topAccent.clear().rect(panelX + panelWidth * 0.76, headerHeight - 4, panelWidth * 0.24, 4).fill({ color: COLORS.cyan, alpha: currentStage === 'reveal' ? 0 : 1 });
-    rhodes.position.set(panelX + padding + 15, 15);
+    rhodes.position.set(panelX + padding + 15, 27);
     rhodes.anchor.set(0.5);
     rhodes.scale.set(30 / (rhodes.texture.width || 1), 26 / (rhodes.texture.height || 1));
     rhodes.tint = currentStage === 'reveal' ? COLORS.ice : 0xf4f6f5;
@@ -815,10 +833,10 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     stageCode.style.fill = currentStage === 'reveal' ? 0x9aa9a6 : COLORS.graphite;
     stageCode.style.fontSize = 10;
     stageCodeBg.clear().rect(panelX + panelWidth - padding - 130, 12, 73, 24).fill({ color: currentStage === 'reveal' ? COLORS.graphite : COLORS.cyan, alpha: 1 });
-    soundBars.position.set(panelX + panelWidth - padding - 34, 22);
-    soundLabel.position.set(panelX + panelWidth - padding - 12, 20);
+    soundLabel.position.set(panelX + panelWidth - padding, 20);
     soundLabel.anchor.set(1, 0);
-    soundLabel.style.fill = currentStage === 'reveal' ? 0x9aa9a6 : 0xbac6c3;
+    soundBars.position.set(soundLabel.x - soundLabel.width - 16, 24);
+    soundLabel.style.fill = currentMuted ? COLORS.red : currentStage === 'reveal' ? 0x9aa9a6 : 0xbac6c3;
     railLeft.position.set(panelX + padding, headerHeight + 7);
     railMiddle.position.set(panelX + panelWidth / 2 - 52, headerHeight + 7);
     railRight.position.set(panelX + panelWidth - padding - 63, headerHeight + 7);
@@ -862,9 +880,9 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     entryKicker.position.set(entryContentX, height * 0.27);
     entryTitle.position.set(entryContentX, height * 0.31);
     entryTitle.style.fontSize = Math.min(126, Math.max(78, width * 0.25));
-    entryChinese.position.set(entryContentX, height * 0.31 + Math.min(126, Math.max(78, width * 0.25)) * 0.72 + 18);
+    entryChinese.position.set(entryContentX, height * 0.31 + Math.min(126, Math.max(78, width * 0.25)) * 0.72 + 28);
     entryChinese.style.fontSize = Math.min(50, Math.max(34, width * 0.1));
-    entryIntro.position.set(entryContentX + 12, height * 0.31 + Math.min(126, Math.max(78, width * 0.25)) * 0.72 + 72);
+    entryIntro.position.set(entryContentX + 12, height * 0.31 + Math.min(126, Math.max(78, width * 0.25)) * 0.72 + 82);
     entryIntro.style.wordWrapWidth = Math.min(entryContentWidth * 0.58, 340);
     entryButton.position.set(entryContentX, entryButtonY);
     drawEntryButton(entryContentX, entryButtonY, entryButtonWidth);
@@ -1117,15 +1135,34 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   }
 
   function setMuted(muted: boolean) {
-    soundBars.clear();
-    const values = muted ? [2, 2, 2] : [5, 12, 8];
-    values.forEach((barHeight, index) => soundBars.rect(index * 4, 12 - barHeight / 2, 2, barHeight).fill({ color: muted ? COLORS.red : COLORS.pale, alpha: 0.78 }));
+    const animate = currentMuted !== null && currentMuted !== muted && !currentReducedMotion;
+    const heights = getSoundBarHeights(muted);
+    currentMuted = muted;
+    soundTimeline?.kill();
+    soundTimeline = null;
+    soundBarItems.forEach((bar) => { bar.tint = muted ? COLORS.red : COLORS.pale; });
+    soundLabel.style.fill = muted ? COLORS.red : currentStage === 'reveal' ? 0x9aa9a6 : 0xbac6c3;
+
+    if (!animate) {
+      soundBarItems.forEach((bar, index) => { bar.scale.y = heights[index] / 12; });
+      if (currentReducedMotion) app.render();
+      return;
+    }
+
+    const scales = soundBarItems.map((bar) => bar.scale);
+    soundTimeline = gsap.timeline({ onComplete: () => { soundTimeline = null; } })
+      .to(scales, { y: 0.12, duration: 0.08, stagger: 0.018, ease: 'power2.in' })
+      .to(scales, { y: (index: number) => heights[index] / 12, duration: 0.24, stagger: 0.035, ease: 'back.out(2.1)' }, '<0.035')
+      .fromTo(soundLabel, { alpha: 0.45 }, { alpha: 1, duration: 0.18, ease: 'power2.out', immediateRender: false }, 0.04);
   }
 
   function setReducedMotion(reducedMotion: boolean) {
     currentReducedMotion = reducedMotion;
     window.clearTimeout(flashTimer);
     if (reducedMotion) {
+      soundTimeline?.kill();
+      soundTimeline = null;
+      setMuted(currentMuted ?? false);
       loopActive = false;
       window.cancelAnimationFrame(frameRequest);
       applyImmediate(currentStage);
@@ -1239,6 +1276,8 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     reset,
     destroy() {
       destroyed = true;
+      soundTimeline?.kill();
+      soundTimeline = null;
       window.clearTimeout(flashTimer);
       loopActive = false;
       window.cancelAnimationFrame(frameRequest);

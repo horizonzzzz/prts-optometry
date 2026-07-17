@@ -77,8 +77,8 @@
   position: absolute;
   top: var(--pixi-sound-top, 15px);
   left: var(--pixi-sound-left, 300px);
-  width: 58px;
-  height: 32px;
+  width: var(--pixi-sound-width, 58px);
+  height: 44px;
   padding: 0;
   border: 0;
   background: transparent;
