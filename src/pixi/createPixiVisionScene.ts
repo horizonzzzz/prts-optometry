@@ -49,9 +49,34 @@ const STAGE_ACCENTS: Record<Stage, number> = {
   reveal: COLORS.ice,
 };
 
+const ENTRY_BOOT_DURATION = 1080;
+
+function phase(elapsedMs: number, delay: number, duration: number) {
+  return Math.min(Math.max((elapsedMs - delay) / duration, 0), 1);
+}
+
+function easeOutCubic(progress: number) {
+  return 1 - Math.pow(1 - progress, 3);
+}
+
+export function getEntryBootState(elapsedMs: number) {
+  return {
+    aperture: easeOutCubic(phase(elapsedMs, 80, 420)),
+    chrome: easeOutCubic(phase(elapsedMs, 300, 360)),
+    title: easeOutCubic(phase(elapsedMs, 420, 360)),
+    reticle: easeOutCubic(phase(elapsedMs, 240, 520)),
+    action: easeOutCubic(phase(elapsedMs, 680, 360)),
+    curtain: 1 - easeOutCubic(phase(elapsedMs, 120, 380)),
+    line: easeOutCubic(phase(elapsedMs, 60, 240)),
+    lineAlpha: 1 - phase(elapsedMs, 300, 260),
+    complete: elapsedMs >= ENTRY_BOOT_DURATION,
+  };
+}
+
 type SceneOptions = {
   host: HTMLElement;
   reducedMotion: boolean;
+  onEntryReady?: () => void;
 };
 
 export type PixiVisionScene = {
@@ -129,7 +154,7 @@ export function getCopyHeight(height: number, reveal: boolean) {
   return 154;
 }
 
-export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion }: SceneOptions) {
+export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion, onEntryReady }: SceneOptions) {
   const app = new Application();
   try {
     await app.init({
@@ -181,6 +206,8 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   const mainChrome = new Container();
   const entryLayer = new Container();
   const entryChrome = new Container();
+  const entryBootCurtain = new Graphics();
+  const entryBootLine = new Graphics();
   const flash = new Graphics();
 
   const mainBackdrop = new Sprite(gridTexture);
@@ -305,7 +332,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   const entryFooterRight = addText('●  TERMINAL READY', new TextStyle({ fill: 0xd4e0dd, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.15 }));
   const entryOptical = addText('OPTICAL', new TextStyle({ fill: 0xe8edeb, fontFamily: 'Novecento, Bender, sans-serif', fontSize: 78, letterSpacing: -3 }));
 
-  app.stage.addChild(outsideBackground, mainLayer, entryLayer, flash);
+  app.stage.addChild(outsideBackground, mainLayer, entryLayer, entryBootCurtain, entryBootLine, flash);
   mainLayer.addChild(mainBackdrop, mainShade, mainMask, mainDiagonal, mainGrid, stageGlow, mainBody, mainCopy, mainChrome, mainGrain, mainScanline, mainFilter);
   mainBody.addChild(bodyBorder, bodyNumber, metaTopDot, metaTop, metaRuleTop, metaSignal, metaBottomDot, metaBottom, metaRuleBottom, metaPhase, haloShadow, halo, houseGroup, revealGroup, moduleTag, moduleText);
   mainCopy.addChild(copyBackground, copyBorder, copyAccent, copyHeading, copyIndex, copyTitle, copyNote, resetButton, resetLabel, resetCode, screeningNote);
@@ -372,6 +399,10 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   let handoffRequest = 0;
   let handoffComplete: (() => void) | undefined;
   let stageTime = 0;
+  let entryBootStartedAt = 0;
+  let entryBootComplete = false;
+  let entryButtonBaseY = 0;
+  let entryReticleBaseScale = 1;
 
   function drawScreenGrid(graphics: Graphics, x: number, y: number, gridWidth: number, gridHeight: number, alpha: number) {
     graphics.clear();
@@ -670,6 +701,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     const entryContentWidth = Math.min(width - entryContentX * 2, 680);
     const entryButtonWidth = Math.min(entryContentWidth, 350);
     const entryButtonY = Math.min(height - 118, Math.max(height * 0.67, height - 208));
+    entryButtonBaseY = entryButtonY;
 
     outsideBackground.clear().rect(0, 0, width, height).fill({ color: COLORS.clinic });
     fitCover(mainBackdrop, panelX + panelWidth / 2, height / 2, panelWidth, height);
@@ -806,6 +838,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     entryBackdrop.position.set(width / 2, height / 2);
     entryBackdrop.anchor.set(0.5);
     entryBackdrop.scale.set(Math.max(width / (entryBackdrop.texture.width || 1), height / (entryBackdrop.texture.height || 1)));
+    entryLayer.origin.set(width / 2, height / 2);
     entryShade.clear().rect(0, 0, width, height).fill({ color: COLORS.night, alpha: 0.78 });
     drawEntryGrid();
     entryRule.clear();
@@ -839,14 +872,70 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     entryOptical.rotation = Math.PI / 2;
     entryOptical.alpha = 0.08;
     entryReticle.position.set(entryContentX + entryContentWidth * 0.97, height * 0.43);
-    entryReticle.scale.set(Math.min(width * 0.69, 300) / 300);
+    entryReticleBaseScale = Math.min(width * 0.69, 300) / 300;
+    entryReticle.scale.set(entryReticleBaseScale);
     entryReticle.alpha = 0.82;
     drawEntryReticle(300);
     entryFooterLeft.position.set(entryContentX, height - 43);
     entryFooterRight.position.set(entryContentX + entryContentWidth - 130, height - 43);
     updateLayoutVars(entryContentX, entryButtonY, entryButtonWidth, panelX + panelWidth / 2, visualY, frameSize);
+    entryBootCurtain.clear().rect(0, 0, width, height).fill({ color: COLORS.night, alpha: 1 });
+    entryBootLine.clear();
+    entryBootLine.rect(-entryContentWidth / 2, -1, entryContentWidth, 2).fill({ color: COLORS.teal, alpha: 0.92 });
+    entryBootLine.rect(entryContentWidth * 0.21, -2, entryContentWidth * 0.14, 4).fill({ color: COLORS.yellow, alpha: 0.96 });
+    entryBootLine.position.set(width / 2, height / 2);
     flash.clear().rect(0, 0, width, height).fill({ color: 0xeffff8, alpha: 1 });
     flash.alpha = 0;
+  }
+
+  function finishEntryBoot() {
+    if (entryBootComplete) return;
+    entryBootComplete = true;
+    entryLayer.alpha = 1;
+    entryLayer.scale.set(1);
+    entryChrome.alpha = 1;
+    entryChrome.y = 0;
+    entryKicker.alpha = 1;
+    entryTitle.alpha = 1;
+    entryTitle.scale.set(1);
+    entryChinese.alpha = 1;
+    entryIntro.alpha = 1;
+    entryButton.alpha = 1;
+    entryButton.y = entryButtonBaseY;
+    entryReticle.alpha = 0.82;
+    entryReticle.scale.set(entryReticleBaseScale);
+    entryOptical.alpha = 0.08;
+    entryFooterLeft.alpha = 1;
+    entryFooterRight.alpha = 1;
+    entryBootCurtain.visible = false;
+    entryBootLine.visible = false;
+    onEntryReady?.();
+  }
+
+  function applyEntryBoot(elapsedMs: number) {
+    const boot = getEntryBootState(elapsedMs);
+    entryLayer.alpha = 0.28 + boot.aperture * 0.72;
+    entryLayer.scale.set(1.02 - boot.aperture * 0.02, 0.018 + boot.aperture * 0.982);
+    entryChrome.alpha = boot.chrome;
+    entryChrome.y = 8 * (1 - boot.chrome);
+    entryKicker.alpha = boot.title;
+    entryTitle.alpha = boot.title;
+    entryTitle.scale.set(0.96 + boot.title * 0.04);
+    entryChinese.alpha = boot.title;
+    entryIntro.alpha = boot.action;
+    entryButton.alpha = boot.action;
+    entryButton.y = entryButtonBaseY + 14 * (1 - boot.action);
+    entryReticle.alpha = 0.82 * boot.reticle;
+    entryReticle.scale.set(entryReticleBaseScale * (0.72 + boot.reticle * 0.28));
+    entryOptical.alpha = 0.08 * boot.reticle;
+    entryFooterLeft.alpha = boot.action;
+    entryFooterRight.alpha = boot.action;
+    entryBootCurtain.visible = true;
+    entryBootCurtain.alpha = boot.curtain;
+    entryBootLine.visible = boot.lineAlpha > 0;
+    entryBootLine.alpha = boot.lineAlpha;
+    entryBootLine.scale.x = boot.line;
+    if (boot.complete) finishEntryBoot();
   }
 
   function updateCopy(stage: Stage) {
@@ -973,6 +1062,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     window.cancelAnimationFrame(handoffRequest);
     handoffRequest = 0;
     handoffComplete = nextStarted ? onComplete : undefined;
+    if (!entryBootComplete) finishEntryBoot();
 
     if (!nextStarted) {
       entryLayer.visible = true;
@@ -1040,6 +1130,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
       window.cancelAnimationFrame(frameRequest);
       applyImmediate(currentStage);
       layout();
+      finishEntryBoot();
       if (handoffComplete) finishHandoff();
       else app.render();
     } else {
@@ -1054,6 +1145,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
 
   function tick() {
     if (currentReducedMotion || destroyed) return;
+    if (!entryBootComplete) applyEntryBoot(performance.now() - entryBootStartedAt);
     time += 0.016;
     stageTime += 0.016;
     if (currentStage === 'calibrate') {
@@ -1129,8 +1221,15 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   applyImmediate('intro');
   mainLayer.visible = false;
   entryLayer.visible = true;
-  if (currentReducedMotion) app.render();
-  else startLoop();
+  if (currentReducedMotion) {
+    finishEntryBoot();
+    app.render();
+  } else {
+    entryBootStartedAt = performance.now();
+    applyEntryBoot(0);
+    app.render();
+    startLoop();
+  }
 
   return {
     setStarted,

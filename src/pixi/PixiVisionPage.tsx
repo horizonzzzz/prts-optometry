@@ -23,6 +23,7 @@ export default function PixiVisionPage() {
   const [state, dispatch] = useReducer(advanceState, undefined, createInitialState);
   const [started, setStarted] = useState(false);
   const [entryDeparting, setEntryDeparting] = useState(false);
+  const [entryReady, setEntryReady] = useState(false);
   const [ready, setReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,7 +73,13 @@ export default function PixiVisionPage() {
 
     let cancelled = false;
 
-    createPixiVisionScene({ host, reducedMotion: reducedMotionRef.current })
+    createPixiVisionScene({
+      host,
+      reducedMotion: reducedMotionRef.current,
+      onEntryReady: () => {
+        if (!cancelled) setEntryReady(true);
+      },
+    })
       .then((scene) => {
         if (cancelled) {
           scene.destroy();
@@ -92,6 +99,7 @@ export default function PixiVisionPage() {
       cancelled = true;
       sceneRef.current?.destroy();
       sceneRef.current = null;
+      setEntryReady(false);
       setReady(false);
     };
   }, []);
@@ -140,7 +148,7 @@ export default function PixiVisionPage() {
   }
 
   function handleStart() {
-    if (!ready || error || started || entryDeparting) return;
+    if (!ready || !entryReady || error || started || entryDeparting) return;
     startAmbientAudio();
     setEntryDeparting(true);
     sceneRef.current?.setStarted(true, () => {
@@ -168,6 +176,7 @@ export default function PixiVisionPage() {
   return (
     <main className="pixi-page" data-stage={state.stage} data-started={started} data-entry-departing={entryDeparting} aria-label="视觉筛查体验">
       <div ref={canvasHostRef} className="pixi-canvas-host" aria-hidden="true" />
+      {!ready && !error && <div className="pixi-loading">PRTS // INITIALIZING OPTICAL ARRAY</div>}
 
       <div className="pixi-ui">
         <Link className="pixi-back" to="/" tabIndex={started ? 0 : -1}>
@@ -189,7 +198,7 @@ export default function PixiVisionPage() {
         className="pixi-hit pixi-entry-hit"
         type="button"
         onClick={handleStart}
-        disabled={started || entryDeparting || !ready || Boolean(error)}
+        disabled={started || entryDeparting || !ready || !entryReady || Boolean(error)}
         aria-label="开始验光"
       />
 
