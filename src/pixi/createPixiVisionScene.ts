@@ -31,7 +31,15 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
 
   let textures;
   try {
-    textures = await loadVisionSceneTextures();
+    [textures] = await Promise.all([
+      loadVisionSceneTextures(),
+      document.fonts.load('400 16px Bender', 'PRTS'),
+      document.fonts.load('700 16px Bender', 'PRTS'),
+      document.fonts.load('400 16px Novecento', 'OPTICAL'),
+      document.fonts.load('700 16px Novecento', '01'),
+      document.fonts.load('400 16px SourceHan', '验光终端'),
+      document.fonts.load('700 16px SourceHan', '视觉回收完成'),
+    ]);
   } catch (error) {
     const canvas = app.canvas;
     app.destroy({ removeView: true }, { children: true });

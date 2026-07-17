@@ -11,8 +11,8 @@ $color-night: #0d1112;
 $color-ice: #dce9e4;
 
 $font-sans: SourceHan, 'Noto Sans SC', sans-serif;
-$font-display: Bender, 'Arial Narrow', sans-serif;
-$font-wide: Novecento, Bender, sans-serif;
+$font-display: Bender, 'Arial Narrow', SourceHan, 'Noto Sans SC', sans-serif;
+$font-wide: Novecento, Bender, SourceHan, 'Noto Sans SC', sans-serif;
 
 :root {
   --clinic: #dce1e2;
@@ -26,6 +26,6 @@ $font-wide: Novecento, Bender, sans-serif;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --sans: SourceHan, 'Noto Sans SC', sans-serif;
-  --display: Bender, 'Arial Narrow', sans-serif;
-  --wide: Novecento, Bender, sans-serif;
+  --display: Bender, 'Arial Narrow', SourceHan, 'Noto Sans SC', sans-serif;
+  --wide: Novecento, Bender, SourceHan, 'Noto Sans SC', sans-serif;
 }

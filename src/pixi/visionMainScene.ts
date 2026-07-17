@@ -131,10 +131,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const copyBackground = new Graphics();
   const copyAccent = new Graphics();
   const copyBorder = new Graphics();
-  const copyHeading = addText('INTAKE / 远距辨认', new TextStyle({ fill: COLORS.cyan, fontFamily: 'Bender, Source Han Sans SC, sans-serif', fontSize: 8, letterSpacing: 1.1 }));
+  const copyHeading = addText('INTAKE / 远距辨认', new TextStyle({ fill: COLORS.cyan, fontFamily: "Bender, 'Arial Narrow', SourceHan, 'Noto Sans SC', sans-serif", fontSize: 8, letterSpacing: 1.1 }));
   const copyIndex = addText('01', new TextStyle({ fill: COLORS.graphite, fontFamily: 'Novecento, Bender, sans-serif', fontSize: 26, fontWeight: '700' }));
-  const copyTitle = addText('请注视远处的房屋', new TextStyle({ fill: COLORS.graphite, fontFamily: 'Novecento, Source Han Sans SC, sans-serif', fontSize: 40, fontWeight: '700', letterSpacing: 1, lineHeight: 42, wordWrap: true }));
-  const copyNote = addText('保持手机距离，确认房屋轮廓', new TextStyle({ fill: COLORS.muted, fontFamily: 'Source Han Sans SC, sans-serif', fontSize: 13, letterSpacing: 0.5, lineHeight: 20, wordWrap: true }));
+  const copyTitle = addText('请注视远处的房屋', new TextStyle({ fill: COLORS.graphite, fontFamily: "Novecento, Bender, SourceHan, 'Noto Sans SC', sans-serif", fontSize: 40, fontWeight: '700', letterSpacing: 1, lineHeight: 42, wordWrap: true }));
+  const copyNote = addText('保持手机距离，确认房屋轮廓', new TextStyle({ fill: COLORS.muted, fontFamily: "SourceHan, 'Noto Sans SC', sans-serif", fontSize: 13, letterSpacing: 0.5, lineHeight: 20, wordWrap: true }));
   const screeningNote = addText('FICTIONAL VISUAL EFFECT / NOT A MEDICAL TEST', new TextStyle({ fill: 0x627176, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.2 }));
   const resetButton = new Graphics();
   const resetLabel = addText('RESET', new TextStyle({ fill: COLORS.night, fontFamily: 'Bender, sans-serif', fontSize: 10, fontWeight: '700', letterSpacing: 1.5 }));

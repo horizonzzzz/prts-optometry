@@ -28,13 +28,13 @@ export function createVisionEntryScene({ textures, onReady }: EntrySceneOptions)
   const sequence = addText('SYS / 00', new TextStyle({ fill: COLORS.night, fontFamily: 'Bender, sans-serif', fontSize: 7, fontWeight: '700', letterSpacing: 1.1 }));
   const kicker = addText('RHODES ISLAND / OPTICAL SERVICE', new TextStyle({ fill: COLORS.teal, fontFamily: 'Bender, sans-serif', fontSize: 8, letterSpacing: 1.35 }));
   const title = addText('PRTS', new TextStyle({ fill: { color: 0x101516, alpha: 0.2 }, stroke: { color: 0xe8edeb, width: 1 }, fontFamily: 'Novecento, Bender, sans-serif', fontSize: 100, fontWeight: '700', letterSpacing: -5 }));
-  const chinese = addText('验光终端', new TextStyle({ fill: 0xe8edeb, fontFamily: 'Source Han Sans SC, sans-serif', fontSize: 42, letterSpacing: 8 }));
-  const intro = addText('保持设备与双眼平齐，进入后请注视视野中央。', new TextStyle({ fill: 0xb4c0be, fontFamily: 'Source Han Sans SC, sans-serif', fontSize: 12, letterSpacing: 0.7, lineHeight: 22, wordWrap: true }));
+  const chinese = addText('验光终端', new TextStyle({ fill: 0xe8edeb, fontFamily: "SourceHan, 'Noto Sans SC', sans-serif", fontSize: 42, letterSpacing: 8 }));
+  const intro = addText('保持设备与双眼平齐，进入后请注视视野中央。', new TextStyle({ fill: 0xb4c0be, fontFamily: "SourceHan, 'Noto Sans SC', sans-serif", fontSize: 12, letterSpacing: 0.7, lineHeight: 22, wordWrap: true }));
   const button = new Container({ label: 'entry-action' });
   const buttonShadow = new Graphics();
   const buttonBg = new Graphics();
   const buttonIndex = addText('01', new TextStyle({ fill: COLORS.night, fontFamily: 'Bender, sans-serif', fontSize: 10, fontWeight: '700', letterSpacing: 1 }));
-  const buttonLabel = addText('开始验光', new TextStyle({ fill: COLORS.night, fontFamily: 'Source Han Sans SC, sans-serif', fontSize: 16, letterSpacing: 2 }));
+  const buttonLabel = addText('开始验光', new TextStyle({ fill: COLORS.night, fontFamily: "SourceHan, 'Noto Sans SC', sans-serif", fontSize: 16, letterSpacing: 2 }));
   const buttonHint = addText('BEGIN OPTICAL TEST', new TextStyle({ fill: COLORS.night, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.25 }));
   const buttonArrow = addText('→', new TextStyle({ fill: COLORS.night, fontFamily: 'Bender, sans-serif', fontSize: 23 }));
   const reticle = new Container({ label: 'entry-reticle' });
