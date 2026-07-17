@@ -5,7 +5,7 @@
   overflow: hidden;
   color: #171c1f;
   background: #dce1e2;
-  font-family: 'SourceHan', 'Source Han Sans SC', sans-serif;
+  font-family: var(--sans);
   isolation: isolate;
 }
 
@@ -16,7 +16,7 @@
   place-items: center;
   color: #5dd5de;
   background: #101516;
-  font-family: 'Bender', sans-serif;
+  font-family: var(--display);
   font-size: 11px;
   letter-spacing: 0.18em;
   z-index: 2;
@@ -53,7 +53,7 @@
   top: calc(16px + var(--safe-top, 0px));
   right: max(18px, env(safe-area-inset-right));
   color: rgba(23, 28, 31, 0.58);
-  font-family: 'Bender', sans-serif;
+  font-family: var(--display);
   font-size: 8px;
   letter-spacing: 0.14em;
   text-decoration: none;
