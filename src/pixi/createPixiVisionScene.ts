@@ -122,15 +122,29 @@ function setCssVar(host: HTMLElement, name: string, value: number) {
   host.parentElement?.style.setProperty(name, `${Math.round(value)}px`);
 }
 
+export function getCopyHeight(height: number, reveal: boolean) {
+  if (reveal) return height <= 860 ? 140 : 180;
+  if (height <= 700) return 90;
+  if (height <= 860) return 110;
+  return 154;
+}
+
 export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion }: SceneOptions) {
   const app = new Application();
-  await app.init({
-    antialias: true,
-    autoDensity: true,
-    backgroundAlpha: 0,
-    preference: 'webgl',
-    resolution: 1,
-  });
+  try {
+    await app.init({
+      antialias: true,
+      autoDensity: true,
+      autoStart: false,
+      backgroundAlpha: 0,
+      preference: 'webgl',
+      // ponytail: cap DPR at 2; raise only if visual QA justifies the GPU cost.
+      resolution: Math.min(window.devicePixelRatio || 1, 2),
+    });
+  } catch (error) {
+    app.destroy({ removeView: true }, { children: true });
+    throw error;
+  }
 
   host.appendChild(app.canvas);
   app.canvas.setAttribute('aria-hidden', 'true');
@@ -356,6 +370,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   let frameRequest = 0;
   let flashTimer = 0;
   let handoffRequest = 0;
+  let handoffComplete: (() => void) | undefined;
   let stageTime = 0;
 
   function drawScreenGrid(graphics: Graphics, x: number, y: number, gridWidth: number, gridHeight: number, alpha: number) {
@@ -545,7 +560,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     entryGrid.alpha = 0.9;
   }
 
-  function updateLayoutVars(entryX: number, entryY: number, entryWidth: number, visionX: number, visionY: number, visionWidth: number, resetX: number, resetY: number) {
+  function updateLayoutVars(entryX: number, entryY: number, entryWidth: number, visionX: number, visionY: number, visionWidth: number) {
     setCssVar(host, '--pixi-entry-x', entryX);
     setCssVar(host, '--pixi-entry-y', entryY);
     setCssVar(host, '--pixi-entry-width', entryWidth);
@@ -553,8 +568,6 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     setCssVar(host, '--pixi-vision-left', visionX - visionWidth / 2);
     setCssVar(host, '--pixi-vision-top', visionY - visionWidth / 2);
     setCssVar(host, '--pixi-vision-size', visionWidth);
-    setCssVar(host, '--pixi-reset-left', resetX);
-    setCssVar(host, '--pixi-reset-top', resetY);
     setCssVar(host, '--pixi-sound-left', panelX + panelWidth - padding - 42);
     setCssVar(host, '--pixi-sound-top', currentStage === 'reveal' ? 15 : 15);
   }
@@ -576,15 +589,23 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     }
 
     const textX = reveal ? contentX : contentX + 25;
-    const topPadding = reveal ? 6 : height <= 700 ? 3 : shortScreen ? 7 : 12;
+    const topPadding = reveal ? 6 : veryShortScreen ? 8 : shortScreen ? 14 : 26;
+    const titleOffset = veryShortScreen ? 19 : shortScreen ? 22 : 27;
+    const noteOffset = veryShortScreen ? 49 : shortScreen ? 59 : 86;
     copyHeading.position.set(textX, copyTopValue + topPadding);
     copyIndex.position.set(contentX + contentWidth - (reveal ? 20 : 42), copyTopValue + topPadding - 4);
-    copyTitle.position.set(textX, copyTopValue + topPadding + (reveal ? 23 : 29));
-    copyNote.position.set(textX, copyTopValue + topPadding + (reveal ? 67 : 73));
-    screeningNote.position.set(textX, copyTopValue + copyHeight - (veryShortScreen ? 12 : shortScreen ? 15 : 19));
-    const titleSize = reveal ? Math.min(42, Math.max(27, width * 0.074)) : veryShortScreen ? 28 : shortScreen ? 34 : 40;
+    copyTitle.position.set(textX, copyTopValue + topPadding + (reveal ? 15 : titleOffset));
+    copyNote.position.set(textX, copyTopValue + topPadding + (reveal ? 67 : noteOffset));
+    screeningNote.position.set(textX, copyTopValue + copyHeight - (veryShortScreen ? 5 : shortScreen ? 7 : 9));
+    const titleSize = reveal
+      ? Math.min(42, Math.max(27, width * 0.074))
+      : veryShortScreen
+        ? Math.min(30, Math.max(22, width * 0.06))
+        : shortScreen
+          ? Math.min(36, Math.max(25, width * 0.07))
+          : Math.min(42, Math.max(27, width * 0.074));
     copyTitle.style.fontSize = titleSize;
-    copyTitle.style.lineHeight = reveal ? Math.round(titleSize * 1.02) : veryShortScreen ? 30 : shortScreen ? 36 : 42;
+    copyTitle.style.lineHeight = Math.round(titleSize * 1.02);
     copyTitle.style.wordWrapWidth = contentWidth - (reveal ? 12 : 38);
     copyNote.style.wordWrapWidth = contentWidth - (reveal ? 12 : 38);
     copyIndex.style.fontSize = reveal ? 8 : veryShortScreen ? 22 : shortScreen ? 22 : 26;
@@ -609,6 +630,8 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
       resetButton.position.set(resetX, resetY);
       resetLabel.position.set(resetX + 12, resetY + 12);
       resetCode.position.set(resetX + 61, resetY + 14);
+      setCssVar(host, '--pixi-reset-left', resetX);
+      setCssVar(host, '--pixi-reset-top', resetY);
       setCssVar(host, '--pixi-reset-width', resetWidth);
       setCssVar(host, '--pixi-reset-height', resetHeight);
     }
@@ -629,9 +652,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     const headerHeight = currentStage === 'reveal' ? 45 : height <= 700 ? 49 : 58;
     const railHeight = currentStage === 'reveal' ? 0 : 19;
     bodyTop = (height <= 700 ? 10 : 16) + headerHeight + railHeight;
-    const copyHeight = currentStage === 'reveal'
-      ? height <= 700 ? 180 : height <= 860 ? 200 : 180
-      : height <= 700 ? 120 : height <= 860 ? 140 : 154;
+    const copyHeight = getCopyHeight(height, currentStage === 'reveal');
     copyTop = Math.max(bodyTop + 230, height - bottomPadding - copyHeight);
     const bodyBottom = copyTop;
     const stageCenterY = (bodyTop + bodyBottom) / 2;
@@ -823,7 +844,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     drawEntryReticle(300);
     entryFooterLeft.position.set(entryContentX, height - 43);
     entryFooterRight.position.set(entryContentX + entryContentWidth - 130, height - 43);
-    updateLayoutVars(entryContentX, entryButtonY, entryButtonWidth, panelX + panelWidth / 2, visualY, frameSize, panelX + padding, copyTop + 95);
+    updateLayoutVars(entryContentX, entryButtonY, entryButtonWidth, panelX + panelWidth / 2, visualY, frameSize);
     flash.clear().rect(0, 0, width, height).fill({ color: 0xeffff8, alpha: 1 });
     flash.alpha = 0;
   }
@@ -931,8 +952,27 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     if (stage === 'reveal' && !currentReducedMotion) triggerRevealFlash();
   }
 
+  function finishHandoff() {
+    window.cancelAnimationFrame(handoffRequest);
+    handoffRequest = 0;
+    mainLayer.visible = true;
+    mainLayer.alpha = 1;
+    entryLayer.visible = false;
+    entryLayer.alpha = 1;
+    entryChrome.alpha = 1;
+    entryChrome.y = 0;
+    entryReticle.scale.set(1);
+    entryReticle.alpha = 0.82;
+    app.render();
+    const onComplete = handoffComplete;
+    handoffComplete = undefined;
+    onComplete?.();
+  }
+
   function setStarted(nextStarted: boolean, onComplete?: () => void) {
     window.cancelAnimationFrame(handoffRequest);
+    handoffRequest = 0;
+    handoffComplete = nextStarted ? onComplete : undefined;
 
     if (!nextStarted) {
       entryLayer.visible = true;
@@ -949,12 +989,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     }
 
     if (currentReducedMotion) {
-      mainLayer.visible = true;
-      mainLayer.alpha = 1;
-      entryLayer.visible = false;
-      entryLayer.alpha = 1;
-      app.render();
-      onComplete?.();
+      finishHandoff();
       return;
     }
 
@@ -985,14 +1020,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
         return;
       }
 
-      entryLayer.visible = false;
-      entryLayer.alpha = 1;
-      entryChrome.alpha = 1;
-      entryChrome.y = 0;
-      entryReticle.scale.set(1);
-      entryReticle.alpha = 0.82;
-      app.render();
-      onComplete?.();
+      finishHandoff();
     };
 
     handoffRequest = window.requestAnimationFrame(handoff);
@@ -1012,7 +1040,8 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
       window.cancelAnimationFrame(frameRequest);
       applyImmediate(currentStage);
       layout();
-      app.render();
+      if (handoffComplete) finishHandoff();
+      else app.render();
     } else {
       setStage(currentStage);
       startLoop();
@@ -1089,7 +1118,10 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     frameRequest = window.requestAnimationFrame(renderFrame);
   }
 
-  const resizeObserver = new ResizeObserver(layout);
+  const resizeObserver = new ResizeObserver(() => {
+    layout();
+    if (currentReducedMotion) app.render();
+  });
   resizeObserver.observe(host);
   updateCopy('intro');
   setMuted(false);
@@ -1112,6 +1144,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
       loopActive = false;
       window.cancelAnimationFrame(frameRequest);
       window.cancelAnimationFrame(handoffRequest);
+      handoffComplete = undefined;
       resizeObserver.disconnect();
       const canvas = app.canvas;
       app.destroy({ removeView: true }, { children: true });

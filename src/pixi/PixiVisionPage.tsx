@@ -170,7 +170,7 @@ export default function PixiVisionPage() {
       <div ref={canvasHostRef} className="pixi-canvas-host" aria-hidden="true" />
 
       <div className="pixi-ui">
-        <Link className="pixi-back" to="/">
+        <Link className="pixi-back" to="/" tabIndex={started ? 0 : -1}>
           ORIGINAL DOM
         </Link>
         <button
