@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCopyHeight, getEntryBootState } from './createPixiVisionScene';
+import { getCopyHeight, getEntryBootState, getSoundBarHeights } from './createPixiVisionScene';
 
 describe('getCopyHeight', () => {
   it('keeps the Pixi copy block aligned with the responsive DOM layout', () => {
@@ -18,5 +18,12 @@ describe('getEntryBootState', () => {
     expect(getEntryBootState(500).title).toBeGreaterThan(0);
     expect(getEntryBootState(500).action).toBe(0);
     expect(getEntryBootState(1080)).toMatchObject({ aperture: 1, chrome: 1, title: 1, action: 1, complete: true });
+  });
+});
+
+describe('getSoundBarHeights', () => {
+  it('maps the audio state to the three stable meter bars', () => {
+    expect(getSoundBarHeights(false)).toEqual([5, 12, 8]);
+    expect(getSoundBarHeights(true)).toEqual([2, 2, 2]);
   });
 });
