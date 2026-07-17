@@ -35,6 +35,59 @@ export function drawDiamond(graphics: Graphics, width: number, height: number, f
   if (fill !== undefined) graphics.fill({ color: fill, alpha });
 }
 
+/** Hollow double-diamond — the PRTS / originium mark. */
+export function drawOriginiumCore(
+  graphics: Graphics,
+  width: number,
+  height: number,
+  color: number,
+  alpha = 1,
+  strokeWidth = 2.4,
+) {
+  graphics.clear();
+  const outer = [
+    [0, -height / 2],
+    [width / 2, 0],
+    [0, height / 2],
+    [-width / 2, 0],
+  ] as const;
+  const innerScale = 0.58;
+  const inner = outer.map(([x, y]) => [x * innerScale, y * innerScale] as const);
+
+  graphics
+    .moveTo(outer[0][0], outer[0][1])
+    .lineTo(outer[1][0], outer[1][1])
+    .lineTo(outer[2][0], outer[2][1])
+    .lineTo(outer[3][0], outer[3][1])
+    .closePath()
+    .stroke({ width: strokeWidth, color, alpha, join: 'miter' });
+
+  graphics
+    .moveTo(inner[0][0], inner[0][1])
+    .lineTo(inner[1][0], inner[1][1])
+    .lineTo(inner[2][0], inner[2][1])
+    .lineTo(inner[3][0], inner[3][1])
+    .closePath()
+    .stroke({ width: strokeWidth * 0.72, color, alpha: alpha * 0.92, join: 'miter' });
+}
+
+export function drawDiamondStroke(
+  graphics: Graphics,
+  width: number,
+  height: number,
+  color: number,
+  alpha: number,
+  strokeWidth: number,
+) {
+  graphics
+    .moveTo(0, -height / 2)
+    .lineTo(width / 2, 0)
+    .lineTo(0, height / 2)
+    .lineTo(-width / 2, 0)
+    .closePath()
+    .stroke({ width: strokeWidth, color, alpha, join: 'miter' });
+}
+
 export function drawPolygon(graphics: Graphics, points: Array<[number, number]>, color: number, alpha: number) {
   graphics.clear().moveTo(points[0][0], points[0][1]);
   for (const [x, y] of points.slice(1)) graphics.lineTo(x, y);

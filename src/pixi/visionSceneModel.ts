@@ -12,6 +12,10 @@ export const COLORS = {
   ice: 0xdce9e4,
   pale: 0xedf2f1,
   yellow: 0xe5c546,
+  // Originium amber — pale gold used by PRTS crystal debris / core marks
+  originium: 0xf0d878,
+  originiumSoft: 0xe8c86a,
+  originiumDeep: 0xc9a84a,
   shadow: 0x080c0e,
 };
 
