@@ -15,7 +15,9 @@ import {
   addText,
   drawDashedCircle,
   drawDiamond,
+  drawDiamondStroke,
   drawLine,
+  drawOriginiumCore,
   drawPolygon,
   fitCover,
   fitStretch,
@@ -117,9 +119,13 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const portrait = new Sprite(textures.portrait);
   const portraitVignette = new Graphics();
   const revealFrame = new Container();
-  const revealGlow = new Graphics();
-  const leftHalf = new Graphics();
-  const rightHalf = new Graphics();
+  const originiumAura = new Graphics();
+  const originiumBody = new Graphics();
+  const originiumShellMask = new Graphics();
+  const originiumRim = new Graphics();
+  const originiumShards = new Graphics();
+  const originiumCoreGlow = new Graphics();
+  const originiumCore = new Graphics();
   const leftEcho = new Graphics();
   const rightEcho = new Graphics();
   const glint = new Graphics();
@@ -127,6 +133,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const revealScan = new Graphics();
   const portraitBlur = new BlurFilter({ strength: 8 });
   const portraitBackdropBlur = new BlurFilter({ strength: 14 });
+  const originiumAuraBlur = new BlurFilter({ strength: 18 });
 
   const copyBackground = new Graphics();
   const copyAccent = new Graphics();
@@ -173,10 +180,29 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   portraitBackdrop.filters = [portraitBackdropBlur];
   portrait.filters = [portraitBlur];
   stageGlow.filters = [stageGlowBlur];
+  originiumAura.filters = [originiumAuraBlur];
   portraitBackdrop.alpha = 0.72;
   portrait.alpha = 0.96;
-  revealFrame.addChild(revealGlow, leftEcho, rightEcho, leftHalf, rightHalf, glint, revealBars, revealScan);
-  revealGroup.addChild(revealPortrait, revealFrame);
+  leftEcho.blendMode = 'screen';
+  rightEcho.blendMode = 'screen';
+  originiumCoreGlow.blendMode = 'add';
+  glint.blendMode = 'add';
+  // Layer order: crystal shell + aura behind portrait, PRTS frame accents on top.
+  originiumShellMask.renderable = true;
+  originiumShellMask.alpha = 0;
+  originiumBody.mask = originiumShellMask;
+  revealGroup.addChild(originiumAura, originiumShellMask, originiumBody, revealPortrait, revealFrame);
+  revealFrame.addChild(
+    leftEcho,
+    rightEcho,
+    originiumRim,
+    originiumShards,
+    glint,
+    originiumCoreGlow,
+    originiumCore,
+    revealBars,
+    revealScan,
+  );
   revealGroup.visible = false;
 
   let width = 1;
@@ -268,41 +294,238 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     return [(x - 160) * scaleX, (y - 180) * scaleY];
   }
 
-  function drawOriginumHalf(graphics: Graphics, side: -1 | 1, scaleX: number, scaleY: number) {
-    const p = (x: number, y: number) => framePoint(x, y, scaleX, scaleY);
-    const shadow = side < 0
-      ? [[153, 13], [18, 169], [18, 191], [153, 347]]
-      : [[167, 13], [302, 169], [302, 191], [167, 347]];
-    const edge = side < 0
-      ? [[[153, 13], [92, 83]], [[73, 105], [18, 169]], [[18, 191], [62, 242]], [[81, 264], [153, 347]]]
-      : [[[167, 13], [231, 87]], [[249, 108], [302, 169]], [[302, 191], [263, 236]], [[244, 258], [167, 347]]];
-    const chips = side < 0
-      ? [[[82, 86], [58, 108], [72, 117]], [[49, 120], [28, 142], [37, 151]], [[61, 250], [76, 267], [62, 278]]]
-      : [[[239, 88], [262, 108], [249, 119]], [[271, 122], [293, 145], [282, 153]], [[258, 247], [245, 263], [258, 275]]];
+  // Originium crystal frame — jagged PRTS-like shell around a diamond aperture.
+  // Design space 320×360, origin mapped through framePoint (center 160,180).
+  // IMPORTANT: every facet must stay OUTSIDE the portrait diamond so the face is never covered.
+  type Facet = {
+    points: Array<[number, number]>;
+    color: number;
+    alpha: number;
+  };
 
-    graphics.clear();
-    for (let index = 0; index < shadow.length; index += 2) {
-      const [start, end] = [p(shadow[index][0], shadow[index][1]), p(shadow[index + 1][0], shadow[index + 1][1])];
-      drawLine(graphics, start[0], start[1], end[0], end[1], 15 * Math.min(scaleX, scaleY), COLORS.shadow, 0.9);
+  // Facets are an outer crown/wings/tip only — clear diamond window in the middle.
+  const ORIGINIUM_FACETS: Facet[] = [
+    // Top crown
+    { points: [[160, 2], [128, 34], [142, 48], [160, 36], [178, 48], [192, 34]], color: 0x0c1014, alpha: 0.94 },
+    { points: [[128, 34], [100, 56], [118, 70], [142, 48]], color: 0x1a222a, alpha: 0.9 },
+    { points: [[192, 34], [178, 48], [202, 70], [220, 56]], color: 0x222b34, alpha: 0.88 },
+    { points: [[142, 36], [132, 50], [160, 58], [160, 40]], color: COLORS.originiumSoft, alpha: 0.28 },
+    { points: [[178, 36], [160, 40], [160, 58], [188, 50]], color: COLORS.originium, alpha: 0.22 },
+
+    // Upper-left outer wing
+    { points: [[100, 56], [62, 98], [74, 128], [108, 108], [118, 70]], color: 0x0a0e12, alpha: 0.92 },
+    { points: [[62, 98], [36, 140], [48, 162], [74, 128]], color: 0x151b22, alpha: 0.9 },
+    { points: [[100, 56], [86, 78], [108, 88], [118, 70]], color: COLORS.originiumSoft, alpha: 0.3 },
+
+    // Upper-right outer wing
+    { points: [[220, 56], [202, 70], [212, 108], [246, 128], [258, 98]], color: 0x12181d, alpha: 0.9 },
+    { points: [[258, 98], [246, 128], [272, 162], [284, 140]], color: 0x1a222a, alpha: 0.88 },
+    { points: [[220, 56], [202, 70], [212, 88], [234, 78]], color: COLORS.originium, alpha: 0.26 },
+
+    // Mid-left blade
+    { points: [[36, 140], [14, 180], [30, 214], [50, 196], [48, 162]], color: 0x0d1116, alpha: 0.94 },
+    { points: [[30, 214], [42, 244], [76, 236], [64, 204], [50, 196]], color: 0x1c252e, alpha: 0.88 },
+    { points: [[14, 180], [30, 196], [46, 186], [40, 166]], color: COLORS.originiumDeep, alpha: 0.22 },
+
+    // Mid-right blade
+    { points: [[284, 140], [272, 162], [270, 196], [290, 214], [306, 180]], color: 0x151b22, alpha: 0.92 },
+    { points: [[290, 214], [256, 236], [244, 244], [270, 196], [278, 204]], color: 0x222b34, alpha: 0.86 },
+    { points: [[306, 180], [280, 166], [274, 186], [290, 196]], color: COLORS.originiumSoft, alpha: 0.18 },
+
+    // Lower-left outer wing
+    { points: [[42, 244], [58, 286], [90, 314], [112, 288], [76, 236]], color: 0x0a0e12, alpha: 0.92 },
+    { points: [[58, 286], [80, 326], [116, 348], [128, 318], [90, 314]], color: 0x171f27, alpha: 0.9 },
+    { points: [[76, 236], [98, 258], [112, 288], [88, 278]], color: COLORS.originium, alpha: 0.2 },
+
+    // Lower-right outer wing
+    { points: [[244, 244], [208, 236], [208, 288], [230, 314], [262, 286]], color: 0x12181d, alpha: 0.9 },
+    { points: [[230, 314], [192, 318], [204, 348], [240, 326], [262, 286]], color: 0x1a222a, alpha: 0.88 },
+    { points: [[208, 236], [232, 258], [230, 288], [210, 278]], color: COLORS.originiumSoft, alpha: 0.18 },
+
+    // Bottom tip
+    { points: [[116, 348], [148, 352], [160, 358], [172, 352], [204, 348], [192, 318], [160, 330], [128, 318]], color: 0x0c1014, alpha: 0.94 },
+    { points: [[148, 332], [160, 346], [172, 332], [160, 322]], color: COLORS.originium, alpha: 0.3 },
+  ];
+
+  const ORIGINIUM_RIM: Array<[[number, number], [number, number], number, number]> = [
+    // Outer silhouette only — no strokes crossing the face window
+    [[160, 2], [100, 56], 2.1, 0.92],
+    [[100, 56], [36, 140], 1.9, 0.86],
+    [[36, 140], [14, 180], 1.8, 0.84],
+    [[14, 180], [42, 244], 1.8, 0.84],
+    [[42, 244], [58, 286], 1.9, 0.86],
+    [[58, 286], [116, 348], 2.0, 0.9],
+    [[116, 348], [160, 358], 2.1, 0.92],
+    [[160, 2], [220, 56], 2.1, 0.92],
+    [[220, 56], [284, 140], 1.9, 0.86],
+    [[284, 140], [306, 180], 1.8, 0.84],
+    [[306, 180], [244, 244], 1.8, 0.84],
+    [[244, 244], [262, 286], 1.9, 0.86],
+    [[262, 286], [204, 348], 2.0, 0.9],
+    [[204, 348], [160, 358], 2.1, 0.92],
+    // Outer fracture accents (stay on the rim)
+    [[128, 34], [74, 128], 1.05, 0.36],
+    [[192, 34], [246, 128], 1.05, 0.36],
+    [[62, 98], [50, 196], 1.0, 0.32],
+    [[258, 98], [270, 196], 1.0, 0.32],
+    [[42, 244], [112, 288], 1.05, 0.34],
+    [[244, 244], [208, 288], 1.05, 0.34],
+    [[116, 348], [160, 330], 1.1, 0.4],
+    [[204, 348], [160, 330], 1.1, 0.4],
+  ];
+
+  type ShardSpec = {
+    points: Array<[number, number]>;
+    color: number;
+    alpha: number;
+    ox: number;
+    oy: number;
+  };
+
+  const ORIGINIUM_SHARDS: ShardSpec[] = [
+    { points: [[0, -10], [8, -2], [4, 9], [-6, 4]], color: COLORS.originium, alpha: 0.9, ox: -132, oy: -102 },
+    { points: [[0, -7], [9, 1], [2, 8], [-7, 2]], color: COLORS.originiumDeep, alpha: 0.8, ox: 138, oy: -88 },
+    { points: [[0, -12], [7, 0], [1, 10], [-8, 3]], color: COLORS.originiumSoft, alpha: 0.84, ox: -152, oy: 8 },
+    { points: [[0, -6], [10, -1], [5, 8], [-5, 5]], color: COLORS.originium, alpha: 0.72, ox: 156, oy: 24 },
+    { points: [[0, -9], [6, 2], [-1, 9], [-8, 1]], color: COLORS.originiumSoft, alpha: 0.86, ox: -118, oy: 134 },
+    { points: [[0, -8], [8, 0], [3, 9], [-7, 3]], color: COLORS.originiumDeep, alpha: 0.78, ox: 122, oy: 142 },
+    { points: [[0, -5], [6, 1], [1, 6], [-5, 2]], color: COLORS.originium, alpha: 0.74, ox: -90, oy: -150 },
+    { points: [[0, -6], [7, -1], [2, 7], [-6, 2]], color: COLORS.originiumSoft, alpha: 0.7, ox: 94, oy: -156 },
+    { points: [[0, -11], [5, 1], [-2, 8], [-7, -2]], color: COLORS.originium, alpha: 0.82, ox: -164, oy: -34 },
+    { points: [[0, -9], [9, 2], [1, 8], [-6, 0]], color: COLORS.originiumDeep, alpha: 0.76, ox: 168, oy: -20 },
+    { points: [[0, -4], [5, 0], [2, 5], [-4, 2]], color: COLORS.originiumSoft, alpha: 0.68, ox: -70, oy: 164 },
+    { points: [[0, -5], [6, 1], [0, 6], [-5, 1]], color: COLORS.originium, alpha: 0.72, ox: 66, oy: 168 },
+    { points: [[0, -7], [5, 2], [-3, 6], [-6, -1]], color: COLORS.originiumSoft, alpha: 0.64, ox: -48, oy: -168 },
+    { points: [[0, -6], [6, 0], [1, 7], [-5, 2]], color: COLORS.originiumDeep, alpha: 0.74, ox: 42, oy: -172 },
+  ];
+
+  function drawOriginiumCrystal(scaleX: number, scaleY: number, apertureW: number, apertureH: number) {
+    const minScale = Math.min(scaleX, scaleY);
+    originiumAura.clear();
+    originiumBody.clear();
+    originiumRim.clear();
+    originiumShards.clear();
+    originiumCoreGlow.clear();
+    originiumCore.clear();
+    leftEcho.clear();
+    rightEcho.clear();
+    glint.clear();
+
+    // Soft vertical aura behind the crystal shell
+    originiumAura
+      .moveTo(...framePoint(160, 0, scaleX, scaleY))
+      .lineTo(...framePoint(30, 180, scaleX, scaleY))
+      .lineTo(...framePoint(160, 360, scaleX, scaleY))
+      .lineTo(...framePoint(290, 180, scaleX, scaleY))
+      .closePath()
+      .fill({ color: 0x1a3034, alpha: 0.32 });
+    originiumAura
+      .moveTo(...framePoint(160, 28, scaleX, scaleY))
+      .lineTo(...framePoint(88, 180, scaleX, scaleY))
+      .lineTo(...framePoint(160, 332, scaleX, scaleY))
+      .lineTo(...framePoint(232, 180, scaleX, scaleY))
+      .closePath()
+      .fill({ color: 0x2e5053, alpha: 0.16 });
+
+    // Faceted crystal shell — geometry is already outside the face window
+    for (const facet of ORIGINIUM_FACETS) {
+      const pts = facet.points.map(([x, y]) => framePoint(x, y, scaleX, scaleY));
+      originiumBody.moveTo(pts[0][0], pts[0][1]);
+      for (const [x, y] of pts.slice(1)) originiumBody.lineTo(x, y);
+      originiumBody.closePath().fill({ color: facet.color, alpha: facet.alpha });
     }
-    for (const [[x1, y1], [x2, y2]] of edge) {
-      const start = p(x1, y1);
-      const end = p(x2, y2);
-      drawLine(graphics, start[0], start[1], end[0], end[1], 13 * Math.min(scaleX, scaleY), COLORS.pale, 0.96);
+
+    // Extra safety: hard-mask the shell so nothing can paint over the portrait diamond
+    const holeW = apertureW * 0.98;
+    const holeH = apertureH * 0.98;
+    const maskOuterW = Math.max(apertureW * 1.7, 300 * scaleX);
+    const maskOuterH = Math.max(apertureH * 1.55, 360 * scaleY);
+    originiumShellMask.clear();
+    originiumShellMask
+      .moveTo(0, -maskOuterH / 2)
+      .lineTo(maskOuterW / 2, 0)
+      .lineTo(0, maskOuterH / 2)
+      .lineTo(-maskOuterW / 2, 0)
+      .closePath()
+      .fill({ color: 0xffffff, alpha: 1 });
+    originiumShellMask
+      .moveTo(0, -holeH / 2)
+      .lineTo(holeW / 2, 0)
+      .lineTo(0, holeH / 2)
+      .lineTo(-holeW / 2, 0)
+      .closePath()
+      .cut();
+
+    // Outer rim strokes
+    for (const [[x1, y1], [x2, y2], width, alpha] of ORIGINIUM_RIM) {
+      const start = framePoint(x1, y1, scaleX, scaleY);
+      const end = framePoint(x2, y2, scaleX, scaleY);
+      drawLine(originiumRim, start[0], start[1], end[0], end[1], width * minScale, COLORS.pale, alpha);
     }
-    for (const chip of chips) {
-      drawPolygon(graphics, chip.map(([x, y]) => p(x, y)), COLORS.pale, 0.92);
+
+    // Thin double diamond edge around the portrait (amber)
+    const innerPad = 3 * minScale;
+    drawDiamondStroke(originiumRim, apertureW + innerPad * 2.2, apertureH + innerPad * 2.2, COLORS.originiumSoft, 0.78, 1.45 * minScale);
+    drawDiamondStroke(originiumRim, apertureW + innerPad * 0.3, apertureH + innerPad * 0.3, COLORS.originium, 0.4, 0.95 * minScale);
+
+    // Edge glints in originium gold
+    for (const [x1, y1, x2, y2, alpha] of [
+      [160, 2, 100, 56, 0.95],
+      [100, 56, 62, 98, 0.72],
+      [160, 2, 142, 36, 0.88],
+      [262, 286, 204, 348, 0.55],
+      [204, 348, 160, 358, 0.72],
+      [14, 180, 36, 140, 0.42],
+    ] as Array<[number, number, number, number, number]>) {
+      const start = framePoint(x1, y1, scaleX, scaleY);
+      const end = framePoint(x2, y2, scaleX, scaleY);
+      drawLine(glint, start[0], start[1], end[0], end[1], 2.2 * minScale, COLORS.originium, alpha);
     }
+
+    // Floating amber debris
+    for (const shard of ORIGINIUM_SHARDS) {
+      const origin = framePoint(160 + shard.ox, 180 + shard.oy, scaleX, scaleY);
+      const pts = shard.points.map(([x, y]) => [origin[0] + x * minScale, origin[1] + y * minScale] as [number, number]);
+      originiumShards.moveTo(pts[0][0], pts[0][1]);
+      for (const [x, y] of pts.slice(1)) originiumShards.lineTo(x, y);
+      originiumShards.closePath().fill({ color: shard.color, alpha: shard.alpha });
+    }
+
+    // PRTS double-diamond sigil near the bottom tip — below the chin / on the lower crystal
+    const coreW = 12 * minScale;
+    const coreH = 15 * minScale;
+    const coreY = apertureH * 0.58;
+    originiumCoreGlow.position.set(0, coreY);
+    originiumCore.position.set(0, coreY);
+    originiumCoreGlow
+      .moveTo(0, -coreH * 0.85)
+      .lineTo(coreW * 0.85, 0)
+      .lineTo(0, coreH * 0.85)
+      .lineTo(-coreW * 0.85, 0)
+      .closePath()
+      .fill({ color: COLORS.originium, alpha: 0.26 });
+    drawOriginiumCore(originiumCore, coreW, coreH, COLORS.originium, 0.96, 2 * minScale);
+
+    // Soft chromatic echoes outside the face
+    drawDiamondStroke(leftEcho, apertureW * 1.16, apertureH * 1.16, COLORS.cyan, 0.18, 0.95 * minScale);
+    drawDiamondStroke(rightEcho, apertureW * 1.12, apertureH * 1.12, COLORS.red, 0.14, 0.85 * minScale);
   }
 
   function drawReveal() {
     const scaleX = revealWidth / 320;
     const scaleY = revealHeight / 360;
-    const portraitWidth = revealWidth * 0.91;
-    const portraitHeight = revealHeight * 0.91;
+    // Large open diamond so Priestess' face dominates the reveal.
+    const portraitWidth = revealWidth * 0.84;
+    const portraitHeight = revealHeight * 0.88;
     drawDiamond(portraitMask, portraitWidth, portraitHeight, 0xffffff);
-    fitCover(portraitBackdrop, 0, revealHeight * 0.19, revealWidth * 1.1, revealHeight * 1.1);
-    fitCover(portrait, 0, revealHeight * 0.19, revealWidth * 1.1, revealHeight * 1.1);
+    // Keep the full bust visible inside the diamond instead of cropping to the face.
+    const portraitScaleW = portraitWidth * 1.1;
+    const portraitScaleH = portraitHeight * 1.3;
+    const portraitOffsetY = portraitHeight * 0.2;
+    fitCover(portraitBackdrop, 0, portraitOffsetY, portraitScaleW, portraitScaleH);
+    fitCover(portrait, 0, portraitOffsetY, portraitScaleW, portraitScaleH);
+    portraitBackdrop.alpha = 0.55;
+    portrait.alpha = 1;
     portraitVignette.clear();
     portraitVignette
       .moveTo(0, -portraitHeight / 2)
@@ -310,43 +533,17 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       .lineTo(0, portraitHeight / 2)
       .lineTo(-portraitWidth / 2, 0)
       .closePath()
-      .stroke({ width: 12, color: COLORS.shadow, alpha: 0.42 });
+      .stroke({ width: 5, color: COLORS.shadow, alpha: 0.18 });
 
-    revealGlow.clear();
-    drawLine(revealGlow, framePoint(153, 13, scaleX, scaleY)[0], framePoint(153, 13, scaleX, scaleY)[1], framePoint(18, 169, scaleX, scaleY)[0], framePoint(18, 169, scaleX, scaleY)[1], 10, COLORS.teal, 0.12);
-    drawLine(revealGlow, framePoint(167, 13, scaleX, scaleY)[0], framePoint(167, 13, scaleX, scaleY)[1], framePoint(302, 169, scaleX, scaleY)[0], framePoint(302, 169, scaleX, scaleY)[1], 10, COLORS.red, 0.12);
-    drawOriginumHalf(leftHalf, -1, scaleX, scaleY);
-    drawOriginumHalf(rightHalf, 1, scaleX, scaleY);
-
-    leftEcho.clear();
-    rightEcho.clear();
-    const leftEchoSegments = [[[154, 25], [31, 168]], [[31, 192], [154, 335]]];
-    const rightEchoSegments = [[[166, 25], [289, 168]], [[289, 192], [166, 335]]];
-    for (const [[x1, y1], [x2, y2]] of leftEchoSegments) {
-      const start = framePoint(x1, y1, scaleX, scaleY);
-      const end = framePoint(x2, y2, scaleX, scaleY);
-      drawLine(leftEcho, start[0], start[1], end[0], end[1], 1, COLORS.cyan, 0.58);
-    }
-    for (const [[x1, y1], [x2, y2]] of rightEchoSegments) {
-      const start = framePoint(x1, y1, scaleX, scaleY);
-      const end = framePoint(x2, y2, scaleX, scaleY);
-      drawLine(rightEcho, start[0], start[1], end[0], end[1], 1, COLORS.red, 0.48);
-    }
-
-    glint.clear();
-    for (const [[x1, y1], [x2, y2]] of [[[153, 13], [92, 83]], [[18, 191], [62, 242]], [[167, 13], [231, 87]], [[302, 191], [263, 236]]]) {
-      const start = framePoint(x1, y1, scaleX, scaleY);
-      const end = framePoint(x2, y2, scaleX, scaleY);
-      drawLine(glint, start[0], start[1], end[0], end[1], 2.2, COLORS.pale, 0.86);
-    }
+    drawOriginiumCrystal(scaleX, scaleY, portraitWidth, portraitHeight);
 
     revealBars.clear();
     for (let index = 0; index < 14; index += 1) {
       const y = -revealHeight / 2 + ((index * 19) % revealHeight);
       const barWidth = revealWidth * (0.34 + (index % 4) * 0.12);
-      revealBars.rect(-barWidth / 2, y, barWidth, index % 3 === 0 ? 2 : 1).fill({ color: index % 2 ? COLORS.red : COLORS.cyan, alpha: 0.07 });
+      revealBars.rect(-barWidth / 2, y, barWidth, index % 3 === 0 ? 2 : 1).fill({ color: index % 2 ? COLORS.red : COLORS.cyan, alpha: 0.05 });
     }
-    revealScan.clear().rect(-revealWidth * 0.72, -4, revealWidth * 1.44, 8).fill({ color: COLORS.pale, alpha: 0.3 });
+    revealScan.clear().rect(-revealWidth * 0.72, -4, revealWidth * 1.44, 8).fill({ color: COLORS.pale, alpha: 0.24 });
   }
 
   function drawCopy(copyTopValue: number, contentWidth: number, contentX: number) {
@@ -625,10 +822,21 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     revealFrame.rotation = stage === 'reveal' && !currentReducedMotion ? 0.024 : 0;
     revealPortrait.alpha = stage === 'reveal' && !currentReducedMotion ? 0 : stage === 'reveal' ? 1 : 0;
     revealFrame.alpha = stage === 'reveal' && !currentReducedMotion ? 0 : stage === 'reveal' ? 1 : 0;
-    leftHalf.x = 0;
-    rightHalf.x = 0;
+    originiumShards.x = 0;
+    originiumShards.y = 0;
+    originiumCore.scale.set(1);
+    originiumCoreGlow.scale.set(1);
+    originiumCoreGlow.alpha = stage === 'reveal' ? 0.9 : 0;
     leftEcho.x = 0;
     rightEcho.x = 0;
+    leftEcho.y = 0;
+    rightEcho.y = 0;
+    leftEcho.alpha = stage === 'reveal' ? 0.55 : 0;
+    rightEcho.alpha = stage === 'reveal' ? 0.42 : 0;
+    originiumBody.x = 0;
+    originiumRim.x = 0;
+    originiumShellMask.x = 0;
+    originiumAura.alpha = stage === 'reveal' ? 1 : 0;
     revealScan.x = stage === 'reveal' && !currentReducedMotion ? -revealWidth * 0.72 : stage === 'reveal' ? revealWidth * 0.72 : -revealWidth * 0.72;
     revealScan.alpha = stage === 'reveal' && !currentReducedMotion ? 0 : stage === 'reveal' ? 0.26 : 0;
     flash.alpha = 0;
@@ -729,10 +937,71 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       revealScan.x = -revealWidth * 0.72 + revealWidth * 1.44 * scanProgress;
       revealScan.alpha = scanProgress * (0.12 + Math.abs(Math.sin(time * 2.2)) * 0.14);
       if (revealProgress >= 1) complete = true;
-      glint.alpha = 0.42 + Math.abs(Math.sin(time * 1.7)) * 0.42;
+
+      // Unstable originium dynamics — idle pulse + rare glitch snaps.
+      const breath = 0.5 + 0.5 * Math.sin(time * 1.55);
+      const corePulse = 1 + breath * 0.06 + Math.sin(time * 4.8) * 0.015;
+      originiumCore.scale.set(corePulse);
+      originiumCoreGlow.scale.set(1.05 + breath * 0.18);
+      originiumCoreGlow.alpha = 0.55 + breath * 0.4 + Math.abs(Math.sin(time * 3.2)) * 0.12;
+      originiumCore.alpha = 0.86 + breath * 0.12;
+      glint.alpha = 0.38 + Math.abs(Math.sin(time * 1.9)) * 0.48;
+      originiumAura.alpha = 0.72 + breath * 0.28;
+      originiumShards.rotation = Math.sin(time * 0.55) * 0.018;
+      originiumShards.x = Math.sin(time * 1.3) * 1.6;
+      originiumShards.y = Math.cos(time * 1.1) * 2.2 + Math.sin(time * 2.4) * 0.8;
+
+      // Chromatic diamond echoes drift opposite each other
+      const echoDrift = 3 + Math.sin(time * 2.1) * 2.4;
+      leftEcho.x = -echoDrift + Math.sin(time * 5.5) * 0.8;
+      leftEcho.y = Math.cos(time * 1.7) * 1.4;
+      rightEcho.x = echoDrift + Math.cos(time * 4.8) * 0.7;
+      rightEcho.y = Math.sin(time * 1.9) * 1.2;
+      leftEcho.alpha = 0.28 + Math.abs(Math.sin(time * 2.6)) * 0.34;
+      rightEcho.alpha = 0.22 + Math.abs(Math.cos(time * 2.3)) * 0.28;
+      leftEcho.scale.set(1 + Math.sin(time * 1.2) * 0.012);
+      rightEcho.scale.set(1 + Math.cos(time * 1.35) * 0.014);
+
       if (complete) {
-        leftHalf.x = Math.sin(time * 1.65) > 0.92 ? -7 : Math.sin(time * 3.1) > 0.95 ? 3 : 0;
-        rightHalf.x = -leftHalf.x;
+        // Micro-horror: rare hard snaps of the crystal body / portrait
+        const snapA = Math.sin(time * 1.65);
+        const snapB = Math.sin(time * 3.1);
+        const hardSnap = snapA > 0.93 || snapB > 0.96;
+        const softJitter = Math.sin(time * 17) * 0.6 + Math.cos(time * 11) * 0.4;
+        if (hardSnap) {
+          const kick = snapA > 0.93 ? -6 : 4;
+          originiumBody.x = kick;
+          originiumShellMask.x = kick;
+          originiumRim.x = kick;
+          originiumCore.x = kick * 0.4;
+          revealPortrait.x = -kick * 0.35;
+          leftEcho.x -= 5;
+          rightEcho.x += 5;
+          originiumCore.alpha = 0.35;
+          originiumShards.alpha = 0.45;
+        } else {
+          originiumBody.x = softJitter * 0.35;
+          originiumShellMask.x = softJitter * 0.35;
+          originiumRim.x = softJitter * 0.35;
+          originiumCore.x = Math.sin(time * 9) * 0.4;
+          revealPortrait.x = Math.sin(time * 7.5) * 0.55;
+          originiumShards.alpha = 0.78 + Math.sin(time * 2.2) * 0.18;
+        }
+        // Occasional crimson infection flash on the core glow
+        if (Math.sin(time * 0.87) > 0.97) {
+          originiumCoreGlow.tint = COLORS.red;
+          originiumCoreGlow.alpha = 0.95;
+        } else {
+          originiumCoreGlow.tint = 0xffffff;
+        }
+      } else {
+        originiumBody.x = 0;
+        originiumShellMask.x = 0;
+        originiumRim.x = 0;
+        originiumCore.x = 0;
+        revealPortrait.x = 0;
+        originiumShards.alpha = 0.55 + revealEase * 0.4;
+        originiumCoreGlow.tint = 0xffffff;
       }
     }
   }
