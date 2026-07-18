@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { advanceState, createInitialState, getStageCopy, type Action, type Stage } from './state';
-import visionHouse from '../assets/vision-house.jpg';
-import prtsClose from '../assets/prts-close.jpg';
-import ambientAudio from '../assets/audio/bgm.ea4286.mp3';
-import revealAudio from '../assets/audio/luanxu.mp3';
+import { advanceState, createInitialState, getStageCopy, type Action, type Stage } from '../state';
+import visionHouse from '../../assets/vision-house.jpg';
+import prtsClose from '../../assets/prts-close.jpg';
+import ambientAudio from '../../assets/audio/bgm.ea4286.mp3';
+import revealAudio from '../../assets/audio/luanxu.mp3';
 
 const AMBIENT_VOLUME = 0.35;
 const REVEAL_VOLUME = 0.5;
@@ -24,7 +24,7 @@ const stageMeta: Readonly<Record<Stage, Readonly<{ code: string; index: string; 
 
 const reduceMotionQuery = window.matchMedia?.('(prefers-reduced-motion: reduce)');
 
-export default function App() {
+export default function LegacyDomPage() {
   const [state, dispatch] = useReducer(advanceState, undefined, createInitialState);
   const [hasStarted, setHasStarted] = useState(false);
   const [entryMounted, setEntryMounted] = useState(true);

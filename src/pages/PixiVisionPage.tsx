@@ -8,7 +8,7 @@ import {
   getStageCopy,
   type Action,
 } from '../state';
-import { createPixiVisionScene, type PixiVisionScene } from './createPixiVisionScene';
+import { createPixiVisionScene, type PixiVisionScene } from '../pixi/createPixiVisionScene';
 
 const ACTION_BY_STAGE: Partial<Record<string, Action>> = {
   intro: 'START',
@@ -179,7 +179,7 @@ export default function PixiVisionPage() {
       {!ready && !error && <div className="pixi-loading">PRTS // INITIALIZING OPTICAL ARRAY</div>}
 
       <div className="pixi-ui">
-        <Link className="pixi-back" to="/" tabIndex={started ? 0 : -1}>
+        <Link className="pixi-back" to="/legacy-dom" tabIndex={started ? 0 : -1}>
           ORIGINAL DOM
         </Link>
         <button
