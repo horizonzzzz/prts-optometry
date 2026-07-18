@@ -4,10 +4,10 @@ import { createVisionEntryScene } from './visionEntryScene';
 import { createVisionMainScene } from './visionMainScene';
 import { loadVisionSceneTextures } from './visionSceneAssets';
 import { setCssVar } from './visionSceneGraphics';
-import { getStageReadyTime } from './visionSceneModel';
+import { getStageReadyTime, isCalibrationClear } from './visionSceneModel';
 import type { PixiVisionScene, SceneOptions } from './visionSceneModel';
 
-export { getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isWideLayout } from './visionSceneModel';
+export { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isWideLayout } from './visionSceneModel';
 export type { PixiVisionScene } from './visionSceneModel';
 
 export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion, onEntryReady }: SceneOptions) {
@@ -186,6 +186,13 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     }
   }
 
+  function confirmCalibration(bypassTiming = false) {
+    if (currentStage !== 'calibrate') return false;
+    const confirmed = bypassTiming || currentReducedMotion || isCalibrationClear(stageTime);
+    main.showCalibrationFeedback(confirmed);
+    return confirmed;
+  }
+
   function tick(deltaSeconds: number) {
     if (currentReducedMotion || destroyed) return;
     if (!entry.isBootComplete()) entry.applyBoot(performance.now() - entryBootStartedAt);
@@ -240,6 +247,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   return {
     setStarted,
     setStage,
+    confirmCalibration,
     setMuted: main.setMuted,
     setReducedMotion,
     reset: () => setStage('intro'),

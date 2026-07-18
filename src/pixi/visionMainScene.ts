@@ -24,6 +24,7 @@ import {
 } from './visionSceneGraphics';
 import {
   COLORS,
+  getCalibrationBlurAmount,
   getCopyHeight,
   getRevealFractureKick,
   getSoundBarHeights,
@@ -94,6 +95,12 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const moduleTag = new Graphics();
   const moduleText = addText('OPTICAL MODULE // ACTIVE', new TextStyle({ fill: 0xf3f5f4, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.05 }));
 
+  const calibrationAlert = new Container({ label: 'calibration-alert' });
+  const calibrationAlertBg = new Graphics();
+  const calibrationAlertAccent = new Graphics();
+  const calibrationAlertCode = addText('ERR 02', new TextStyle({ fill: COLORS.pale, fontFamily: 'Bender, sans-serif', fontSize: 8, fontWeight: '700', letterSpacing: 1 }));
+  const calibrationAlertMessage = addText('FOCUS UNSTABLE\n请在清晰时点击', new TextStyle({ fill: COLORS.pale, fontFamily: "Bender, SourceHan, 'Noto Sans SC', sans-serif", fontSize: 8, letterSpacing: 0.7, lineHeight: 11 }));
+
   const halo = new Graphics();
   const haloShadow = new Graphics();
   const houseGroup = new Container({ label: 'house-visual' });
@@ -152,7 +159,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const resetCode = addText('R-00', new TextStyle({ fill: 0x627176, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 0.8 }));
 
   layer.addChild(backdrop, shade, mask, diagonal, grid, stageGlow, body, copy, chrome, grain, scanline, filter);
-  body.addChild(bodyBorder, bodyNumber, metaTopDot, metaTop, metaRuleTop, metaSignal, metaBottomDot, metaBottom, metaRuleBottom, metaPhase, haloShadow, halo, houseGroup, revealGroup, moduleTag, moduleText);
+  body.addChild(bodyBorder, bodyNumber, metaTopDot, metaTop, metaRuleTop, metaSignal, metaBottomDot, metaBottom, metaRuleBottom, metaPhase, haloShadow, halo, houseGroup, revealGroup, calibrationAlert, moduleTag, moduleText);
+  calibrationAlert.addChild(calibrationAlertBg, calibrationAlertAccent, calibrationAlertCode, calibrationAlertMessage);
   copy.addChild(copyBackground, copyBorder, copyAccent, copyHeading, copyIndex, copyTitle, copyNote, resetButton, resetLabel, resetCode, screeningNote);
   chrome.addChild(topBar, topAccent, rhodes, brandName, brandSub, stageCodeBg, stageCode, soundBars, soundLabel, railLeft, railMiddle, railRight, railRuleLeft, railRuleRight);
 
@@ -166,6 +174,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   copy.position.set(0, 0);
   chrome.position.set(0, 0);
   filter.alpha = 0;
+  calibrationAlert.alpha = 0;
 
   houseMask.renderable = true;
   houseMask.alpha = 0;
@@ -226,6 +235,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   let complete = false;
   let currentMuted: boolean | null = null;
   let soundTimeline: gsap.core.Timeline | null = null;
+  let calibrationFeedbackTimeline: gsap.core.Timeline | null = null;
+  let calibrationLocked = false;
   let flashTimer = 0;
 
   function drawScreenGrid(graphics: Graphics, x: number, y: number, gridWidth: number, gridHeight: number, alpha: number) {
@@ -246,6 +257,18 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     for (let lineY = 0; lineY < height; lineY += 5) {
       filter.rect(panelX, lineY, panelWidth, 1).fill({ color: currentStage === 'drift' ? COLORS.red : COLORS.pale, alpha: 0.045 });
     }
+  }
+
+  function drawCalibrationAlert(alertWidth: number) {
+    const left = -alertWidth / 2;
+    const right = alertWidth / 2;
+    const top = -19;
+    const bottom = 19;
+    calibrationAlertBg.clear();
+    drawPolygon(calibrationAlertBg, [[left + 8, top], [right, top], [right, bottom - 8], [right - 8, bottom], [left, bottom], [left, top + 8]], COLORS.graphite, 0.96);
+    calibrationAlertAccent.clear().rect(left, top, 49, 38).fill({ color: 0xffffff, alpha: 1 });
+    calibrationAlertCode.position.set(left + 9, -4);
+    calibrationAlertMessage.position.set(left + 59, -12);
   }
 
   function drawHouse(radius: number) {
@@ -586,9 +609,9 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     }
 
     const textX = reveal ? panelLeft : panelLeft + 13;
-    const topPadding = reveal ? 6 : veryShortScreen ? 8 : shortScreen ? 14 : 26;
-    const titleOffset = veryShortScreen ? 19 : shortScreen ? 22 : 27;
-    const noteOffset = veryShortScreen ? 49 : shortScreen ? 59 : 86;
+    const topPadding = reveal ? 6 : wideLayout ? 26 : veryShortScreen ? 8 : shortScreen ? 14 : 26;
+    const titleOffset = wideLayout ? 27 : veryShortScreen ? 19 : shortScreen ? 22 : 27;
+    const noteOffset = wideLayout ? 86 : veryShortScreen ? 49 : shortScreen ? 59 : 86;
     copyHeading.position.set(textX, copyTopValue + topPadding);
     copyIndex.position.set(panelRight - (reveal ? 20 : 42), copyTopValue + topPadding - 4);
     copyTitle.position.set(textX, copyTopValue + topPadding + (reveal ? 15 : titleOffset));
@@ -748,6 +771,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     houseGroup.position.set(visualX, visualY);
     drawHouse(radius);
     houseGroup.visible = currentStage !== 'reveal';
+    calibrationAlert.position.set(visualX, visualY + frameSize / 2 - 25);
+    drawCalibrationAlert(Math.min(frameSize * 0.86, 260));
     revealGroup.position.set(visualX, visualY);
     revealGroup.visible = currentStage === 'reveal';
     revealGroup.pivot.set(0, 0);
@@ -834,8 +859,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
 
   function updateCopy(stage: Stage) {
     const stageCopy = {
-      intro: { eyebrow: 'INTAKE / 远距辨认', title: '请注视远处的房屋', note: '保持手机距离，确认房屋轮廓' },
-      calibrate: { eyebrow: 'CALIBRATE / 焦距校准', title: '焦距校准中', note: '画面会短暂失焦，请继续注视房屋' },
+      intro: { eyebrow: 'INTAKE / 远距辨认', title: '请注视远处的房屋', note: '点击中央图像，开始焦距校准' },
+      calibrate: { eyebrow: 'CALIBRATE / 焦距校准', title: '焦距校准中', note: '观察焦距变化，在房屋最清晰时点击中央图像' },
       drift: { eyebrow: 'ANOMALY / 视觉偏移', title: '房屋位置发生偏移', note: '视觉信号偏离基线，请不要移开视线' },
       reveal: { eyebrow: 'REVEAL / 影像回收', title: 'PRTS // 视觉回收完成', note: '你看到的，从来不止一层。' },
     }[stage];
@@ -847,6 +872,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     metaSignal.text = STAGE_META[stage].signal;
     metaBottom.text = stage === 'reveal' ? STAGE_META[stage].signal : 'FOCAL DISTANCE / 30 CM';
     metaPhase.text = `PHASE / ${STAGE_META[stage].index}`;
+    moduleText.text = stage === 'intro' ? 'TAP IMAGE // START CALIBRATION' : stage === 'calibrate' ? 'TAP ON CLEAR // FOCUS LOCK' : 'OPTICAL MODULE // ACTIVE';
   }
 
   function applyStage() {
@@ -856,7 +882,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     body.y = 0;
     houseGroup.visible = stage !== 'reveal';
     revealGroup.visible = stage === 'reveal';
-    houseBlur.strength = stage === 'calibrate' ? 3.5 : stage === 'drift' ? 2 : 0;
+    houseBlur.strength = stage === 'calibrate' && !currentReducedMotion ? 9 : stage === 'drift' ? 2 : 0;
     houseNoise.noise = stage === 'drift' ? 0.16 : 0.045;
     houseBase.alpha = stage === 'drift' ? 0.62 : 1;
     houseBase.tint = 0xffffff;
@@ -868,7 +894,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     houseTrace.alpha = stage === 'drift' ? 0.62 : stage === 'calibrate' ? 0.12 : 0.04;
     houseTrace.position.set(0, 0);
     houseTrace.scale.set(stage === 'drift' ? 1.04 : 1);
-    houseGroup.scale.set(stage === 'drift' ? 1.025 : 1);
+    houseGroup.scale.set(stage === 'calibrate' && !currentReducedMotion ? 1.03 : stage === 'drift' ? 1.025 : 1);
+    houseReticle.alpha = 1;
+    targetDash.alpha = 1;
+    calibrationAlert.visible = stage === 'calibrate';
     filter.alpha = stage === 'reveal' ? 0.28 : 0;
     scanline.alpha = stage === 'drift' ? 0.4 : 0;
     revealPortrait.alpha = stage === 'reveal' ? 1 : 0;
@@ -901,6 +930,36 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     resetLabel.alpha = resetAlpha;
     resetCode.alpha = resetAlpha;
     flash.alpha = 0;
+  }
+
+  function showCalibrationFeedback(confirmed: boolean) {
+    calibrationFeedbackTimeline?.kill();
+    calibrationFeedbackTimeline = null;
+    calibrationLocked = confirmed;
+    calibrationAlert.visible = true;
+    calibrationAlert.alpha = 1;
+    calibrationAlert.scale.set(1);
+    calibrationAlertAccent.tint = confirmed ? COLORS.cyan : COLORS.red;
+    calibrationAlertCode.text = confirmed ? 'LOCK 100' : 'ERR 02';
+    calibrationAlertCode.style.fill = confirmed ? COLORS.graphite : COLORS.pale;
+    calibrationAlertMessage.text = confirmed ? 'FOCUS LOCKED\n焦距已锁定' : 'FOCUS UNSTABLE\n请在清晰时点击';
+
+    if (confirmed) {
+      houseBlur.strength = 0;
+      houseGroup.scale.set(1);
+      houseTrace.alpha = 0.08;
+      houseTrace.scale.set(1);
+      houseReticle.alpha = 1;
+      targetDash.alpha = 1;
+      app.render();
+      return;
+    }
+
+    calibrationFeedbackTimeline = gsap.timeline({ onComplete: () => { calibrationFeedbackTimeline = null; } })
+      .fromTo(calibrationAlert, { alpha: 0 }, { alpha: 1, duration: 0.05, ease: 'none' })
+      .fromTo(calibrationAlert.scale, { x: 0.96 }, { x: 1, duration: 0.1, ease: 'power2.out' }, 0)
+      .to(calibrationAlert, { alpha: 0.35, duration: 0.04, repeat: 3, yoyo: true, ease: 'none' }, 0.08)
+      .to(calibrationAlert, { alpha: 0, duration: 0.14, ease: 'power2.in' }, '+=0.55');
   }
 
   function triggerRevealFlash() {
@@ -966,11 +1025,13 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
 
   function tick(time: number, stageTime: number) {
     if (currentStage === 'calibrate') {
-      const calibration = (Math.sin(stageTime * Math.PI / 1.17) + 1) / 2;
-      houseBlur.strength = 3.5 + calibration * 5.5;
-      houseGroup.scale.set(1.015 + calibration * 0.015);
+      const calibration = calibrationLocked ? 0 : getCalibrationBlurAmount(stageTime);
+      houseBlur.strength = calibration * 9;
+      houseGroup.scale.set(1 + calibration * 0.03);
       houseTrace.alpha = 0.08 + calibration * 0.14;
-      houseTrace.scale.set(0.96 + calibration * 0.06);
+      houseTrace.scale.set(1 + calibration * 0.02);
+      houseReticle.alpha = 0.45 + (1 - calibration) * 0.55;
+      targetDash.alpha = 0.32 + (1 - calibration) * 0.68;
     }
     scanline.y = (time * (currentStage === 'drift' ? 180 : 72)) % Math.max(height + 40, 1);
     grain.rotation = Math.sin(time * 0.12) * 0.01;
@@ -1054,16 +1115,24 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     selectStage(stage: Stage) {
       currentStage = stage;
       complete = false;
+      calibrationLocked = false;
+      calibrationFeedbackTimeline?.kill();
+      calibrationFeedbackTimeline = null;
+      calibrationAlert.alpha = 0;
       window.clearTimeout(flashTimer);
       updateCopy(stage);
     },
     applyStage,
+    showCalibrationFeedback,
     triggerRevealFlash,
     setMuted,
     setReducedMotion(reducedMotion: boolean) {
       currentReducedMotion = reducedMotion;
       window.clearTimeout(flashTimer);
       if (!reducedMotion) return;
+      calibrationFeedbackTimeline?.kill();
+      calibrationFeedbackTimeline = null;
+      calibrationAlert.alpha = 0;
       soundTimeline?.kill();
       soundTimeline = null;
       setMuted(currentMuted ?? false);
@@ -1081,6 +1150,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       layer.alpha = progress;
     },
     destroy() {
+      calibrationFeedbackTimeline?.kill();
+      calibrationFeedbackTimeline = null;
       soundTimeline?.kill();
       soundTimeline = null;
       window.clearTimeout(flashTimer);

@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState, type MouseEvent } from 'react';
 import ambientAudio from '../../assets/audio/bgm.ea4286.mp3';
 import revealAudio from '../../assets/audio/luanxu.mp3';
 import {
@@ -27,10 +27,12 @@ export default function PixiVisionPage() {
   const [ready, setReady] = useState(false);
   const [stageReady, setStageReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [interactionMessage, setInteractionMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
   const sceneRef = useRef<PixiVisionScene | null>(null);
   const reducedMotionRef = useRef(false);
+  const calibrationTimerRef = useRef(0);
   const ambientRef = useRef<HTMLAudioElement | null>(null);
   const revealRef = useRef<HTMLAudioElement | null>(null);
   const snowNoiseRef = useRef<{
@@ -49,6 +51,8 @@ export default function PixiVisionPage() {
     query.addEventListener?.('change', update);
     return () => query.removeEventListener?.('change', update);
   }, []);
+
+  useEffect(() => () => window.clearTimeout(calibrationTimerRef.current), []);
 
   useEffect(() => {
     const ambient = new Audio(ambientAudio);
@@ -118,6 +122,7 @@ export default function PixiVisionPage() {
 
   useEffect(() => {
     if (!ready) return;
+    setInteractionMessage('');
     setStageReady(false);
     sceneRef.current?.setStage(state.stage, () => setStageReady(true));
   }, [ready, state.stage]);
@@ -205,9 +210,20 @@ export default function PixiVisionPage() {
     });
   }
 
-  function handleVisionActivate() {
+  function handleVisionActivate(event: MouseEvent<HTMLButtonElement>) {
     if (!ready || !stageReady || error || !started || entryDeparting || state.stage === 'reveal') return;
-    if (state.stage === 'calibrate') prepareSnowNoise();
+    if (state.stage === 'calibrate') {
+      prepareSnowNoise();
+      const confirmed = sceneRef.current?.confirmCalibration(event.detail === 0) ?? false;
+      setInteractionMessage(confirmed ? '焦距已锁定。' : '焦距未锁定，请在图像清晰时点击。');
+      if (!confirmed) return;
+      setStageReady(false);
+      window.clearTimeout(calibrationTimerRef.current);
+      calibrationTimerRef.current = window.setTimeout(() => dispatch('CONFIRM'), 180);
+      return;
+    }
+
+    setInteractionMessage('');
     const action = ACTION_BY_STAGE[state.stage];
     if (action) {
       setStageReady(false);
@@ -270,7 +286,7 @@ export default function PixiVisionPage() {
       )}
 
       <p className="pixi-sr-only" aria-live="polite" aria-atomic="true">
-        {entryDeparting ? '正在进入验光界面。' : `${copy.eyebrow}。${copy.title}。${liveNote}${stageReady ? copy.actionLabel : ''}`}
+        {entryDeparting ? '正在进入验光界面。' : `${copy.eyebrow}。${copy.title}。${liveNote}${stageReady ? `${copy.actionLabel}。` : ''}${interactionMessage}`}
       </p>
 
       {error && <p className="pixi-error">{error}</p>}

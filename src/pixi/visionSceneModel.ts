@@ -35,13 +35,25 @@ export const STAGE_ACCENTS: Record<Stage, number> = {
 
 const STAGE_READY_TIME: Record<Stage, number> = {
   intro: 0,
-  calibrate: 1.17,
+  calibrate: 0,
   drift: 0.75,
   reveal: 0.9,
 };
 
+const CALIBRATION_CYCLE_TIME = 2.6;
+const CALIBRATION_CLEAR_MAX = 0.2;
+
 export function getStageReadyTime(stage: Stage, reducedMotion = false) {
   return reducedMotion ? 0 : STAGE_READY_TIME[stage];
+}
+
+export function getCalibrationBlurAmount(stageTime: number) {
+  const cycle = Math.max(stageTime, 0) % CALIBRATION_CYCLE_TIME;
+  return (Math.cos((cycle / CALIBRATION_CYCLE_TIME) * Math.PI * 2) + 1) / 2;
+}
+
+export function isCalibrationClear(stageTime: number) {
+  return getCalibrationBlurAmount(stageTime) <= CALIBRATION_CLEAR_MAX;
 }
 
 export function getRevealFractureKick(stageTime: number) {
@@ -99,6 +111,7 @@ export type SceneOptions = {
 export type PixiVisionScene = {
   setStarted: (started: boolean, onComplete?: () => void) => void;
   setStage: (stage: Stage, onReady?: () => void) => void;
+  confirmCalibration: (bypassTiming?: boolean) => boolean;
   setMuted: (muted: boolean) => void;
   setReducedMotion: (reducedMotion: boolean) => void;
   reset: () => void;

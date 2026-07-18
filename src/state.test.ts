@@ -8,7 +8,7 @@ test('initial state starts at the clear house scene', () => {
     stage: 'intro',
     muted: false,
   });
-  expect(getStageCopy(state).actionLabel).toBe('开始焦距校准');
+  expect(getStageCopy(state).actionLabel).toBe('点击中央验光图像，开始焦距校准');
 });
 
 test('each confirmation advances one scene', () => {

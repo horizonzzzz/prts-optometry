@@ -18,14 +18,14 @@ const COPY: Readonly<Record<Stage, Readonly<StageCopy>>> = Object.freeze({
   intro: Object.freeze({
     eyebrow: 'INTAKE / 远距辨认',
     title: '请注视远处的房屋',
-    note: '保持手机距离，确认房屋轮廓',
-    actionLabel: '开始焦距校准',
+    note: '点击中央图像，开始焦距校准',
+    actionLabel: '点击中央验光图像，开始焦距校准',
   }),
   calibrate: Object.freeze({
     eyebrow: 'CALIBRATE / 焦距校准',
     title: '焦距校准中',
-    note: '画面会短暂失焦，请继续注视房屋',
-    actionLabel: '继续校准',
+    note: '观察焦距变化，在房屋最清晰时点击中央图像',
+    actionLabel: '在图像清晰时确认焦距',
   }),
   drift: Object.freeze({
     eyebrow: 'ANOMALY / 视觉偏移',

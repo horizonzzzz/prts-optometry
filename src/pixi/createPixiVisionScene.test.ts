@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isWideLayout } from './createPixiVisionScene';
+import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isWideLayout } from './createPixiVisionScene';
 
 describe('getCopyHeight', () => {
   it('keeps the Pixi copy block aligned with the responsive DOM layout', () => {
@@ -39,10 +39,20 @@ describe('getSoundBarHeights', () => {
 describe('getStageReadyTime', () => {
   it('holds each animated stage until its key feedback is visible', () => {
     expect(getStageReadyTime('intro')).toBe(0);
-    expect(getStageReadyTime('calibrate')).toBe(1.17);
+    expect(getStageReadyTime('calibrate')).toBe(0);
     expect(getStageReadyTime('drift')).toBe(0.75);
     expect(getStageReadyTime('reveal')).toBe(0.9);
     expect(getStageReadyTime('reveal', true)).toBe(0);
+  });
+});
+
+describe('calibration focus cycle', () => {
+  it('opens a forgiving clear window around the middle of each cycle', () => {
+    expect(getCalibrationBlurAmount(0)).toBe(1);
+    expect(getCalibrationBlurAmount(1.3)).toBe(0);
+    expect(getCalibrationBlurAmount(2.6)).toBe(1);
+    expect(isCalibrationClear(0.9)).toBe(false);
+    expect(isCalibrationClear(1.3)).toBe(true);
   });
 });
 
