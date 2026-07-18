@@ -19,6 +19,7 @@ test('each confirmation advances one scene', () => {
   state = advanceState(state, 'CONFIRM');
   expect(state).toEqual({ stage: 'drift', muted: false });
   expect(getStageCopy(state).title).toBe('房屋位置发生偏移');
+  expect(getStageCopy(state).actionLabel).toBe('拖动偏移影像回到中央准星');
 });
 
 test('drift advances to reveal and reveal resets cleanly', () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isWideLayout } from './createPixiVisionScene';
+import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './createPixiVisionScene';
 
 describe('getCopyHeight', () => {
   it('keeps the Pixi copy block aligned with the responsive DOM layout', () => {
@@ -53,6 +53,14 @@ describe('calibration focus cycle', () => {
     expect(getCalibrationBlurAmount(2.6)).toBe(1);
     expect(isCalibrationClear(0.9)).toBe(false);
     expect(isCalibrationClear(1.3)).toBe(true);
+  });
+});
+
+describe('drift alignment', () => {
+  it('accepts a forgiving center radius without accepting a diagonal near miss', () => {
+    expect(isDriftAligned(0, 0)).toBe(true);
+    expect(isDriftAligned(0.03, 0.03)).toBe(true);
+    expect(isDriftAligned(0.04, 0.04)).toBe(false);
   });
 });
 

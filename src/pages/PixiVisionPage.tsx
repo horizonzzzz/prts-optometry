@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState, type MouseEvent } from 'react';
+import { useEffect, useReducer, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import qrNode01 from '../../assets/7521a33230186fc1435c3077c4449634.png';
 import qrNode02 from '../../assets/b3a33055da1d8f99363e4042f4df035f.jpg';
 import ambientAudio from '../../assets/audio/bgm.ea4286.mp3';
@@ -7,15 +7,8 @@ import {
   advanceState,
   createInitialState,
   getStageCopy,
-  type Action,
 } from '../state';
 import { createPixiVisionScene, type PixiVisionScene } from '../pixi/createPixiVisionScene';
-
-const ACTION_BY_STAGE: Partial<Record<string, Action>> = {
-  intro: 'START',
-  calibrate: 'CONFIRM',
-  drift: 'CONTINUE',
-};
 
 const AMBIENT_VOLUME = 0.35;
 const REVEAL_VOLUME = 0.5;
@@ -35,7 +28,8 @@ export default function PixiVisionPage() {
   const qrDialogRef = useRef<HTMLDialogElement | null>(null);
   const sceneRef = useRef<PixiVisionScene | null>(null);
   const reducedMotionRef = useRef(false);
-  const calibrationTimerRef = useRef(0);
+  const transitionTimerRef = useRef(0);
+  const driftPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const ambientRef = useRef<HTMLAudioElement | null>(null);
   const revealRef = useRef<HTMLAudioElement | null>(null);
   const snowNoiseRef = useRef<{
@@ -55,7 +49,7 @@ export default function PixiVisionPage() {
     return () => query.removeEventListener?.('change', update);
   }, []);
 
-  useEffect(() => () => window.clearTimeout(calibrationTimerRef.current), []);
+  useEffect(() => () => window.clearTimeout(transitionTimerRef.current), []);
 
   useEffect(() => {
     const ambient = new Audio(ambientAudio);
@@ -125,6 +119,7 @@ export default function PixiVisionPage() {
 
   useEffect(() => {
     if (!ready) return;
+    driftPointerRef.current = null;
     setInteractionMessage('');
     setStageReady(false);
     sceneRef.current?.setStage(state.stage, () => setStageReady(true));
@@ -170,6 +165,7 @@ export default function PixiVisionPage() {
 
   const copy = getStageCopy(state);
   const liveNote = copy.note.endsWith('。') ? copy.note : `${copy.note}。`;
+  const visionUnavailable = !ready || !stageReady || Boolean(error) || !started || entryDeparting || state.stage === 'reveal';
 
   function startAmbientAudio() {
     const ambient = ambientRef.current;
@@ -214,24 +210,70 @@ export default function PixiVisionPage() {
   }
 
   function handleVisionActivate(event: MouseEvent<HTMLButtonElement>) {
-    if (!ready || !stageReady || error || !started || entryDeparting || state.stage === 'reveal') return;
+    if (visionUnavailable) return;
     if (state.stage === 'calibrate') {
       prepareSnowNoise();
       const confirmed = sceneRef.current?.confirmCalibration(event.detail === 0) ?? false;
       setInteractionMessage(confirmed ? '焦距已锁定。' : '焦距未锁定，请在图像清晰时点击。');
       if (!confirmed) return;
       setStageReady(false);
-      window.clearTimeout(calibrationTimerRef.current);
-      calibrationTimerRef.current = window.setTimeout(() => dispatch('CONFIRM'), 180);
+      window.clearTimeout(transitionTimerRef.current);
+      transitionTimerRef.current = window.setTimeout(() => dispatch('CONFIRM'), 180);
+      return;
+    }
+
+    if (state.stage === 'drift') {
+      if (event.detail === 0) completeDriftAlignment(true);
       return;
     }
 
     setInteractionMessage('');
-    const action = ACTION_BY_STAGE[state.stage];
-    if (action) {
+    if (state.stage === 'intro') {
       setStageReady(false);
-      dispatch(action);
+      dispatch('START');
     }
+  }
+
+  function completeDriftAlignment(bypassAlignment = false) {
+    const confirmed = sceneRef.current?.confirmDrift(bypassAlignment) ?? false;
+    setInteractionMessage(confirmed ? '影像已与中央准星重合。' : '偏移仍未归零，请继续拖动影像。');
+    if (!confirmed) return;
+    setStageReady(false);
+    window.clearTimeout(transitionTimerRef.current);
+    transitionTimerRef.current = window.setTimeout(() => dispatch('CONTINUE'), 260);
+  }
+
+  function handleDriftPointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (visionUnavailable || state.stage !== 'drift' || event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    driftPointerRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+  }
+
+  function handleDriftPointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
+    const pointer = driftPointerRef.current;
+    if (!pointer || pointer.pointerId !== event.pointerId || state.stage !== 'drift') return;
+    event.preventDefault();
+    const deltaX = event.clientX - pointer.x;
+    const deltaY = event.clientY - pointer.y;
+    pointer.x = event.clientX;
+    pointer.y = event.clientY;
+    sceneRef.current?.moveDriftBy(deltaX, deltaY);
+  }
+
+  function handleDriftPointerUp(event: ReactPointerEvent<HTMLButtonElement>) {
+    const pointer = driftPointerRef.current;
+    if (!pointer || pointer.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    driftPointerRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    completeDriftAlignment();
+  }
+
+  function handleDriftPointerCancel(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (driftPointerRef.current?.pointerId !== event.pointerId) return;
+    driftPointerRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
   function handleReset() {
@@ -274,8 +316,15 @@ export default function PixiVisionPage() {
         className="pixi-hit pixi-vision-hit"
         type="button"
         onClick={handleVisionActivate}
-        disabled={!started || entryDeparting || !ready || !stageReady || Boolean(error) || state.stage === 'reveal'}
-        aria-label={copy.actionLabel}
+        onPointerDown={handleDriftPointerDown}
+        onPointerMove={handleDriftPointerMove}
+        onPointerUp={handleDriftPointerUp}
+        onPointerCancel={handleDriftPointerCancel}
+        onLostPointerCapture={(event) => {
+          if (driftPointerRef.current?.pointerId === event.pointerId) driftPointerRef.current = null;
+        }}
+        disabled={visionUnavailable}
+        aria-label={state.stage === 'drift' ? `${copy.actionLabel}，键盘用户按回车完成对准` : copy.actionLabel}
       />
 
       {state.stage === 'reveal' && stageReady && (

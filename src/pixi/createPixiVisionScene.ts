@@ -7,7 +7,7 @@ import { setCssVar } from './visionSceneGraphics';
 import { getStageReadyTime, isCalibrationClear } from './visionSceneModel';
 import type { PixiVisionScene, SceneOptions } from './visionSceneModel';
 
-export { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isWideLayout } from './visionSceneModel';
+export { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './visionSceneModel';
 export type { PixiVisionScene } from './visionSceneModel';
 
 export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion, onEntryReady }: SceneOptions) {
@@ -248,6 +248,8 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     setStarted,
     setStage,
     confirmCalibration,
+    moveDriftBy: main.moveDriftBy,
+    confirmDrift: main.confirmDrift,
     setMuted: main.setMuted,
     setReducedMotion,
     reset: () => setStage('intro'),

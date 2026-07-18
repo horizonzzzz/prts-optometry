@@ -30,8 +30,8 @@ const COPY: Readonly<Record<Stage, Readonly<StageCopy>>> = Object.freeze({
   drift: Object.freeze({
     eyebrow: 'ANOMALY / 视觉偏移',
     title: '房屋位置发生偏移',
-    note: '视觉信号偏离基线，请不要移开视线',
-    actionLabel: '确认异常影像',
+    note: '拖动房屋影像，使其与中央准星重合',
+    actionLabel: '拖动偏移影像回到中央准星',
   }),
   reveal: Object.freeze({
     eyebrow: 'REVEAL / 影像回收',

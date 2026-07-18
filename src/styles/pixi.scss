@@ -398,6 +398,15 @@
   box-shadow: 0 0 0 1px rgba(184, 43, 56, 0.72), 0 0 42px rgba(184, 43, 56, 0.22);
 }
 
+.pixi-page[data-stage='drift'] .pixi-vision-hit:not(:disabled) {
+  touch-action: none;
+  cursor: grab;
+}
+
+.pixi-page[data-stage='drift'] .pixi-vision-hit:active:not(:disabled) {
+  cursor: grabbing;
+}
+
 .pixi-hit:active:not(:disabled) {
   transform: scale(0.985);
 }

@@ -42,6 +42,7 @@ const STAGE_READY_TIME: Record<Stage, number> = {
 
 const CALIBRATION_CYCLE_TIME = 2.6;
 const CALIBRATION_CLEAR_MAX = 0.2;
+const DRIFT_ALIGNMENT_MAX = 0.055;
 
 export function getStageReadyTime(stage: Stage, reducedMotion = false) {
   return reducedMotion ? 0 : STAGE_READY_TIME[stage];
@@ -54,6 +55,10 @@ export function getCalibrationBlurAmount(stageTime: number) {
 
 export function isCalibrationClear(stageTime: number) {
   return getCalibrationBlurAmount(stageTime) <= CALIBRATION_CLEAR_MAX;
+}
+
+export function isDriftAligned(offsetX: number, offsetY: number) {
+  return Math.hypot(offsetX, offsetY) <= DRIFT_ALIGNMENT_MAX;
 }
 
 export function getRevealFractureKick(stageTime: number) {
@@ -112,6 +117,8 @@ export type PixiVisionScene = {
   setStarted: (started: boolean, onComplete?: () => void) => void;
   setStage: (stage: Stage, onReady?: () => void) => void;
   confirmCalibration: (bypassTiming?: boolean) => boolean;
+  moveDriftBy: (deltaX: number, deltaY: number) => void;
+  confirmDrift: (bypassAlignment?: boolean) => boolean;
   setMuted: (muted: boolean) => void;
   setReducedMotion: (reducedMotion: boolean) => void;
   reset: () => void;

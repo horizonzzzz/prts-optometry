@@ -29,6 +29,7 @@ import {
   getRevealFractureKick,
   getSoundBarHeights,
   getStageReadyTime,
+  isDriftAligned,
   isWideLayout,
   STAGE_ACCENTS,
   STAGE_META,
@@ -179,8 +180,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   houseMask.renderable = true;
   houseMask.alpha = 0;
   houseViewport.mask = houseMask;
-  houseViewport.addChild(houseBase, houseGlitch, houseStatic, houseRoll, houseVignette, houseTrace, houseReticle);
-  houseGroup.addChild(houseMask, houseViewport, houseFrame, targetDash);
+  houseViewport.addChild(houseBase, houseGlitch, houseStatic, houseRoll, houseVignette, houseTrace);
+  houseGroup.addChild(houseMask, houseViewport, houseFrame, targetDash, houseReticle);
   houseBase.filters = [houseBlur, houseNoise, houseColor];
   houseGlitch.tint = 0xff5665;
   houseGlitch.blendMode = 'screen';
@@ -236,7 +237,11 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   let currentMuted: boolean | null = null;
   let soundTimeline: gsap.core.Timeline | null = null;
   let calibrationFeedbackTimeline: gsap.core.Timeline | null = null;
+  let driftTween: gsap.core.Tween | null = null;
   let calibrationLocked = false;
+  let driftLocked = false;
+  let driftOffsetX = 0;
+  let driftOffsetY = 0;
   let flashTimer = 0;
 
   function drawScreenGrid(graphics: Graphics, x: number, y: number, gridWidth: number, gridHeight: number, alpha: number) {
@@ -282,16 +287,18 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     houseFrame.circle(0, 0, radius + 12).stroke({ width: 1, color: currentStage === 'drift' ? COLORS.pale : COLORS.cyan, alpha: 0.16 });
 
     targetDash.position.set(0, 0);
-    drawDashedCircle(targetDash, radius * 0.92, currentStage === 'drift' ? COLORS.pale : COLORS.graphite, currentStage === 'drift' ? 0.12 : 0.25);
+    drawDashedCircle(targetDash, radius * 0.92, currentStage === 'drift' ? COLORS.pale : COLORS.graphite, currentStage === 'drift' ? 0.82 : 0.25);
 
     houseReticle.clear();
     const reticleLength = 12;
     const reticleGap = 5;
-    const reticleAlpha = currentStage === 'calibrate' ? 0.48 : currentStage === 'drift' ? 0.06 : 0.24;
-    drawLine(houseReticle, -reticleGap - reticleLength, 0, -reticleGap, 0, 1, COLORS.pale, reticleAlpha);
-    drawLine(houseReticle, reticleGap, 0, reticleGap + reticleLength, 0, 1, COLORS.pale, reticleAlpha);
-    drawLine(houseReticle, 0, -reticleGap - reticleLength, 0, -reticleGap, 1, COLORS.pale, reticleAlpha);
-    drawLine(houseReticle, 0, reticleGap, 0, reticleGap + reticleLength, 1, COLORS.pale, reticleAlpha);
+    const reticleAlpha = currentStage === 'calibrate' ? 0.48 : currentStage === 'drift' ? 0.9 : 0.24;
+    const reticleColor = currentStage === 'drift' ? 0xffffff : COLORS.pale;
+    drawLine(houseReticle, -reticleGap - reticleLength, 0, -reticleGap, 0, 1, reticleColor, reticleAlpha);
+    drawLine(houseReticle, reticleGap, 0, reticleGap + reticleLength, 0, 1, reticleColor, reticleAlpha);
+    drawLine(houseReticle, 0, -reticleGap - reticleLength, 0, -reticleGap, 1, reticleColor, reticleAlpha);
+    drawLine(houseReticle, 0, reticleGap, 0, reticleGap + reticleLength, 1, reticleColor, reticleAlpha);
+    if (currentStage === 'drift') houseReticle.circle(0, 0, 2.5).fill({ color: 0xffffff, alpha: 0.92 });
 
     houseStatic.clear();
     for (let lineY = -radius; lineY <= radius; lineY += 4) {
@@ -770,6 +777,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
 
     houseGroup.position.set(visualX, visualY);
     drawHouse(radius);
+    applyDriftPosition();
     houseGroup.visible = currentStage !== 'reveal';
     calibrationAlert.position.set(visualX, visualY + frameSize / 2 - 25);
     drawCalibrationAlert(Math.min(frameSize * 0.86, 260));
@@ -861,7 +869,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     const stageCopy = {
       intro: { eyebrow: 'INTAKE / 远距辨认', title: '请注视远处的房屋', note: '点击中央图像，开始焦距校准' },
       calibrate: { eyebrow: 'CALIBRATE / 焦距校准', title: '焦距校准中', note: '观察焦距变化，在房屋最清晰时点击中央图像' },
-      drift: { eyebrow: 'ANOMALY / 视觉偏移', title: '房屋位置发生偏移', note: '视觉信号偏离基线，请不要移开视线' },
+      drift: { eyebrow: 'ANOMALY / 视觉偏移', title: '房屋位置发生偏移', note: '拖动房屋影像，使其与中央准星重合' },
       reveal: { eyebrow: 'REVEAL / 影像回收', title: 'PRTS // 视觉回收完成', note: '你看到的，从来不止一层。' },
     }[stage];
     copyHeading.text = stageCopy.eyebrow;
@@ -872,7 +880,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     metaSignal.text = STAGE_META[stage].signal;
     metaBottom.text = stage === 'reveal' ? STAGE_META[stage].signal : 'FOCAL DISTANCE / 30 CM';
     metaPhase.text = `PHASE / ${STAGE_META[stage].index}`;
-    moduleText.text = stage === 'intro' ? 'TAP IMAGE // START CALIBRATION' : stage === 'calibrate' ? 'TAP ON CLEAR // FOCUS LOCK' : 'OPTICAL MODULE // ACTIVE';
+    moduleText.text = stage === 'intro' ? 'TAP IMAGE // START CALIBRATION' : stage === 'calibrate' ? 'TAP ON CLEAR // FOCUS LOCK' : stage === 'drift' ? 'DRAG IMAGE // ALIGN RETICLE' : 'OPTICAL MODULE // ACTIVE';
   }
 
   function applyStage() {
@@ -882,14 +890,14 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     body.y = 0;
     houseGroup.visible = stage !== 'reveal';
     revealGroup.visible = stage === 'reveal';
-    houseBlur.strength = stage === 'calibrate' && !currentReducedMotion ? 9 : stage === 'drift' ? 2 : 0;
+    houseBlur.strength = stage === 'calibrate' && !currentReducedMotion ? 9 : stage === 'drift' && !driftLocked ? 2 : 0;
     houseNoise.noise = stage === 'drift' ? 0.16 : 0.045;
-    houseBase.alpha = stage === 'drift' ? 0.62 : 1;
+    houseBase.alpha = stage === 'drift' && !driftLocked ? 0.62 : 1;
     houseBase.tint = 0xffffff;
-    houseColor.enabled = stage === 'drift';
-    houseGlitch.alpha = stage === 'drift' ? 0.22 : 0;
-    houseStatic.alpha = stage === 'drift' ? 0.42 : 0;
-    houseRoll.alpha = stage === 'drift' ? 0.64 : 0;
+    houseColor.enabled = stage === 'drift' && !driftLocked;
+    houseGlitch.alpha = stage === 'drift' && !driftLocked ? 0.22 : 0;
+    houseStatic.alpha = stage === 'drift' && !driftLocked ? 0.42 : 0;
+    houseRoll.alpha = stage === 'drift' && !driftLocked ? 0.64 : 0;
     houseVignette.alpha = stage === 'drift' ? 1 : 0.12;
     houseTrace.alpha = stage === 'drift' ? 0.62 : stage === 'calibrate' ? 0.12 : 0.04;
     houseTrace.position.set(0, 0);
@@ -930,6 +938,89 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     resetLabel.alpha = resetAlpha;
     resetCode.alpha = resetAlpha;
     flash.alpha = 0;
+    houseViewport.scale.set(1);
+    applyDriftPosition();
+  }
+
+  function applyDriftPosition(updatePosition = true) {
+    if (currentStage !== 'drift') {
+      if (updatePosition) houseViewport.position.set(0, 0);
+      houseReticle.tint = 0xffffff;
+      houseReticle.scale.set(1);
+      targetDash.tint = 0xffffff;
+      return;
+    }
+
+    if (updatePosition) houseViewport.position.set(driftOffsetX * frameSize, driftOffsetY * frameSize);
+    const aligned = driftLocked || isDriftAligned(driftOffsetX, driftOffsetY);
+    houseReticle.tint = COLORS.cyan;
+    houseReticle.scale.set(aligned ? 1.14 : 1);
+    targetDash.tint = aligned ? COLORS.cyan : 0xffffff;
+    targetDash.alpha = aligned ? 0.86 : 0.36;
+  }
+
+  function moveDriftBy(deltaX: number, deltaY: number) {
+    if (currentStage !== 'drift' || driftLocked || !Number.isFinite(deltaX) || !Number.isFinite(deltaY)) return;
+    driftTween?.kill();
+    driftTween = null;
+    houseViewport.scale.set(1);
+    calibrationAlert.alpha = 0;
+    driftOffsetX = Math.max(-0.3, Math.min(0.3, driftOffsetX + deltaX / Math.max(frameSize, 1)));
+    driftOffsetY = Math.max(-0.3, Math.min(0.3, driftOffsetY + deltaY / Math.max(frameSize, 1)));
+    applyDriftPosition();
+    if (currentReducedMotion) app.render();
+  }
+
+  function confirmDrift(bypassAlignment = false) {
+    if (currentStage !== 'drift') return false;
+    const confirmed = bypassAlignment || isDriftAligned(driftOffsetX, driftOffsetY);
+    driftLocked = confirmed;
+    driftTween?.kill();
+    driftTween = null;
+    calibrationAlert.visible = true;
+    calibrationAlert.alpha = 1;
+    calibrationAlert.scale.set(1);
+    calibrationAlertAccent.tint = confirmed ? COLORS.cyan : COLORS.red;
+    calibrationAlertCode.text = confirmed ? 'LOCK 100' : 'ERR 03';
+    calibrationAlertCode.style.fill = confirmed ? COLORS.graphite : COLORS.pale;
+    calibrationAlertMessage.text = confirmed ? 'OFFSET ALIGNED\n偏移已归零' : 'OFFSET UNRESOLVED\n请拖动影像对准准星';
+
+    if (confirmed) {
+      driftOffsetX = 0;
+      driftOffsetY = 0;
+      houseBlur.strength = 0;
+      houseBase.alpha = 1;
+      houseColor.enabled = false;
+      houseGlitch.alpha = 0;
+      houseStatic.alpha = 0;
+      houseRoll.alpha = 0;
+      houseTrace.alpha = 0.12;
+      applyDriftPosition(false);
+      if (currentReducedMotion) {
+        houseViewport.position.set(0, 0);
+      } else {
+        driftTween = gsap.to(houseViewport.position, {
+          x: 0,
+          y: 0,
+          duration: 0.2,
+          ease: 'power3.out',
+          overwrite: true,
+          onComplete: () => { driftTween = null; },
+        });
+      }
+    } else if (!currentReducedMotion) {
+      driftTween = gsap.fromTo(houseViewport.scale, { x: 0.985, y: 0.985 }, {
+        x: 1,
+        y: 1,
+        duration: 0.18,
+        ease: 'back.out(2)',
+        overwrite: true,
+        onComplete: () => { driftTween = null; },
+      });
+    }
+
+    app.render();
+    return confirmed;
   }
 
   function showCalibrationFeedback(confirmed: boolean) {
@@ -1035,7 +1126,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     }
     scanline.y = (time * (currentStage === 'drift' ? 180 : 72)) % Math.max(height + 40, 1);
     grain.rotation = Math.sin(time * 0.12) * 0.01;
-    if (currentStage === 'drift') {
+    if (currentStage === 'drift' && !driftLocked) {
       houseGlitch.x = Math.sin(time * 26) * 13;
       houseGlitch.y = Math.cos(time * 18) * 1.2;
       houseGlitch.scale.x = houseBase.scale.x * (1 + Math.sin(time * 11) * 0.05);
@@ -1048,6 +1139,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       houseGlitch.y = 0;
       houseStatic.position.set(0, 0);
       houseRoll.y = 0;
+      houseTrace.position.set(0, 0);
     }
     houseNoise.seed = (time * 0.17) % 1;
     if (currentStage === 'reveal') {
@@ -1116,6 +1208,12 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       currentStage = stage;
       complete = false;
       calibrationLocked = false;
+      driftLocked = false;
+      driftOffsetX = stage === 'drift' ? 0.18 : 0;
+      driftOffsetY = stage === 'drift' ? -0.1 : 0;
+      driftTween?.kill();
+      driftTween = null;
+      houseViewport.scale.set(1);
       calibrationFeedbackTimeline?.kill();
       calibrationFeedbackTimeline = null;
       calibrationAlert.alpha = 0;
@@ -1124,11 +1222,17 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     },
     applyStage,
     showCalibrationFeedback,
+    moveDriftBy,
+    confirmDrift,
     triggerRevealFlash,
     setMuted,
     setReducedMotion(reducedMotion: boolean) {
       currentReducedMotion = reducedMotion;
       window.clearTimeout(flashTimer);
+      driftTween?.kill();
+      driftTween = null;
+      houseViewport.scale.set(1);
+      if (driftLocked) houseViewport.position.set(0, 0);
       if (!reducedMotion) return;
       calibrationFeedbackTimeline?.kill();
       calibrationFeedbackTimeline = null;
@@ -1152,6 +1256,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     destroy() {
       calibrationFeedbackTimeline?.kill();
       calibrationFeedbackTimeline = null;
+      driftTween?.kill();
+      driftTween = null;
       soundTimeline?.kill();
       soundTimeline = null;
       window.clearTimeout(flashTimer);
