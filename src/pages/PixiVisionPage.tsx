@@ -17,6 +17,7 @@ const ACTION_BY_STAGE: Partial<Record<string, Action>> = {
 
 const AMBIENT_VOLUME = 0.35;
 const REVEAL_VOLUME = 0.5;
+const SNOW_NOISE_VOLUME = 0.02;
 
 export default function PixiVisionPage() {
   const [state, dispatch] = useReducer(advanceState, undefined, createInitialState);
@@ -31,6 +32,10 @@ export default function PixiVisionPage() {
   const reducedMotionRef = useRef(false);
   const ambientRef = useRef<HTMLAudioElement | null>(null);
   const revealRef = useRef<HTMLAudioElement | null>(null);
+  const snowNoiseRef = useRef<{
+    context: AudioContext;
+    gain: GainNode;
+  } | null>(null);
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -57,12 +62,15 @@ export default function PixiVisionPage() {
     revealRef.current = reveal;
 
     return () => {
+      const snowNoise = snowNoiseRef.current;
       ambient.pause();
       reveal.pause();
       ambient.currentTime = 0;
       reveal.currentTime = 0;
+      void snowNoise?.context.close().catch(() => undefined);
       ambientRef.current = null;
       revealRef.current = null;
+      snowNoiseRef.current = null;
     };
   }, []);
 
@@ -122,6 +130,9 @@ export default function PixiVisionPage() {
     const reveal = revealRef.current;
     if (!ambient || !reveal || !started) return;
 
+    const snowNoise = snowNoiseRef.current;
+    if (snowNoise) snowNoise.gain.gain.value = 0;
+
     if (state.muted) {
       ambient.pause();
       reveal.pause();
@@ -137,6 +148,12 @@ export default function PixiVisionPage() {
     }
 
     reveal.pause();
+    if (state.stage === 'drift') {
+      ambient.pause();
+      if (snowNoise) snowNoise.gain.gain.value = SNOW_NOISE_VOLUME;
+      return;
+    }
+
     ambient.volume = AMBIENT_VOLUME;
     void ambient.play().catch(() => undefined);
   }, [started, state.muted, state.stage]);
@@ -148,6 +165,31 @@ export default function PixiVisionPage() {
     if (!ambient || state.muted) return;
     ambient.volume = AMBIENT_VOLUME;
     void ambient.play().catch(() => undefined);
+  }
+
+  function prepareSnowNoise() {
+    if (snowNoiseRef.current) return;
+
+    try {
+      const context = new AudioContext();
+      const buffer = context.createBuffer(1, context.sampleRate, context.sampleRate);
+      const samples = buffer.getChannelData(0);
+      for (let index = 0; index < samples.length; index += 1) {
+        samples[index] = Math.random() * 2 - 1;
+      }
+
+      const source = context.createBufferSource();
+      const gain = context.createGain();
+      source.buffer = buffer;
+      source.loop = true;
+      gain.gain.value = 0;
+      source.connect(gain).connect(context.destination);
+      source.start();
+      snowNoiseRef.current = { context, gain };
+      void context.resume().catch(() => undefined);
+    } catch {
+      // Audio is optional; unsupported browsers continue silently.
+    }
   }
 
   function handleStart() {
@@ -162,6 +204,7 @@ export default function PixiVisionPage() {
 
   function handleVisionActivate() {
     if (!ready || error || !started || entryDeparting || state.stage === 'reveal') return;
+    if (state.stage === 'calibrate') prepareSnowNoise();
     const action = ACTION_BY_STAGE[state.stage];
     if (action) dispatch(action);
   }
