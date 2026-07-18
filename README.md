@@ -1,57 +1,134 @@
-# Vision Screening
+# Vision Screening / PRTS Optometry
 
-手机端二维码体验页：点击中心房屋视野完成清晰、失焦和异常检测，再以不稳定的源石菱形和普瑞赛斯真实影像完成揭示。
+Mobile-first fictional vision-screening experience inspired by Arknights / PRTS.
 
-前三阶段采用明日方舟式冷白/炭黑工业终端视觉，以青色表示系统反馈、红色表示异常；最终影像保持独立的深色揭示风格。
+Tap the central house view to move through clear focus, blur calibration, and anomaly drift, then open an unstable originium-framed PRTS reveal. Acts 1–3 use a cold white / charcoal industrial terminal look (cyan for system feedback, red for anomaly). The final act keeps its own dark reveal style.
 
-## Development
+> [!IMPORTANT]
+> This is a **fictional visual effect**, not a medical eye test. The page does not collect accounts, location, or personal data.
 
-安装依赖并启动 Vite：
+## Features
 
-```powershell
+- Four-stage interaction: `intro → calibrate → drift → reveal`, then reset
+- Default **PixiJS 8** visual terminal with overlaid accessible hit targets
+- Legacy **DOM + GSAP** implementation retained at `#/legacy-dom`
+- Local ambient / reveal audio after the first user gesture, with mute support
+- `prefers-reduced-motion` friendly stage progression
+- Deployable as a Cloudflare Workers SPA
+
+## Quick start
+
+```bash
 npm install
 npm run dev
 ```
 
-建议用 390×844 左右的移动端视口预览。
+Open the dev server and preview around **390×844** (mobile portrait). For a wider two-column layout check, use roughly **960×700+**.
 
-```powershell
+```bash
 npm test
+npm run typecheck
 npm run build
 ```
 
-## Interaction contract
+| Script | Purpose |
+|--------|---------|
+| `npm run dev` | Vite dev server (`0.0.0.0`) |
+| `npm test` | Vitest unit tests |
+| `npm run typecheck` | TypeScript project build check |
+| `npm run build` | Production bundle |
+| `npm run preview` | Build + local Wrangler preview |
+| `npm run deploy` | Build + `wrangler deploy` |
+
+## Interaction
 
 ```text
-点击中心房屋视野：intro（清晰）→ calibrate（失焦）→ drift（异常）→ reveal
-点击最终普瑞赛斯影像：reveal → reset
+Entry “start” control
+  → screening UI
+
+Tap center house view
+  intro (clear) → calibrate (blur) → drift (anomaly) → reveal
+
+Reveal reset control
+  reveal → intro
+
+Mute
+  toggles audio only (does not change stage)
 ```
 
-这是虚构的视觉效果，不是医疗视力测试；页面不收集账号、定位或个人信息。
+Routes (HashRouter):
+
+| URL | Experience |
+|-----|------------|
+| `#/` | Pixi terminal (default) |
+| `#/legacy-dom` | Original DOM / GSAP page |
+
+## Stack
+
+- **React 19** + **TypeScript** + **Vite 8** — app shell and routing
+- **PixiJS 8** — default canvas terminal (`src/pixi/`)
+- **GSAP** — stage transitions (Pixi main scene + legacy DOM page)
+- **Sass** — legacy DOM styling and Pixi overlay hit-target layout
+- **Vitest** — pure state / layout helper tests
+- **Cloudflare Workers** (`wrangler`, `@cloudflare/vite-plugin`) — hosting
+
+## Project layout
+
+```text
+src/
+  main.tsx                 # routes
+  state.ts                 # stage machine + copy
+  pages/
+    PixiVisionPage.tsx     # default experience
+    LegacyDomPage.tsx      # DOM fallback
+  pixi/                    # scene modules, assets, layout helpers
+  styles/                  # SCSS entrypoints + partials
+assets/                    # images, particles, audio
+fonts/                     # Bender, Novecento, Source Han Sans SC
+```
+
+Agent-oriented setup, architecture notes, and contribution guardrails live in [`AGENTS.md`](./AGENTS.md).
 
 ## Resources
 
-- React：负责页面渲染与交互状态连接。
-- Tailwind CSS：负责常规布局工具类；复杂阶段效果、伪元素和关键帧保留在 `src/index.css`。
-- GSAP：通过 npm 安装，用于房屋失焦、异常转场和最终影像时间线。
-- `assets/prts-close.jpg`：最终画面唯一使用的普瑞赛斯图像，以焦点蒙版突出头部并模糊边缘。
-- `assets/vision-house.jpg`：前三幕共用的经典远距房屋视野，依次呈现清晰、失焦和异常扭曲。
-- `assets/official-terminal-blueprint.jpg`、`assets/official-terminal-grid.jpg`、`assets/official-rhodes-island.png`：来自 Arknights Global Fan Kit / 官网公开资源包，用于入口蓝图、检测底纹和罗德岛标记。
-- 源石菱形：内联 SVG 分段折角与位移滤镜；揭示时左右收束，稳定后偶发短促撕扯，不遮挡人物。
-- 字体：从明日方舟官网 CDN 下载到 `fonts/`，来源为官网的 Bender、Novecentosanswide 和 Source Han Sans SC 文件，并使用其真实 Bold 字重。
-- 粒子纹理与遮罩：引用明日方舟官网 CDN，加载失败时由 CSS 渐变替代。
-- 环境音：用户首次点击后才尝试播放官网 CDN BGM；浏览器禁止播放或资源失败时静默降级。
+| Asset | Use |
+|-------|-----|
+| `assets/vision-house.jpg` | Shared far-house view for the first three acts |
+| `assets/prts-close.jpg` | Reveal portrait (focus mask on the head) |
+| `assets/official-terminal-blueprint.jpg` | Entry blueprint texture |
+| `assets/official-terminal-grid.jpg` | Detection grid texture |
+| `assets/official-rhodes-island.png` | Rhodes Island mark |
+| `assets/audio/bgm.ea4286.mp3` | Ambient loop after start |
+| `assets/audio/luanxu.mp3` | Reveal loop |
+| `fonts/*` | Local Bender / Novecento / Source Han Sans SC |
 
-资源来源参考：
+Originium framing is drawn in-scene (segmented chevrons / displacement), closing in on reveal and occasionally tearing without covering the portrait.
 
-- 官网：https://ak.hypergryph.com/#index
-- Fan Kit：https://www.arknights.global/fankit
-- Wiki：https://ak.mooncell.wiki/w/首页
+Reference sources:
 
-Fan Kit 素材仅用于本非商业同人体验；公开发布或制作周边前需再次核对官方条款。
+- Official site: https://ak.hypergryph.com/#index
+- Fan Kit: https://www.arknights.global/fankit
+- Wiki: https://ak.mooncell.wiki/w/首页
+
+Fan Kit materials are used only for this non-commercial fan experience. Re-check official terms before public redistribution or merch.
 
 ## Fallback behavior
 
-- 远程 GSAP 不可用时，页面仍能切换全部阶段，源石边框与 PRTS 会直接显示。
-- 远程纹理不可用时，页面使用内联 SVG 和 CSS 渐变。
-- `prefers-reduced-motion: reduce` 会取消大幅位移和持续闪烁，保留阶段和最终画面。
+- If Pixi / WebGL fails to initialize, the default page shows an error; the legacy DOM route remains available at `#/legacy-dom`
+- If audio is blocked or fails to load, playback degrades silently
+- `prefers-reduced-motion: reduce` removes large travel and continuous flicker while keeping stage changes and the final image
+- Missing remote textures (legacy path) fall back to inline SVG / CSS gradients where applicable
+
+## Deploy
+
+Production target is Cloudflare Workers (`prts-optometry` in `wrangler.jsonc`), configured as a single-page app:
+
+```bash
+npm run deploy
+```
+
+Local worker-style preview:
+
+```bash
+npm run preview
+```
