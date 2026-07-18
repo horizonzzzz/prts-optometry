@@ -59,9 +59,13 @@ export function getEntryBootState(elapsedMs: number) {
 
 export function getCopyHeight(height: number, reveal: boolean) {
   if (reveal) return height <= 860 ? 140 : 180;
-  if (height <= 700) return 90;
+  if (height <= 700) return 98;
   if (height <= 860) return 110;
   return 154;
+}
+
+export function isWideLayout(width: number, height: number) {
+  return width >= 960 && height >= 700;
 }
 
 export function getSoundBarHeights(muted: boolean) {

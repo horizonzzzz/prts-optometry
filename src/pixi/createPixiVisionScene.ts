@@ -6,7 +6,7 @@ import { loadVisionSceneTextures } from './visionSceneAssets';
 import { setCssVar } from './visionSceneGraphics';
 import type { PixiVisionScene, SceneOptions } from './visionSceneModel';
 
-export { getCopyHeight, getEntryBootState, getSoundBarHeights } from './visionSceneModel';
+export { getCopyHeight, getEntryBootState, getSoundBarHeights, isWideLayout } from './visionSceneModel';
 export type { PixiVisionScene } from './visionSceneModel';
 
 export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion, onEntryReady }: SceneOptions) {

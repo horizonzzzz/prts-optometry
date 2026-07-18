@@ -1,5 +1,4 @@
 import { useEffect, useReducer, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 import ambientAudio from '../../assets/audio/bgm.ea4286.mp3';
 import revealAudio from '../../assets/audio/luanxu.mp3';
 import {
@@ -183,9 +182,6 @@ export default function PixiVisionPage() {
       {!ready && !error && <div className="pixi-loading">PRTS // INITIALIZING OPTICAL ARRAY</div>}
 
       <div className="pixi-ui">
-        <Link className="pixi-back" to="/legacy-dom" tabIndex={started ? 0 : -1}>
-          ORIGINAL DOM
-        </Link>
         <button
           className="pixi-sound-hit"
           type="button"

@@ -26,6 +26,7 @@ import {
   COLORS,
   getCopyHeight,
   getSoundBarHeights,
+  isWideLayout,
   STAGE_ACCENTS,
   STAGE_META,
 } from './visionSceneModel';
@@ -79,7 +80,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const railRuleRight = new Graphics();
 
   const bodyBorder = new Graphics();
-  const bodyNumber = addText('01', new TextStyle({ fill: COLORS.graphite, fontFamily: 'Novecento, Bender, sans-serif', fontSize: 128, fontWeight: '700', letterSpacing: -4 }));
+  const bodyNumber = addText('01', new TextStyle({ fill: COLORS.graphite, fontFamily: 'Novecento, Bender, sans-serif', fontSize: 128, fontWeight: '700' }));
   const metaTopDot = new Graphics();
   const metaBottomDot = new Graphics();
   const metaTop = addText('OPTICAL ARRAY', new TextStyle({ fill: COLORS.muted, fontFamily: 'Bender, sans-serif', fontSize: 8, letterSpacing: 1.3 }));
@@ -546,43 +547,56 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     revealScan.clear().rect(-revealWidth * 0.72, -4, revealWidth * 1.44, 8).fill({ color: COLORS.pale, alpha: 0.24 });
   }
 
-  function drawCopy(copyTopValue: number, contentWidth: number, contentX: number) {
+  function drawCopy(copyTopValue: number, panelWidthValue: number, panelLeft: number, fixedHeight?: number) {
     const shortScreen = height <= 860;
     const veryShortScreen = height <= 700;
-    const copyHeight = height - copyTopValue - (veryShortScreen ? 10 : shortScreen ? 10 : 18);
+    const wideLayout = isWideLayout(width, height);
+    const copyHeight = fixedHeight ?? height - copyTopValue - (veryShortScreen ? 10 : shortScreen ? 10 : 18);
     const reveal = currentStage === 'reveal';
+    const panelRight = panelLeft + panelWidthValue;
+    const panelBottom = copyTopValue + copyHeight;
+    const panelPoints: Array<[number, number]> = [
+      [panelLeft, copyTopValue],
+      [panelRight - 12, copyTopValue],
+      [panelRight, copyTopValue + 12],
+      [panelRight, panelBottom],
+      [panelLeft + 12, panelBottom],
+      [panelLeft, panelBottom - 12],
+    ];
     copyBackground.clear();
     copyBorder.clear();
     copyAccent.clear();
     if (!reveal) {
-      copyBackground.rect(contentX + 12, copyTopValue, contentWidth - 12, copyHeight).fill({ color: 0xf7f9f8, alpha: currentStage === 'drift' ? 0.04 : 0.8 });
-      copyBorder.rect(contentX + 12, copyTopValue, contentWidth - 12, copyHeight).stroke({ width: 1, color: currentStage === 'drift' ? COLORS.pale : COLORS.graphite, alpha: currentStage === 'drift' ? 0.62 : 1 });
-      copyBorder.rect(contentX + 12, copyTopValue, 1, copyHeight).fill({ color: currentStage === 'drift' ? COLORS.pale : COLORS.graphite, alpha: 1 });
-      copyBorder.rect(contentX + 12, copyTopValue, contentWidth - 12, 5).fill({ color: COLORS.graphite, alpha: 1 });
-      copyAccent.rect(contentX + 12 + (contentWidth - 12) * 0.71, copyTopValue, (contentWidth - 12) * 0.29, 5).fill({ color: currentStage === 'drift' ? COLORS.red : COLORS.cyan, alpha: 1 });
+      copyBackground.moveTo(panelPoints[0][0], panelPoints[0][1]);
+      for (const [x, y] of panelPoints.slice(1)) copyBackground.lineTo(x, y);
+      copyBackground.closePath().fill({ color: 0xf7f9f8, alpha: currentStage === 'drift' ? 0.04 : 0.8 });
+      copyBorder.moveTo(panelPoints[0][0], panelPoints[0][1]);
+      for (const [x, y] of panelPoints.slice(1)) copyBorder.lineTo(x, y);
+      copyBorder.closePath().stroke({ width: 1, color: currentStage === 'drift' ? COLORS.pale : COLORS.graphite, alpha: currentStage === 'drift' ? 0.62 : 1 });
+      copyBorder.rect(panelLeft, copyTopValue, 1, copyHeight - 12).fill({ color: currentStage === 'drift' ? COLORS.pale : COLORS.graphite, alpha: 1 });
+      copyBorder.rect(panelLeft, copyTopValue, panelWidthValue - 12, 5).fill({ color: COLORS.graphite, alpha: 1 });
+      copyAccent.rect(panelLeft + panelWidthValue * 0.71, copyTopValue, panelWidthValue * 0.29 - 12, 5).fill({ color: currentStage === 'drift' ? COLORS.red : COLORS.cyan, alpha: 1 });
     }
 
-    const textX = reveal ? contentX : contentX + 25;
+    const textX = reveal ? panelLeft : panelLeft + 13;
     const topPadding = reveal ? 6 : veryShortScreen ? 8 : shortScreen ? 14 : 26;
     const titleOffset = veryShortScreen ? 19 : shortScreen ? 22 : 27;
     const noteOffset = veryShortScreen ? 49 : shortScreen ? 59 : 86;
     copyHeading.position.set(textX, copyTopValue + topPadding);
-    copyIndex.position.set(contentX + contentWidth - (reveal ? 20 : 42), copyTopValue + topPadding - 4);
+    copyIndex.position.set(panelRight - (reveal ? 20 : 42), copyTopValue + topPadding - 4);
     copyTitle.position.set(textX, copyTopValue + topPadding + (reveal ? 15 : titleOffset));
     copyNote.position.set(textX, copyTopValue + topPadding + (reveal ? 67 : noteOffset));
-    screeningNote.position.set(textX, copyTopValue + copyHeight - (veryShortScreen ? 5 : shortScreen ? 7 : 9));
-    const titleSize = reveal
-      ? Math.min(42, Math.max(27, width * 0.074))
-      : veryShortScreen
-        ? Math.min(30, Math.max(22, width * 0.06))
-        : shortScreen
-          ? Math.min(36, Math.max(25, width * 0.07))
-          : Math.min(42, Math.max(27, width * 0.074));
+    screeningNote.position.set(textX, panelBottom - (veryShortScreen || shortScreen ? 12 : 14));
+    const titleSize = wideLayout
+      ? 36
+      : reveal
+        ? veryShortScreen ? 27 : shortScreen ? 28 : 42
+        : veryShortScreen ? 22 : shortScreen ? 28 : 42;
     copyTitle.style.fontSize = titleSize;
     copyTitle.style.lineHeight = Math.round(titleSize * 1.02);
-    copyTitle.style.wordWrapWidth = contentWidth - (reveal ? 12 : 38);
-    copyNote.style.wordWrapWidth = contentWidth - (reveal ? 12 : 38);
-    copyIndex.style.fontSize = reveal ? 8 : veryShortScreen ? 22 : shortScreen ? 22 : 26;
+    copyTitle.style.wordWrapWidth = panelWidthValue - (reveal ? 12 : 26);
+    copyNote.style.wordWrapWidth = panelWidthValue - (reveal ? 12 : 26);
+    copyIndex.style.fontSize = reveal ? 8 : wideLayout ? 24 : veryShortScreen ? 22 : shortScreen ? 22 : 26;
     copyIndex.alpha = reveal ? 1 : 0.2;
     copyTitle.style.fill = reveal ? COLORS.ice : currentStage === 'drift' ? COLORS.pale : COLORS.graphite;
     copyNote.style.fill = reveal ? 0x9aa9a6 : currentStage === 'drift' ? 0xa9b6b3 : COLORS.muted;
@@ -597,9 +611,9 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
 
     copyNote.position.set(textX, copyTitle.y + copyTitle.height + 6);
     const resetX = textX;
-    const resetY = copyNote.y + copyNote.height + 12;
     const resetWidth = 94;
     const resetHeight = 36;
+    const resetY = Math.min(copyNote.y + copyNote.height + 12, screeningNote.y - resetHeight - 12);
     const resetPoints: Array<[number, number]> = [[0, 0], [resetWidth - 8, 0], [resetWidth, 8], [resetWidth, resetHeight], [8, resetHeight], [0, resetHeight - 8]];
     drawPolygon(resetButton, resetPoints, COLORS.ice, 1);
     resetButton.position.set(resetX, resetY);
@@ -611,27 +625,55 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   function layout(nextWidth: number, nextHeight: number) {
     width = nextWidth;
     height = nextHeight;
-    panelWidth = Math.min(width, 720);
+    const wideLayout = isWideLayout(width, height);
+    panelWidth = Math.min(width, wideLayout ? 1120 : 720);
     panelX = (width - panelWidth) / 2;
-    padding = width >= 600 ? 32 : 20;
-    const bottomPadding = height <= 700 ? 10 : height <= 860 ? 10 : 18;
-    const headerHeight = currentStage === 'reveal' ? 45 : height <= 700 ? 49 : 58;
-    const railHeight = currentStage === 'reveal' ? 0 : 19;
-    bodyTop = (height <= 700 ? 10 : 16) + headerHeight + railHeight;
-    const copyHeight = getCopyHeight(height, currentStage === 'reveal');
-    copyTop = Math.max(bodyTop + 230, height - bottomPadding - copyHeight);
-    const bodyBottom = copyTop;
-    const stageCenterY = (bodyTop + bodyBottom) / 2;
-    frameSize = height <= 700 ? Math.min(height * 0.58, 250) : Math.min(width * 0.78, 320);
-    frameSize = Math.min(frameSize, panelWidth - padding * 2);
-    haloSize = height <= 700 ? Math.min(height * 0.6, 260) : Math.min(width * 0.8, 330);
-    haloSize = Math.min(haloSize, panelWidth - padding);
-    visualY = stageCenterY;
-    revealWidth = Math.min(width * 0.88, 360);
-    revealHeight = Math.min(height * 0.76, 390);
-    const radius = Math.max((frameSize - 16) / 2, 30);
+    padding = wideLayout ? 40 : width >= 600 ? 32 : 20;
+    const bottomPadding = wideLayout ? 28 : height <= 860 ? 10 : 18;
+    const headerHeight = currentStage === 'reveal' ? (wideLayout ? 58 : 45) : wideLayout ? 64 : height <= 700 ? 49 : 58;
+    const railHeight = currentStage === 'reveal' ? 0 : wideLayout ? 23 : 19;
+    bodyTop = (wideLayout ? 18 : height <= 700 ? 10 : 16) + headerHeight + railHeight;
     const contentX = panelX + padding;
     const contentWidth = panelWidth - padding * 2;
+    let bodyBottom: number;
+    let copyPanelLeft: number;
+    let copyPanelWidth: number;
+    let copyPanelHeight: number | undefined;
+    let visualColumnWidth = contentWidth;
+
+    if (wideLayout) {
+      const columnGap = 48;
+      copyPanelWidth = Math.min(380, contentWidth * 0.36);
+      visualColumnWidth = contentWidth - copyPanelWidth - columnGap;
+      copyPanelLeft = contentX + visualColumnWidth + columnGap;
+      bodyBottom = height - bottomPadding;
+      copyPanelHeight = Math.min(currentStage === 'reveal' ? 300 : 260, bodyBottom - bodyTop - 32);
+      copyTop = bodyTop + (bodyBottom - bodyTop - copyPanelHeight) / 2;
+    } else {
+      const copyHeight = getCopyHeight(height, currentStage === 'reveal');
+      copyTop = Math.max(bodyTop + 230, height - bottomPadding - copyHeight);
+      bodyBottom = copyTop;
+      copyPanelLeft = contentX + 12;
+      copyPanelWidth = contentWidth - 12;
+    }
+
+    const stageCenterY = (bodyTop + bodyBottom) / 2;
+    const visualX = contentX + visualColumnWidth / 2;
+    if (wideLayout) {
+      frameSize = Math.min(visualColumnWidth * 0.72, (bodyBottom - bodyTop) * 0.58, 400);
+      haloSize = Math.min(frameSize + 56, visualColumnWidth - 8);
+      revealWidth = Math.min(visualColumnWidth * 0.67, 400);
+      revealHeight = Math.min((bodyBottom - bodyTop) * 0.6, 440);
+    } else {
+      frameSize = height <= 700 ? Math.min(height * 0.58, 250) : Math.min(width * 0.78, 320);
+      frameSize = Math.min(frameSize, panelWidth - padding * 2);
+      haloSize = height <= 700 ? Math.min(height * 0.6, 260) : Math.min(width * 0.8, 330);
+      haloSize = Math.min(haloSize, panelWidth - padding);
+      revealWidth = Math.min(width * 0.84, 360);
+      revealHeight = Math.min(height * 0.76, 390);
+    }
+    visualY = stageCenterY;
+    const radius = Math.max((frameSize - 16) / 2, 30);
 
     outsideBackground.clear().rect(0, 0, width, height).fill({ color: COLORS.clinic });
     fitCover(backdrop, panelX + panelWidth / 2, height / 2, panelWidth, height);
@@ -660,7 +702,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     bodyBorder.visible = currentStage !== 'reveal';
     bodyNumber.text = STAGE_META[currentStage].index;
     bodyNumber.position.set(contentX + 8, bodyTop + (bodyBottom - bodyTop) * 0.08);
-    bodyNumber.style.fontSize = Math.min(150, Math.max(92, width * 0.31));
+    bodyNumber.style.fontSize = wideLayout ? 150 : width < 600 ? 112 : 128;
     bodyNumber.style.fill = currentStage === 'drift' ? COLORS.red : COLORS.graphite;
     bodyNumber.alpha = currentStage === 'drift' ? 0.12 : 0.08;
     bodyNumber.visible = currentStage !== 'reveal';
@@ -681,23 +723,25 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     metaBottomDot.visible = currentStage !== 'reveal';
     metaRuleTop.visible = currentStage !== 'reveal';
     metaRuleBottom.visible = currentStage !== 'reveal';
+    metaTop.visible = currentStage !== 'reveal';
+    metaSignal.visible = currentStage !== 'reveal';
     metaBottom.visible = true;
     metaPhase.visible = true;
 
-    halo.position.set(panelX + panelWidth / 2, visualY);
+    halo.position.set(visualX, visualY);
     halo.clear();
     drawPolygon(halo, [[-haloSize / 2 + 12, -haloSize / 2], [haloSize / 2, -haloSize / 2], [haloSize / 2, haloSize / 2 - 12], [haloSize / 2 - 12, haloSize / 2], [-haloSize / 2, haloSize / 2], [-haloSize / 2, -haloSize / 2 + 12]], currentStage === 'drift' ? COLORS.night : 0xf5f7f6, currentStage === 'drift' ? 0.46 : 0.64);
     halo.stroke({ width: 2, color: currentStage === 'drift' ? COLORS.red : COLORS.graphite, alpha: currentStage === 'drift' ? 0.38 : 1 });
     haloShadow.clear();
     drawPolygon(haloShadow, [[-haloSize / 2 + 23, -haloSize / 2 + 11], [haloSize / 2 + 11, -haloSize / 2 + 11], [haloSize / 2 + 11, haloSize / 2 - 1], [haloSize / 2 - 1, haloSize / 2 + 11], [-haloSize / 2 + 11, haloSize / 2 + 11], [-haloSize / 2 + 11, -haloSize / 2 + 23]], currentStage === 'drift' ? COLORS.red : COLORS.graphite, currentStage === 'drift' ? 0.1 : 0.12);
-    haloShadow.position.set(panelX + panelWidth / 2, visualY);
+    haloShadow.position.set(visualX, visualY);
     halo.visible = currentStage !== 'reveal';
     haloShadow.visible = currentStage !== 'reveal';
 
-    houseGroup.position.set(panelX + panelWidth / 2, visualY);
+    houseGroup.position.set(visualX, visualY);
     drawHouse(radius);
     houseGroup.visible = currentStage !== 'reveal';
-    revealGroup.position.set(panelX + panelWidth / 2, visualY);
+    revealGroup.position.set(visualX, visualY);
     revealGroup.visible = currentStage === 'reveal';
     revealGroup.pivot.set(0, 0);
     drawReveal();
@@ -708,24 +752,25 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     stageGlow.clear();
     if (currentStage === 'drift') {
       const glowRadius = Math.min(frameSize * 0.75, panelWidth / 2 - 36);
-      const glowX = panelX + panelWidth / 2;
+      const glowX = visualX;
       stageGlow.circle(glowX, visualY, glowRadius).fill({ color: COLORS.red, alpha: 0.28 });
       stageGlow.circle(glowX, visualY, Math.min(frameSize * 0.58, glowRadius * 0.62)).fill({ color: COLORS.red, alpha: 0.16 });
     } else if (currentStage === 'reveal') {
-      stageGlow.circle(panelX + panelWidth / 2, visualY, Math.max(revealWidth * 0.72, 170)).fill({ color: 0x2e5053, alpha: 0.08 });
+      stageGlow.circle(visualX, visualY, Math.max(revealWidth * 0.72, 170)).fill({ color: 0x2e5053, alpha: 0.08 });
     } else {
-      stageGlow.circle(panelX + panelWidth / 2, visualY, Math.max(frameSize * 1.05, 160)).fill({ color: COLORS.cyan, alpha: 0.07 });
+      stageGlow.circle(visualX, visualY, Math.max(frameSize * 1.05, 160)).fill({ color: COLORS.cyan, alpha: 0.07 });
     }
     stageGlow.visible = currentStage !== 'reveal';
 
     const moduleY = bodyTop + (bodyBottom - bodyTop) * 0.9;
+    const moduleRight = wideLayout ? contentX + visualColumnWidth : panelX + panelWidth;
     moduleTag.visible = currentStage !== 'reveal';
     moduleText.visible = currentStage !== 'reveal';
-    moduleText.position.set(panelX + panelWidth - 168, moduleY - 12);
+    moduleText.position.set(moduleRight - 168, moduleY - 12);
     moduleTag.clear();
-    drawPolygon(moduleTag, [[panelX + panelWidth - 184, moduleY - 17], [panelX + panelWidth + 2, moduleY - 17], [panelX + panelWidth - 8, moduleY + 4], [panelX + panelWidth - 184, moduleY + 4]], COLORS.graphite, 1);
+    drawPolygon(moduleTag, [[moduleRight - 184, moduleY - 17], [moduleRight + 2, moduleY - 17], [moduleRight - 8, moduleY + 4], [moduleRight - 184, moduleY + 4]], COLORS.graphite, 1);
 
-    const reset = drawCopy(copyTop, contentWidth, panelX + padding);
+    const reset = drawCopy(copyTop, copyPanelWidth, copyPanelLeft, copyPanelHeight);
 
     topBar.clear();
     topBar.rect(panelX, 0, panelWidth, headerHeight).fill({ color: currentStage === 'reveal' ? COLORS.night : COLORS.graphite, alpha: currentStage === 'reveal' ? 0.15 : 1 });
@@ -740,7 +785,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     brandSub.position.set(panelX + padding + 39, 34);
     brandSub.style.fill = currentStage === 'reveal' ? 0x9aa9a6 : COLORS.muted;
     stageCode.text = STAGE_META[currentStage].code;
-    stageCode.position.set(panelX + panelWidth - padding - 123, 16);
+    stageCode.anchor.set(0.5);
+    stageCode.position.set(panelX + panelWidth - padding - 93.5, 24);
     stageCode.style.fill = currentStage === 'reveal' ? 0x9aa9a6 : COLORS.graphite;
     stageCode.style.fontSize = 10;
     stageCodeBg.clear().rect(panelX + panelWidth - padding - 130, 12, 73, 24).fill({ color: currentStage === 'reveal' ? COLORS.graphite : COLORS.cyan, alpha: 1 });
@@ -769,7 +815,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     const soundRight = panelX + panelWidth - padding;
     const soundLeft = soundRight - soundLabel.width - 24;
     return {
-      visionLeft: panelX + panelWidth / 2 - frameSize / 2,
+      visionLeft: visualX - frameSize / 2,
       visionTop: visualY - frameSize / 2,
       visionSize: frameSize,
       soundLeft,
