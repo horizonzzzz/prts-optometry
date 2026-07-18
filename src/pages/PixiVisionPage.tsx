@@ -111,8 +111,12 @@ export default function PixiVisionPage() {
   useEffect(() => {
     if (!ready) return;
     sceneRef.current?.setStage(state.stage);
+  }, [ready, state.stage]);
+
+  useEffect(() => {
+    if (!ready) return;
     sceneRef.current?.setMuted(state.muted);
-  }, [ready, state.stage, state.muted]);
+  }, [ready, state.muted]);
 
   useEffect(() => {
     const ambient = ambientRef.current;
