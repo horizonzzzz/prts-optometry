@@ -4,9 +4,10 @@ import { createVisionEntryScene } from './visionEntryScene';
 import { createVisionMainScene } from './visionMainScene';
 import { loadVisionSceneTextures } from './visionSceneAssets';
 import { setCssVar } from './visionSceneGraphics';
+import { getStageReadyTime } from './visionSceneModel';
 import type { PixiVisionScene, SceneOptions } from './visionSceneModel';
 
-export { getCopyHeight, getEntryBootState, getSoundBarHeights, isWideLayout } from './visionSceneModel';
+export { getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isWideLayout } from './visionSceneModel';
 export type { PixiVisionScene } from './visionSceneModel';
 
 export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion, onEntryReady }: SceneOptions) {
@@ -57,10 +58,12 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   let destroyed = false;
   let time = 0;
   let stageTime = 0;
+  let lastFrameTime = 0;
   let loopActive = false;
   let frameRequest = 0;
   let handoffRequest = 0;
   let handoffComplete: (() => void) | undefined;
+  let stageReady: (() => void) | undefined;
   let entryBootStartedAt = 0;
 
   function layout() {
@@ -143,14 +146,22 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     handoffRequest = window.requestAnimationFrame(handoff);
   }
 
-  function setStage(stage: Stage) {
+  function finishStage() {
+    const onReady = stageReady;
+    stageReady = undefined;
+    onReady?.();
+  }
+
+  function setStage(stage: Stage, onReady?: () => void) {
     currentStage = stage;
     stageTime = 0;
+    stageReady = onReady;
     main.selectStage(stage);
     layout();
     main.applyStage();
     app.render();
     if (stage === 'reveal' && !currentReducedMotion) main.triggerRevealFlash();
+    if (getStageReadyTime(stage, currentReducedMotion) === 0) finishStage();
   }
 
   function setReducedMotion(reducedMotion: boolean) {
@@ -164,28 +175,37 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
       entry.finishBoot();
       if (handoffComplete) finishHandoff();
       else app.render();
+      finishStage();
     } else {
-      setStage(currentStage);
+      stageTime = Math.max(stageTime, getStageReadyTime(currentStage));
+      layout();
+      main.applyStage();
+      main.tick(time, stageTime);
+      app.render();
       startLoop();
     }
   }
 
-  function tick() {
+  function tick(deltaSeconds: number) {
     if (currentReducedMotion || destroyed) return;
     if (!entry.isBootComplete()) entry.applyBoot(performance.now() - entryBootStartedAt);
-    time += 0.016;
-    stageTime += 0.016;
+    time += deltaSeconds;
+    stageTime += deltaSeconds;
     main.tick(time, stageTime);
     entry.tick(time);
+    if (stageReady && stageTime >= getStageReadyTime(currentStage)) finishStage();
   }
 
   function startLoop() {
     if (loopActive || currentReducedMotion || destroyed) return;
     loopActive = true;
-    const renderFrame = () => {
+    lastFrameTime = 0;
+    const renderFrame = (now: number) => {
       if (!loopActive || destroyed) return;
       try {
-        tick();
+        const deltaSeconds = lastFrameTime === 0 ? 0 : (now - lastFrameTime) / 1000;
+        lastFrameTime = now;
+        tick(deltaSeconds);
         app.render();
       } catch (error) {
         console.error('PIXEL_LOOP_ERROR', error);
@@ -229,6 +249,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
       window.cancelAnimationFrame(frameRequest);
       window.cancelAnimationFrame(handoffRequest);
       handoffComplete = undefined;
+      stageReady = undefined;
       resizeObserver.disconnect();
       main.destroy();
       const canvas = app.canvas;

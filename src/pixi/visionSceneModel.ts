@@ -20,10 +20,10 @@ export const COLORS = {
 };
 
 export const STAGE_META: Record<Stage, { code: string; index: string; signal: string }> = {
-  intro: { code: '01 / 04', index: '01', signal: 'SIGNAL / STABLE' },
-  calibrate: { code: '02 / 04', index: '02', signal: 'SIGNAL / CALIBRATING' },
-  drift: { code: '03 / 04', index: '03', signal: 'SIGNAL / DUAL' },
-  reveal: { code: '04 / 04', index: '04', signal: 'SIGNAL / RETURNED' },
+  intro: { code: '01 / 04', index: '01', signal: 'TRACE RI-07 / STABLE' },
+  calibrate: { code: '02 / 04', index: '02', signal: 'TRACE RI-07 / ALIGN' },
+  drift: { code: '03 / 04', index: '03', signal: 'TRACE RI-07 / DUAL' },
+  reveal: { code: '04 / 04', index: '04', signal: 'TRACE RI-07 / RETURN' },
 };
 
 export const STAGE_ACCENTS: Record<Stage, number> = {
@@ -32,6 +32,24 @@ export const STAGE_ACCENTS: Record<Stage, number> = {
   drift: COLORS.red,
   reveal: COLORS.ice,
 };
+
+const STAGE_READY_TIME: Record<Stage, number> = {
+  intro: 0,
+  calibrate: 1.17,
+  drift: 0.75,
+  reveal: 0.9,
+};
+
+export function getStageReadyTime(stage: Stage, reducedMotion = false) {
+  return reducedMotion ? 0 : STAGE_READY_TIME[stage];
+}
+
+export function getRevealFractureKick(stageTime: number) {
+  const fractureTime = stageTime - 1.8;
+  if (fractureTime <= 0) return 0;
+  if (Math.sin(fractureTime * 1.65) > 0.94) return -6;
+  return Math.sin(fractureTime * 3.1) > 0.97 ? 4 : 0;
+}
 
 const ENTRY_BOOT_DURATION = 1080;
 
@@ -80,7 +98,7 @@ export type SceneOptions = {
 
 export type PixiVisionScene = {
   setStarted: (started: boolean, onComplete?: () => void) => void;
-  setStage: (stage: Stage) => void;
+  setStage: (stage: Stage, onReady?: () => void) => void;
   setMuted: (muted: boolean) => void;
   setReducedMotion: (reducedMotion: boolean) => void;
   reset: () => void;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCopyHeight, getEntryBootState, getSoundBarHeights, isWideLayout } from './createPixiVisionScene';
+import { getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isWideLayout } from './createPixiVisionScene';
 
 describe('getCopyHeight', () => {
   it('keeps the Pixi copy block aligned with the responsive DOM layout', () => {
@@ -33,5 +33,23 @@ describe('getSoundBarHeights', () => {
   it('maps the audio state to the three stable meter bars', () => {
     expect(getSoundBarHeights(false)).toEqual([5, 12, 8]);
     expect(getSoundBarHeights(true)).toEqual([2, 2, 2]);
+  });
+});
+
+describe('getStageReadyTime', () => {
+  it('holds each animated stage until its key feedback is visible', () => {
+    expect(getStageReadyTime('intro')).toBe(0);
+    expect(getStageReadyTime('calibrate')).toBe(1.17);
+    expect(getStageReadyTime('drift')).toBe(0.75);
+    expect(getStageReadyTime('reveal')).toBe(0.9);
+    expect(getStageReadyTime('reveal', true)).toBe(0);
+  });
+});
+
+describe('getRevealFractureKick', () => {
+  it('keeps the reveal stable before pulsing the crystal frame only', () => {
+    expect(getRevealFractureKick(1.8)).toBe(0);
+    expect(getRevealFractureKick(1.8 + Math.PI / (2 * 1.65))).toBe(-6);
+    expect(getRevealFractureKick(1.8 + Math.PI / (2 * 3.1))).toBe(4);
   });
 });

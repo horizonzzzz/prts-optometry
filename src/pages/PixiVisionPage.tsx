@@ -25,6 +25,7 @@ export default function PixiVisionPage() {
   const [entryDeparting, setEntryDeparting] = useState(false);
   const [entryReady, setEntryReady] = useState(false);
   const [ready, setReady] = useState(false);
+  const [stageReady, setStageReady] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
@@ -117,7 +118,8 @@ export default function PixiVisionPage() {
 
   useEffect(() => {
     if (!ready) return;
-    sceneRef.current?.setStage(state.stage);
+    setStageReady(false);
+    sceneRef.current?.setStage(state.stage, () => setStageReady(true));
   }, [ready, state.stage]);
 
   useEffect(() => {
@@ -159,6 +161,7 @@ export default function PixiVisionPage() {
   }, [started, state.muted, state.stage]);
 
   const copy = getStageCopy(state);
+  const liveNote = copy.note.endsWith('。') ? copy.note : `${copy.note}。`;
 
   function startAmbientAudio() {
     const ambient = ambientRef.current;
@@ -203,15 +206,18 @@ export default function PixiVisionPage() {
   }
 
   function handleVisionActivate() {
-    if (!ready || error || !started || entryDeparting || state.stage === 'reveal') return;
+    if (!ready || !stageReady || error || !started || entryDeparting || state.stage === 'reveal') return;
     if (state.stage === 'calibrate') prepareSnowNoise();
     const action = ACTION_BY_STAGE[state.stage];
-    if (action) dispatch(action);
+    if (action) {
+      setStageReady(false);
+      dispatch(action);
+    }
   }
 
   function handleReset() {
-    if (!ready) return;
-    sceneRef.current?.reset();
+    if (!ready || !stageReady) return;
+    setStageReady(false);
     dispatch('RESET');
   }
 
@@ -249,11 +255,11 @@ export default function PixiVisionPage() {
         className="pixi-hit pixi-vision-hit"
         type="button"
         onClick={handleVisionActivate}
-        disabled={!started || entryDeparting || !ready || Boolean(error) || state.stage === 'reveal'}
+        disabled={!started || entryDeparting || !ready || !stageReady || Boolean(error) || state.stage === 'reveal'}
         aria-label={copy.actionLabel}
       />
 
-      {state.stage === 'reveal' && (
+      {state.stage === 'reveal' && stageReady && (
         <button
           className="pixi-hit pixi-reset-hit"
           type="button"
@@ -264,7 +270,7 @@ export default function PixiVisionPage() {
       )}
 
       <p className="pixi-sr-only" aria-live="polite" aria-atomic="true">
-        {entryDeparting ? '正在进入验光界面。' : `${copy.eyebrow}。${copy.title}。${copy.note}`}
+        {entryDeparting ? '正在进入验光界面。' : `${copy.eyebrow}。${copy.title}。${liveNote}${stageReady ? copy.actionLabel : ''}`}
       </p>
 
       {error && <p className="pixi-error">{error}</p>}

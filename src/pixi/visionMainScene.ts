@@ -25,7 +25,9 @@ import {
 import {
   COLORS,
   getCopyHeight,
+  getRevealFractureKick,
   getSoundBarHeights,
+  getStageReadyTime,
   isWideLayout,
   STAGE_ACCENTS,
   STAGE_META,
@@ -102,6 +104,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const houseStatic = new Graphics();
   const houseRoll = new Graphics();
   const houseVignette = new Graphics();
+  const houseTrace = new Graphics();
   const houseReticle = new Graphics();
   const houseFrame = new Graphics();
   const targetDash = new Graphics();
@@ -167,7 +170,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   houseMask.renderable = true;
   houseMask.alpha = 0;
   houseViewport.mask = houseMask;
-  houseViewport.addChild(houseBase, houseGlitch, houseStatic, houseRoll, houseVignette, houseReticle);
+  houseViewport.addChild(houseBase, houseGlitch, houseStatic, houseRoll, houseVignette, houseTrace, houseReticle);
   houseGroup.addChild(houseMask, houseViewport, houseFrame, targetDash);
   houseBase.filters = [houseBlur, houseNoise, houseColor];
   houseGlitch.tint = 0xff5665;
@@ -289,6 +292,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     for (let index = 0; index < 8; index += 1) {
       houseVignette.circle(0, 0, radius - index * (radius / 9)).stroke({ width: radius / 9 + 2, color: COLORS.shadow, alpha: currentStage === 'drift' ? 0.14 : 0.025 });
     }
+
+    houseTrace.clear();
+    drawDiamondStroke(houseTrace, radius * 0.9, radius * 1.14, COLORS.originiumSoft, 0.86, 1.1);
+    drawDiamondStroke(houseTrace, radius * 0.8, radius * 1.02, COLORS.cyan, 0.54, 0.8);
   }
 
   function framePoint(x: number, y: number, scaleX: number, scaleY: number): [number, number] {
@@ -838,6 +845,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     copyNote.text = stageCopy.note;
     copyIndex.text = STAGE_META[stage].index;
     metaSignal.text = STAGE_META[stage].signal;
+    metaBottom.text = stage === 'reveal' ? STAGE_META[stage].signal : 'FOCAL DISTANCE / 30 CM';
     metaPhase.text = `PHASE / ${STAGE_META[stage].index}`;
   }
 
@@ -857,6 +865,9 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     houseStatic.alpha = stage === 'drift' ? 0.42 : 0;
     houseRoll.alpha = stage === 'drift' ? 0.64 : 0;
     houseVignette.alpha = stage === 'drift' ? 1 : 0.12;
+    houseTrace.alpha = stage === 'drift' ? 0.62 : stage === 'calibrate' ? 0.12 : 0.04;
+    houseTrace.position.set(0, 0);
+    houseTrace.scale.set(stage === 'drift' ? 1.04 : 1);
     houseGroup.scale.set(stage === 'drift' ? 1.025 : 1);
     filter.alpha = stage === 'reveal' ? 0.28 : 0;
     scanline.alpha = stage === 'drift' ? 0.4 : 0;
@@ -885,6 +896,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     originiumAura.alpha = stage === 'reveal' ? 1 : 0;
     revealScan.x = stage === 'reveal' && !currentReducedMotion ? -revealWidth * 0.72 : stage === 'reveal' ? revealWidth * 0.72 : -revealWidth * 0.72;
     revealScan.alpha = stage === 'reveal' && !currentReducedMotion ? 0 : stage === 'reveal' ? 0.26 : 0;
+    const resetAlpha = complete ? 1 : 0;
+    resetButton.alpha = resetAlpha;
+    resetLabel.alpha = resetAlpha;
+    resetCode.alpha = resetAlpha;
     flash.alpha = 0;
   }
 
@@ -954,6 +969,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       const calibration = (Math.sin(stageTime * Math.PI / 1.17) + 1) / 2;
       houseBlur.strength = 3.5 + calibration * 5.5;
       houseGroup.scale.set(1.015 + calibration * 0.015);
+      houseTrace.alpha = 0.08 + calibration * 0.14;
+      houseTrace.scale.set(0.96 + calibration * 0.06);
     }
     scanline.y = (time * (currentStage === 'drift' ? 180 : 72)) % Math.max(height + 40, 1);
     grain.rotation = Math.sin(time * 0.12) * 0.01;
@@ -963,6 +980,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       houseGlitch.scale.x = houseBase.scale.x * (1 + Math.sin(time * 11) * 0.05);
       houseStatic.position.set(Math.sin(time * 22), Math.cos(time * 18));
       houseRoll.y = ((time * 120) % Math.max(frameSize * 2, 1)) - frameSize;
+      houseTrace.position.set(Math.sin(time * 15) * 4, Math.cos(time * 11) * 1.5);
+      houseTrace.alpha = 0.48 + Math.abs(Math.sin(time * 3.2)) * 0.18;
     } else {
       houseGlitch.x = 0;
       houseGlitch.y = 0;
@@ -973,6 +992,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     if (currentStage === 'reveal') {
       const revealProgress = Math.min(stageTime / 0.68, 1);
       const revealEase = 1 - Math.pow(1 - revealProgress, 3);
+      const settleDuration = getStageReadyTime('reveal') - 0.68;
+      const settleProgress = Math.min(Math.max((stageTime - 0.68) / settleDuration, 0), 1);
       revealPortrait.alpha = revealEase;
       revealPortrait.scale.set(0.9 + revealEase * 0.1);
       revealFrame.alpha = Math.min(stageTime / 0.04, 1);
@@ -981,10 +1002,13 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       portraitBlur.strength = 8 * (1 - revealEase);
       const scanProgress = Math.min(stageTime / 0.64, 1);
       revealScan.x = -revealWidth * 0.72 + revealWidth * 1.44 * scanProgress;
-      revealScan.alpha = scanProgress * (0.12 + Math.abs(Math.sin(time * 2.2)) * 0.14);
-      if (revealProgress >= 1) complete = true;
+      revealScan.alpha = (1 - settleProgress) * scanProgress * (0.12 + Math.abs(Math.sin(time * 2.2)) * 0.14);
+      complete = settleProgress >= 1;
+      resetButton.alpha = settleProgress;
+      resetLabel.alpha = settleProgress;
+      resetCode.alpha = settleProgress;
 
-      // Unstable originium dynamics — idle pulse + rare glitch snaps.
+      const motion = complete ? 0.15 : 1 - settleProgress * 0.85;
       const breath = 0.5 + 0.5 * Math.sin(time * 1.55);
       const corePulse = 1 + breath * 0.06 + Math.sin(time * 4.8) * 0.015;
       originiumCore.scale.set(corePulse);
@@ -993,12 +1017,11 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       originiumCore.alpha = 0.86 + breath * 0.12;
       glint.alpha = 0.38 + Math.abs(Math.sin(time * 1.9)) * 0.48;
       originiumAura.alpha = 0.72 + breath * 0.28;
-      originiumShards.rotation = Math.sin(time * 0.55) * 0.018;
-      originiumShards.x = Math.sin(time * 1.3) * 1.6;
-      originiumShards.y = Math.cos(time * 1.1) * 2.2 + Math.sin(time * 2.4) * 0.8;
+      originiumShards.rotation = Math.sin(time * 0.55) * 0.018 * motion;
+      originiumShards.x = Math.sin(time * 1.3) * 1.6 * motion;
+      originiumShards.y = (Math.cos(time * 1.1) * 2.2 + Math.sin(time * 2.4) * 0.8) * motion;
 
-      // Chromatic diamond echoes drift opposite each other
-      const echoDrift = 3 + Math.sin(time * 2.1) * 2.4;
+      const echoDrift = (3 + Math.sin(time * 2.1) * 2.4) * motion;
       leftEcho.x = -echoDrift + Math.sin(time * 5.5) * 0.8;
       leftEcho.y = Math.cos(time * 1.7) * 1.4;
       rightEcho.x = echoDrift + Math.cos(time * 4.8) * 0.7;
@@ -1008,47 +1031,18 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       leftEcho.scale.set(1 + Math.sin(time * 1.2) * 0.012);
       rightEcho.scale.set(1 + Math.cos(time * 1.35) * 0.014);
 
-      if (complete) {
-        // Micro-horror: rare hard snaps of the crystal body / portrait
-        const snapA = Math.sin(time * 1.65);
-        const snapB = Math.sin(time * 3.1);
-        const hardSnap = snapA > 0.93 || snapB > 0.96;
-        const softJitter = Math.sin(time * 17) * 0.6 + Math.cos(time * 11) * 0.4;
-        if (hardSnap) {
-          const kick = snapA > 0.93 ? -6 : 4;
-          originiumBody.x = kick;
-          originiumShellMask.x = kick;
-          originiumRim.x = kick;
-          originiumCore.x = kick * 0.4;
-          revealPortrait.x = -kick * 0.35;
-          leftEcho.x -= 5;
-          rightEcho.x += 5;
-          originiumCore.alpha = 0.35;
-          originiumShards.alpha = 0.45;
-        } else {
-          originiumBody.x = softJitter * 0.35;
-          originiumShellMask.x = softJitter * 0.35;
-          originiumRim.x = softJitter * 0.35;
-          originiumCore.x = Math.sin(time * 9) * 0.4;
-          revealPortrait.x = Math.sin(time * 7.5) * 0.55;
-          originiumShards.alpha = 0.78 + Math.sin(time * 2.2) * 0.18;
-        }
-        // Occasional crimson infection flash on the core glow
-        if (Math.sin(time * 0.87) > 0.97) {
-          originiumCoreGlow.tint = COLORS.red;
-          originiumCoreGlow.alpha = 0.95;
-        } else {
-          originiumCoreGlow.tint = 0xffffff;
-        }
-      } else {
-        originiumBody.x = 0;
-        originiumShellMask.x = 0;
-        originiumRim.x = 0;
-        originiumCore.x = 0;
-        revealPortrait.x = 0;
-        originiumShards.alpha = 0.55 + revealEase * 0.4;
-        originiumCoreGlow.tint = 0xffffff;
-      }
+      const fractureKick = getRevealFractureKick(stageTime);
+      originiumBody.x = fractureKick;
+      originiumShellMask.x = fractureKick;
+      originiumRim.x = fractureKick;
+      originiumCore.x = 0;
+      revealPortrait.x = 0;
+      originiumShards.x -= fractureKick * 0.8;
+      originiumShards.y += Math.abs(fractureKick) * 0.45;
+      leftEcho.x -= Math.abs(fractureKick);
+      rightEcho.x += Math.abs(fractureKick);
+      originiumShards.alpha = fractureKick === 0 ? 0.55 + revealEase * 0.4 : 0.45;
+      originiumCoreGlow.tint = 0xffffff;
     }
   }
 
