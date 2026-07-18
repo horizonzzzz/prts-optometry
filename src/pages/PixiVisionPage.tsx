@@ -1,4 +1,6 @@
 import { useEffect, useReducer, useRef, useState, type MouseEvent } from 'react';
+import qrNode01 from '../../assets/7521a33230186fc1435c3077c4449634.png';
+import qrNode02 from '../../assets/b3a33055da1d8f99363e4042f4df035f.jpg';
 import ambientAudio from '../../assets/audio/bgm.ea4286.mp3';
 import revealAudio from '../../assets/audio/luanxu.mp3';
 import {
@@ -30,6 +32,7 @@ export default function PixiVisionPage() {
   const [interactionMessage, setInteractionMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
+  const qrDialogRef = useRef<HTMLDialogElement | null>(null);
   const sceneRef = useRef<PixiVisionScene | null>(null);
   const reducedMotionRef = useRef(false);
   const calibrationTimerRef = useRef(0);
@@ -276,14 +279,71 @@ export default function PixiVisionPage() {
       />
 
       {state.stage === 'reveal' && stageReady && (
-        <button
-          className="pixi-hit pixi-reset-hit"
-          type="button"
-          onClick={handleReset}
-          disabled={!ready}
-          aria-label="重置并返回第一个画面"
-        />
+        <>
+          <button
+            className="pixi-hit pixi-reset-hit"
+            type="button"
+            onClick={handleReset}
+            disabled={!ready}
+            aria-label="重置并返回第一个画面"
+          />
+          <button
+            className="pixi-qr-trigger"
+            type="button"
+            onClick={() => qrDialogRef.current?.showModal()}
+            aria-haspopup="dialog"
+            aria-controls="pixi-qr-dialog"
+          >
+            <span>接入通讯终端</span>
+            <strong>QR-02</strong>
+          </button>
+        </>
       )}
+
+      <dialog
+        ref={qrDialogRef}
+        id="pixi-qr-dialog"
+        className="pixi-qr-dialog"
+        aria-labelledby="pixi-qr-title"
+        aria-describedby="pixi-qr-description"
+      >
+        <section className="pixi-qr-panel">
+          <header className="pixi-qr-header">
+            <div>
+              <p>PRTS // EXTERNAL CHANNEL</p>
+              <h2 id="pixi-qr-title">通讯终端接入</h2>
+            </div>
+            <form method="dialog">
+              <button type="submit" aria-label="关闭通讯终端弹窗">CLOSE / ESC</button>
+            </form>
+          </header>
+
+          <p id="pixi-qr-description" className="pixi-qr-description">
+            选择任一通讯节点，扫描二维码完成外部接入。
+          </p>
+
+          <div className="pixi-qr-grid">
+            <figure className="pixi-qr-node">
+              <div className="pixi-qr-code">
+                <img src={qrNode01} alt="通讯节点 01 二维码" />
+              </div>
+              <figcaption><span>NODE // 01</span><strong>通讯节点 A</strong></figcaption>
+            </figure>
+
+            <figure className="pixi-qr-node">
+              <div className="pixi-qr-code">
+                <img src={qrNode02} alt="通讯节点 02 二维码" />
+              </div>
+              <figcaption><span>NODE // 02</span><strong>通讯节点 B</strong></figcaption>
+            </figure>
+          </div>
+
+          <footer className="pixi-qr-footer">
+            <span>SCAN STATUS // STANDBY</span>
+            <span>ENCRYPTED CHANNEL / 02</span>
+          </footer>
+        </section>
+      </dialog>
 
       <p className="pixi-sr-only" aria-live="polite" aria-atomic="true">
         {entryDeparting ? '正在进入验光界面。' : `${copy.eyebrow}。${copy.title}。${liveNote}${stageReady ? `${copy.actionLabel}。` : ''}${interactionMessage}`}
