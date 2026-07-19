@@ -32,6 +32,7 @@ export default function PixiVisionPage() {
   const driftPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const ambientRef = useRef<HTMLAudioElement | null>(null);
   const revealRef = useRef<HTMLAudioElement | null>(null);
+  const previousAudioStageRef = useRef(state.stage);
   const snowNoiseRef = useRef<{
     context: AudioContext;
     gain: GainNode;
@@ -131,6 +132,8 @@ export default function PixiVisionPage() {
   }, [ready, state.muted]);
 
   useEffect(() => {
+    const enteringReveal = state.stage === 'reveal' && previousAudioStageRef.current !== 'reveal';
+    previousAudioStageRef.current = state.stage;
     const ambient = ambientRef.current;
     const reveal = revealRef.current;
     if (!ambient || !reveal || !started) return;
@@ -147,7 +150,7 @@ export default function PixiVisionPage() {
     if (state.stage === 'reveal') {
       ambient.pause();
       reveal.volume = REVEAL_VOLUME;
-      reveal.currentTime = 0;
+      if (enteringReveal) reveal.currentTime = 0;
       void reveal.play().catch(() => undefined);
       return;
     }
