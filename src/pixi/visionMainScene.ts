@@ -26,6 +26,7 @@ import {
   COLORS,
   getCalibrationBlurAmount,
   getCopyHeight,
+  getInitialDriftOffset,
   getRevealFractureKick,
   getSoundBarHeights,
   getStageReadyTime,
@@ -1209,8 +1210,9 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       complete = false;
       calibrationLocked = false;
       driftLocked = false;
-      driftOffsetX = stage === 'drift' ? 0.18 : 0;
-      driftOffsetY = stage === 'drift' ? -0.1 : 0;
+      const driftOffset = stage === 'drift' ? getInitialDriftOffset() : { x: 0, y: 0 };
+      driftOffsetX = driftOffset.x;
+      driftOffsetY = driftOffset.y;
       driftTween?.kill();
       driftTween = null;
       houseViewport.scale.set(1);

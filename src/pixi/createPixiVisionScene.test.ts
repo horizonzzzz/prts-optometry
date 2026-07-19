@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './createPixiVisionScene';
+import { getInitialDriftOffset } from './visionSceneModel';
 
 describe('getCopyHeight', () => {
   it('keeps the Pixi copy block aligned with the responsive DOM layout', () => {
@@ -61,6 +62,19 @@ describe('drift alignment', () => {
     expect(isDriftAligned(0, 0)).toBe(true);
     expect(isDriftAligned(0.03, 0.03)).toBe(true);
     expect(isDriftAligned(0.04, 0.04)).toBe(false);
+  });
+});
+
+describe('initial drift offset', () => {
+  it('varies the direction while keeping the image outside the aligned center', () => {
+    const east = getInitialDriftOffset(() => 0);
+    const west = getInitialDriftOffset(() => 0.5);
+
+    expect(east).not.toEqual(west);
+    expect(Math.hypot(east.x, east.y)).toBeCloseTo(0.14);
+    expect(Math.hypot(west.x, west.y)).toBeCloseTo(0.18);
+    expect(isDriftAligned(east.x, east.y)).toBe(false);
+    expect(isDriftAligned(west.x, west.y)).toBe(false);
   });
 });
 

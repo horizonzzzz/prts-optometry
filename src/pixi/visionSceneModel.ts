@@ -61,6 +61,12 @@ export function isDriftAligned(offsetX: number, offsetY: number) {
   return Math.hypot(offsetX, offsetY) <= DRIFT_ALIGNMENT_MAX;
 }
 
+export function getInitialDriftOffset(random = Math.random) {
+  const angle = random() * Math.PI * 2;
+  const distance = 0.14 + random() * 0.08;
+  return { x: Math.cos(angle) * distance, y: Math.sin(angle) * distance };
+}
+
 export function getRevealFractureKick(stageTime: number) {
   const fractureTime = stageTime - 1.8;
   if (fractureTime <= 0) return 0;

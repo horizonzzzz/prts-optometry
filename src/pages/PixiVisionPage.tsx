@@ -368,7 +368,7 @@ export default function PixiVisionPage() {
           </header>
 
           <p id="pixi-qr-description" className="pixi-qr-description">
-            选择任一通讯节点，扫描二维码完成外部接入。
+            欢迎加好友（）
           </p>
 
           <div className="pixi-qr-grid">
