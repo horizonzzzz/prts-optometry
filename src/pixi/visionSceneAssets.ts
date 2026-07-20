@@ -1,4 +1,8 @@
 import maskAsset from '../../assets/common_mask.55fff2e9.png';
+import dialogueAmiyaAsset from '../../assets/dialogue/amiya.png';
+import dialogueDoctorAsset from '../../assets/dialogue/doctor.png';
+import dialogueKaltsitAsset from '../../assets/dialogue/kaltsit.png';
+import dialoguePriestessAsset from '../../assets/dialogue/priestess.png';
 import blueprintAsset from '../../assets/official-terminal-blueprint.jpg';
 import gridAsset from '../../assets/official-terminal-grid.jpg';
 import rhodesAsset from '../../assets/official-rhodes-island.png';
@@ -8,7 +12,7 @@ import houseAsset from '../../assets/vision-house.jpg';
 import { Assets, type Texture } from 'pixi.js';
 
 export async function loadVisionSceneTextures() {
-  const [grid, blueprint, mask, rhodes, particle, house, portrait] = await Promise.all([
+  const [grid, blueprint, mask, rhodes, particle, house, portrait, dialogueDoctor, dialogueAmiya, dialogueKaltsit, dialoguePriestess] = await Promise.all([
     Assets.load<Texture>(gridAsset),
     Assets.load<Texture>(blueprintAsset),
     Assets.load<Texture>(maskAsset),
@@ -16,9 +20,13 @@ export async function loadVisionSceneTextures() {
     Assets.load<Texture>(particleAsset),
     Assets.load<Texture>(houseAsset),
     Assets.load<Texture>(portraitAsset),
+    Assets.load<Texture>({ src: dialogueDoctorAsset, data: { scaleMode: 'nearest' } }),
+    Assets.load<Texture>({ src: dialogueAmiyaAsset, data: { scaleMode: 'nearest' } }),
+    Assets.load<Texture>({ src: dialogueKaltsitAsset, data: { scaleMode: 'nearest' } }),
+    Assets.load<Texture>({ src: dialoguePriestessAsset, data: { scaleMode: 'nearest' } }),
   ]);
 
-  return { grid, blueprint, mask, rhodes, particle, house, portrait };
+  return { grid, blueprint, mask, rhodes, particle, house, portrait, dialogueDoctor, dialogueAmiya, dialogueKaltsit, dialoguePriestess };
 }
 
 export type VisionSceneTextures = Awaited<ReturnType<typeof loadVisionSceneTextures>>;

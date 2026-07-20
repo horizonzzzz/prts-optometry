@@ -8,7 +8,7 @@ import {
   createInitialState,
   getStageCopy,
 } from '../state';
-import { createPixiVisionScene, type PixiVisionScene } from '../pixi/createPixiVisionScene';
+import { createPixiVisionScene, type DialogueSnapshot, type PixiVisionScene } from '../pixi/createPixiVisionScene';
 
 const AMBIENT_VOLUME = 0.35;
 const REVEAL_VOLUME = 0.5;
@@ -21,6 +21,8 @@ export default function PixiVisionPage() {
   const [entryReady, setEntryReady] = useState(false);
   const [ready, setReady] = useState(false);
   const [stageReady, setStageReady] = useState(false);
+  const [dialogue, setDialogue] = useState<DialogueSnapshot | null>(null);
+  const [dialogueAnnouncement, setDialogueAnnouncement] = useState('');
   const [reducedMotion, setReducedMotion] = useState(false);
   const [interactionMessage, setInteractionMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -119,12 +121,19 @@ export default function PixiVisionPage() {
   }, [reducedMotion]);
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !started) return;
     driftPointerRef.current = null;
     setInteractionMessage('');
+    setDialogue(null);
+    setDialogueAnnouncement('');
     setStageReady(false);
-    sceneRef.current?.setStage(state.stage, () => setStageReady(true));
-  }, [ready, state.stage]);
+    sceneRef.current?.setStage(state.stage, () => {
+      const snapshot = sceneRef.current?.getDialogueSnapshot() ?? null;
+      setDialogue(snapshot);
+      setDialogueAnnouncement(snapshot ? `${snapshot.speakerName}：${snapshot.text}` : '');
+      setStageReady(true);
+    });
+  }, [ready, started, state.stage]);
 
   useEffect(() => {
     if (!ready) return;
@@ -168,7 +177,8 @@ export default function PixiVisionPage() {
 
   const copy = getStageCopy(state);
   const liveNote = copy.note.endsWith('。') ? copy.note : `${copy.note}。`;
-  const visionUnavailable = !ready || !stageReady || Boolean(error) || !started || entryDeparting || state.stage === 'reveal';
+  const dialogueComplete = dialogue?.complete ?? false;
+  const visionUnavailable = !ready || !stageReady || !dialogueComplete || Boolean(error) || !started || entryDeparting || state.stage === 'reveal';
 
   function startAmbientAudio() {
     const ambient = ambientRef.current;
@@ -237,6 +247,19 @@ export default function PixiVisionPage() {
     }
   }
 
+  function handleDialogueAdvance() {
+    if (!ready || !stageReady || !dialogue || dialogue.complete) return;
+    const previousLine = dialogue.lineIndex;
+    const next = sceneRef.current?.advanceDialogue();
+    if (!next) return;
+    setDialogue(next);
+    if (next.complete) {
+      setDialogueAnnouncement(`${copy.actionLabel}。`);
+    } else if (next.lineIndex !== previousLine) {
+      setDialogueAnnouncement(`${next.speakerName}：${next.text}`);
+    }
+  }
+
   function completeDriftAlignment(bypassAlignment = false) {
     const confirmed = sceneRef.current?.confirmDrift(bypassAlignment) ?? false;
     setInteractionMessage(confirmed ? '影像已与中央准星重合。' : '偏移仍未归零，请继续拖动影像。');
@@ -280,7 +303,7 @@ export default function PixiVisionPage() {
   }
 
   function handleReset() {
-    if (!ready || !stageReady) return;
+    if (!ready || !stageReady || !dialogueComplete) return;
     setStageReady(false);
     dispatch('RESET');
   }
@@ -330,7 +353,16 @@ export default function PixiVisionPage() {
         aria-label={state.stage === 'drift' ? `${copy.actionLabel}，键盘用户按回车完成对准` : copy.actionLabel}
       />
 
-      {state.stage === 'reveal' && stageReady && (
+      {started && stageReady && dialogue && !dialogue.complete && (
+        <button
+          className="pixi-hit pixi-dialogue-hit"
+          type="button"
+          onClick={handleDialogueAdvance}
+          aria-label={`推进${dialogue.speakerName}的对话`}
+        />
+      )}
+
+      {state.stage === 'reveal' && stageReady && dialogueComplete && (
         <>
           <button
             className="pixi-hit pixi-reset-hit"
@@ -398,7 +430,7 @@ export default function PixiVisionPage() {
       </dialog>
 
       <p className="pixi-sr-only" aria-live="polite" aria-atomic="true">
-        {entryDeparting ? '正在进入验光界面。' : `${copy.eyebrow}。${copy.title}。${liveNote}${stageReady ? `${copy.actionLabel}。` : ''}${interactionMessage}`}
+        {entryDeparting ? '正在进入验光界面。' : dialogueAnnouncement ? `${dialogueAnnouncement}${interactionMessage}` : `${copy.eyebrow}。${copy.title}。${liveNote}`}
       </p>
 
       {error && <p className="pixi-error">{error}</p>}

@@ -99,10 +99,9 @@ export function getEntryBootState(elapsedMs: number) {
 }
 
 export function getCopyHeight(height: number, reveal: boolean) {
-  if (reveal) return height <= 860 ? 140 : 180;
-  if (height <= 700) return 98;
-  if (height <= 860) return 110;
-  return 154;
+  if (height <= 700) return 150;
+  if (height <= 860) return 176;
+  return reveal ? 210 : 196;
 }
 
 export function isWideLayout(width: number, height: number) {
@@ -119,12 +118,25 @@ export type SceneOptions = {
   onEntryReady?: () => void;
 };
 
+export type DialogueSpeaker = 'doctor' | 'amiya' | 'kaltsit' | 'priestess';
+
+export type DialogueSnapshot = {
+  speaker: DialogueSpeaker;
+  speakerName: string;
+  text: string;
+  lineIndex: number;
+  lineCount: number;
+  complete: boolean;
+};
+
 export type PixiVisionScene = {
   setStarted: (started: boolean, onComplete?: () => void) => void;
   setStage: (stage: Stage, onReady?: () => void) => void;
   confirmCalibration: (bypassTiming?: boolean) => boolean;
   moveDriftBy: (deltaX: number, deltaY: number) => void;
   confirmDrift: (bypassAlignment?: boolean) => boolean;
+  advanceDialogue: () => DialogueSnapshot;
+  getDialogueSnapshot: () => DialogueSnapshot;
   setMuted: (muted: boolean) => void;
   setReducedMotion: (reducedMotion: boolean) => void;
   reset: () => void;

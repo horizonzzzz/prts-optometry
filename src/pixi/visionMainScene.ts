@@ -10,6 +10,7 @@ import {
   type Application,
 } from 'pixi.js';
 import type { Stage } from '../state';
+import { createVisionDialogueScene } from './visionDialogueScene';
 import type { VisionSceneTextures } from './visionSceneAssets';
 import {
   addText,
@@ -32,7 +33,6 @@ import {
   getStageReadyTime,
   isDriftAligned,
   isWideLayout,
-  STAGE_ACCENTS,
   STAGE_META,
 } from './visionSceneModel';
 
@@ -49,6 +49,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const copy = new Container({ label: 'main-copy' });
   const chrome = new Container({ label: 'main-chrome' });
   const flash = new Graphics();
+  const dialogue = createVisionDialogueScene(textures, initialReducedMotion);
 
   const backdrop = new Sprite(textures.grid);
   const mask = new Sprite(textures.mask);
@@ -148,22 +149,14 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const portraitBackdropBlur = new BlurFilter({ strength: 14 });
   const originiumAuraBlur = new BlurFilter({ strength: 18 });
 
-  const copyBackground = new Graphics();
-  const copyAccent = new Graphics();
-  const copyBorder = new Graphics();
-  const copyHeading = addText('INTAKE / 远距辨认', new TextStyle({ fill: COLORS.cyan, fontFamily: "Bender, 'Arial Narrow', SourceHan, 'Noto Sans SC', sans-serif", fontSize: 8, letterSpacing: 1.1 }));
-  const copyIndex = addText('01', new TextStyle({ fill: COLORS.graphite, fontFamily: 'Novecento, Bender, sans-serif', fontSize: 26, fontWeight: '700' }));
-  const copyTitle = addText('请注视远处的房屋', new TextStyle({ fill: COLORS.graphite, fontFamily: "Novecento, Bender, SourceHan, 'Noto Sans SC', sans-serif", fontSize: 40, fontWeight: '700', letterSpacing: 1, lineHeight: 42, wordWrap: true }));
-  const copyNote = addText('保持手机距离，确认房屋轮廓', new TextStyle({ fill: COLORS.muted, fontFamily: "SourceHan, 'Noto Sans SC', sans-serif", fontSize: 13, letterSpacing: 0.5, lineHeight: 20, wordWrap: true }));
-  const screeningNote = addText('FICTIONAL VISUAL EFFECT / NOT A MEDICAL TEST', new TextStyle({ fill: 0x627176, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.2 }));
   const resetButton = new Graphics();
   const resetLabel = addText('RESET', new TextStyle({ fill: COLORS.night, fontFamily: 'Bender, sans-serif', fontSize: 10, fontWeight: '700', letterSpacing: 1.5 }));
   const resetCode = addText('R-00', new TextStyle({ fill: 0x627176, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 0.8 }));
 
-  layer.addChild(backdrop, shade, mask, diagonal, grid, stageGlow, body, copy, chrome, grain, scanline, filter);
+  layer.addChild(backdrop, shade, mask, diagonal, grid, stageGlow, body, copy, dialogue.layer, chrome, grain, scanline, filter);
   body.addChild(bodyBorder, bodyNumber, metaTopDot, metaTop, metaRuleTop, metaSignal, metaBottomDot, metaBottom, metaRuleBottom, metaPhase, haloShadow, halo, houseGroup, revealGroup, calibrationAlert, moduleTag, moduleText);
   calibrationAlert.addChild(calibrationAlertBg, calibrationAlertAccent, calibrationAlertCode, calibrationAlertMessage);
-  copy.addChild(copyBackground, copyBorder, copyAccent, copyHeading, copyIndex, copyTitle, copyNote, resetButton, resetLabel, resetCode, screeningNote);
+  copy.addChild(resetButton, resetLabel, resetCode);
   chrome.addChild(topBar, topAccent, rhodes, brandName, brandSub, stageCodeBg, stageCode, soundBars, soundLabel, railLeft, railMiddle, railRight, railRuleLeft, railRuleRight);
 
   backdrop.alpha = 0.94;
@@ -588,76 +581,28 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   function drawCopy(copyTopValue: number, panelWidthValue: number, panelLeft: number, fixedHeight?: number) {
     const shortScreen = height <= 860;
     const veryShortScreen = height <= 700;
-    const wideLayout = isWideLayout(width, height);
     const copyHeight = fixedHeight ?? height - copyTopValue - (veryShortScreen ? 10 : shortScreen ? 10 : 18);
     const reveal = currentStage === 'reveal';
-    const panelRight = panelLeft + panelWidthValue;
     const panelBottom = copyTopValue + copyHeight;
-    const panelPoints: Array<[number, number]> = [
-      [panelLeft, copyTopValue],
-      [panelRight - 12, copyTopValue],
-      [panelRight, copyTopValue + 12],
-      [panelRight, panelBottom],
-      [panelLeft + 12, panelBottom],
-      [panelLeft, panelBottom - 12],
-    ];
-    copyBackground.clear();
-    copyBorder.clear();
-    copyAccent.clear();
-    if (!reveal) {
-      copyBackground.moveTo(panelPoints[0][0], panelPoints[0][1]);
-      for (const [x, y] of panelPoints.slice(1)) copyBackground.lineTo(x, y);
-      copyBackground.closePath().fill({ color: 0xf7f9f8, alpha: currentStage === 'drift' ? 0.04 : 0.8 });
-      copyBorder.moveTo(panelPoints[0][0], panelPoints[0][1]);
-      for (const [x, y] of panelPoints.slice(1)) copyBorder.lineTo(x, y);
-      copyBorder.closePath().stroke({ width: 1, color: currentStage === 'drift' ? COLORS.pale : COLORS.graphite, alpha: currentStage === 'drift' ? 0.62 : 1 });
-      copyBorder.rect(panelLeft, copyTopValue, 1, copyHeight - 12).fill({ color: currentStage === 'drift' ? COLORS.pale : COLORS.graphite, alpha: 1 });
-      copyBorder.rect(panelLeft, copyTopValue, panelWidthValue - 12, 5).fill({ color: COLORS.graphite, alpha: 1 });
-      copyAccent.rect(panelLeft + panelWidthValue * 0.71, copyTopValue, panelWidthValue * 0.29 - 12, 5).fill({ color: currentStage === 'drift' ? COLORS.red : COLORS.cyan, alpha: 1 });
-    }
-
-    const textX = reveal ? panelLeft : panelLeft + 13;
-    const topPadding = reveal ? 6 : wideLayout ? 26 : veryShortScreen ? 8 : shortScreen ? 14 : 26;
-    const titleOffset = wideLayout ? 27 : veryShortScreen ? 19 : shortScreen ? 22 : 27;
-    const noteOffset = wideLayout ? 86 : veryShortScreen ? 49 : shortScreen ? 59 : 86;
-    copyHeading.position.set(textX, copyTopValue + topPadding);
-    copyIndex.position.set(panelRight - (reveal ? 20 : 42), copyTopValue + topPadding - 4);
-    copyTitle.position.set(textX, copyTopValue + topPadding + (reveal ? 15 : titleOffset));
-    copyNote.position.set(textX, copyTopValue + topPadding + (reveal ? 67 : noteOffset));
-    screeningNote.position.set(textX, panelBottom - (veryShortScreen || shortScreen ? 12 : 14));
-    const titleSize = wideLayout
-      ? 36
-      : reveal
-        ? veryShortScreen ? 27 : shortScreen ? 28 : 42
-        : veryShortScreen ? 22 : shortScreen ? 28 : 42;
-    copyTitle.style.fontSize = titleSize;
-    copyTitle.style.lineHeight = Math.round(titleSize * 1.02);
-    copyTitle.style.wordWrapWidth = panelWidthValue - (reveal ? 12 : 26);
-    copyNote.style.wordWrapWidth = panelWidthValue - (reveal ? 12 : 26);
-    copyIndex.style.fontSize = reveal ? 8 : wideLayout ? 24 : veryShortScreen ? 22 : shortScreen ? 22 : 26;
-    copyIndex.alpha = reveal ? 1 : 0.2;
-    copyTitle.style.fill = reveal ? COLORS.ice : currentStage === 'drift' ? COLORS.pale : COLORS.graphite;
-    copyNote.style.fill = reveal ? 0x9aa9a6 : currentStage === 'drift' ? 0xa9b6b3 : COLORS.muted;
-    screeningNote.style.fill = reveal ? 0x80918e : currentStage === 'drift' ? 0xa9b6b3 : 0x627176;
-    copyBackground.visible = !reveal;
-    copyBorder.visible = !reveal;
-    copyAccent.visible = !reveal;
     resetButton.visible = reveal;
     resetLabel.visible = reveal;
     resetCode.visible = reveal;
-    if (!reveal) return undefined;
+    const dialogueBounds = { left: panelLeft, top: copyTopValue, width: panelWidthValue, height: copyHeight };
+    if (!reveal) return { dialogue: dialogueBounds, reset: undefined };
 
-    copyNote.position.set(textX, copyTitle.y + copyTitle.height + 6);
-    const resetX = textX;
+    const resetX = panelLeft + 14;
     const resetWidth = 94;
     const resetHeight = 36;
-    const resetY = Math.min(copyNote.y + copyNote.height + 12, screeningNote.y - resetHeight - 12);
+    const resetY = panelBottom - resetHeight - 16;
     const resetPoints: Array<[number, number]> = [[0, 0], [resetWidth - 8, 0], [resetWidth, 8], [resetWidth, resetHeight], [8, resetHeight], [0, resetHeight - 8]];
     drawPolygon(resetButton, resetPoints, COLORS.ice, 1);
     resetButton.position.set(resetX, resetY);
     resetLabel.position.set(resetX + 12, resetY + 12);
     resetCode.position.set(resetX + 61, resetY + 14);
-    return { left: resetX, top: resetY, width: resetWidth, height: resetHeight };
+    return {
+      dialogue: dialogueBounds,
+      reset: { left: resetX, top: resetY, width: resetWidth, height: resetHeight },
+    };
   }
 
   function layout(nextWidth: number, nextHeight: number) {
@@ -811,7 +756,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     moduleTag.clear();
     drawPolygon(moduleTag, [[moduleRight - 184, moduleY - 17], [moduleRight + 2, moduleY - 17], [moduleRight - 8, moduleY + 4], [moduleRight - 184, moduleY + 4]], COLORS.graphite, 1);
 
-    const reset = drawCopy(copyTop, copyPanelWidth, copyPanelLeft, copyPanelHeight);
+    const copyLayout = drawCopy(copyTop, copyPanelWidth, copyPanelLeft, copyPanelHeight);
+    dialogue.layout(copyLayout.dialogue);
 
     topBar.clear();
     topBar.rect(panelX, 0, panelWidth, headerHeight).fill({ color: currentStage === 'reveal' ? COLORS.night : COLORS.graphite, alpha: currentStage === 'reveal' ? 0.15 : 1 });
@@ -862,22 +808,12 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       soundLeft,
       soundTop: 2,
       soundWidth: soundRight - soundLeft,
-      reset,
+      dialogue: copyLayout.dialogue,
+      reset: copyLayout.reset,
     };
   }
 
   function updateCopy(stage: Stage) {
-    const stageCopy = {
-      intro: { eyebrow: 'INTAKE / 远距辨认', title: '请注视远处的房屋', note: '点击中央图像，开始焦距校准' },
-      calibrate: { eyebrow: 'CALIBRATE / 焦距校准', title: '焦距校准中', note: '观察焦距变化，在房屋最清晰时点击中央图像' },
-      drift: { eyebrow: 'ANOMALY / 视觉偏移', title: '房屋位置发生偏移', note: '拖动房屋影像，使其与中央准星重合' },
-      reveal: { eyebrow: 'REVEAL / 影像回收', title: 'PRTS // 视觉回收完成', note: '你看到的，从来不止一层。' },
-    }[stage];
-    copyHeading.text = stageCopy.eyebrow;
-    copyHeading.style.fill = STAGE_ACCENTS[stage];
-    copyTitle.text = stageCopy.title;
-    copyNote.text = stageCopy.note;
-    copyIndex.text = STAGE_META[stage].index;
     metaSignal.text = STAGE_META[stage].signal;
     metaBottom.text = stage === 'reveal' ? STAGE_META[stage].signal : 'FOCAL DISTANCE / 30 CM';
     metaPhase.text = `PHASE / ${STAGE_META[stage].index}`;
@@ -1198,6 +1134,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       originiumShards.alpha = fractureKick === 0 ? 0.55 + revealEase * 0.4 : 0.45;
       originiumCoreGlow.tint = 0xffffff;
     }
+    dialogue.tick(time);
   }
 
   return {
@@ -1220,16 +1157,21 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       calibrationFeedbackTimeline = null;
       calibrationAlert.alpha = 0;
       window.clearTimeout(flashTimer);
+      dialogue.selectStage(stage);
       updateCopy(stage);
     },
     applyStage,
     showCalibrationFeedback,
     moveDriftBy,
     confirmDrift,
+    startDialogue: dialogue.start,
+    advanceDialogue: dialogue.advance,
+    getDialogueSnapshot: dialogue.getSnapshot,
     triggerRevealFlash,
     setMuted,
     setReducedMotion(reducedMotion: boolean) {
       currentReducedMotion = reducedMotion;
+      dialogue.setReducedMotion(reducedMotion);
       window.clearTimeout(flashTimer);
       driftTween?.kill();
       driftTween = null;

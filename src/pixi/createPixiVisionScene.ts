@@ -8,7 +8,7 @@ import { getStageReadyTime, isCalibrationClear } from './visionSceneModel';
 import type { PixiVisionScene, SceneOptions } from './visionSceneModel';
 
 export { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './visionSceneModel';
-export type { PixiVisionScene } from './visionSceneModel';
+export type { DialogueSnapshot, PixiVisionScene } from './visionSceneModel';
 
 export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion, onEntryReady }: SceneOptions) {
   const app = new Application();
@@ -64,6 +64,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   let handoffRequest = 0;
   let handoffComplete: (() => void) | undefined;
   let stageReady: (() => void) | undefined;
+  let dialoguePending = false;
   let entryBootStartedAt = 0;
 
   function layout() {
@@ -86,6 +87,10 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     setCssVar(host, '--pixi-sound-left', mainLayout.soundLeft);
     setCssVar(host, '--pixi-sound-top', mainLayout.soundTop);
     setCssVar(host, '--pixi-sound-width', mainLayout.soundWidth);
+    setCssVar(host, '--pixi-dialogue-left', mainLayout.dialogue.left);
+    setCssVar(host, '--pixi-dialogue-top', mainLayout.dialogue.top);
+    setCssVar(host, '--pixi-dialogue-width', mainLayout.dialogue.width);
+    setCssVar(host, '--pixi-dialogue-height', mainLayout.dialogue.height);
     if (mainLayout.reset) {
       setCssVar(host, '--pixi-reset-left', mainLayout.reset.left);
       setCssVar(host, '--pixi-reset-top', mainLayout.reset.top);
@@ -147,8 +152,12 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   }
 
   function finishStage() {
+    if (!dialoguePending) return;
+    dialoguePending = false;
     const onReady = stageReady;
     stageReady = undefined;
+    main.startDialogue();
+    app.render();
     onReady?.();
   }
 
@@ -156,6 +165,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     currentStage = stage;
     stageTime = 0;
     stageReady = onReady;
+    dialoguePending = true;
     main.selectStage(stage);
     layout();
     main.applyStage();
@@ -200,7 +210,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     stageTime += deltaSeconds;
     main.tick(time, stageTime);
     entry.tick(time);
-    if (stageReady && stageTime >= getStageReadyTime(currentStage)) finishStage();
+    if (dialoguePending && stageTime >= getStageReadyTime(currentStage)) finishStage();
   }
 
   function startLoop() {
@@ -250,6 +260,12 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     confirmCalibration,
     moveDriftBy: main.moveDriftBy,
     confirmDrift: main.confirmDrift,
+    advanceDialogue() {
+      const snapshot = main.advanceDialogue();
+      app.render();
+      return snapshot;
+    },
+    getDialogueSnapshot: main.getDialogueSnapshot,
     setMuted: main.setMuted,
     setReducedMotion,
     reset: () => setStage('intro'),
@@ -260,6 +276,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
       window.cancelAnimationFrame(handoffRequest);
       handoffComplete = undefined;
       stageReady = undefined;
+      dialoguePending = false;
       resizeObserver.disconnect();
       main.destroy();
       const canvas = app.canvas;

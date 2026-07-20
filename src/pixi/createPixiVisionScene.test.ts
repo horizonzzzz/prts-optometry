@@ -1,14 +1,33 @@
 import { describe, expect, it } from 'vitest';
 import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './createPixiVisionScene';
 import { getInitialDriftOffset } from './visionSceneModel';
+import { advanceDialogueCursor } from './visionDialogueScene';
 
 describe('getCopyHeight', () => {
   it('keeps the Pixi copy block aligned with the responsive DOM layout', () => {
-    expect(getCopyHeight(568, false)).toBe(98);
-    expect(getCopyHeight(844, false)).toBe(110);
-    expect(getCopyHeight(900, false)).toBe(154);
-    expect(getCopyHeight(568, true)).toBe(140);
-    expect(getCopyHeight(900, true)).toBe(180);
+    expect(getCopyHeight(568, false)).toBe(150);
+    expect(getCopyHeight(844, false)).toBe(176);
+    expect(getCopyHeight(900, false)).toBe(196);
+    expect(getCopyHeight(568, true)).toBe(150);
+    expect(getCopyHeight(900, true)).toBe(210);
+  });
+});
+
+describe('dialogue progression', () => {
+  it('reveals the current line before advancing and unlocks after the final line', () => {
+    let cursor = { lineIndex: 0, visibleCharacters: 2, complete: false };
+
+    cursor = advanceDialogueCursor(cursor, 5, 3);
+    expect(cursor).toEqual({ lineIndex: 0, visibleCharacters: 5, complete: false });
+
+    cursor = advanceDialogueCursor(cursor, 5, 3);
+    expect(cursor).toEqual({ lineIndex: 1, visibleCharacters: 0, complete: false });
+
+    cursor = advanceDialogueCursor({ ...cursor, visibleCharacters: 4 }, 4, 3);
+    expect(cursor).toEqual({ lineIndex: 2, visibleCharacters: 0, complete: false });
+
+    cursor = advanceDialogueCursor({ ...cursor, visibleCharacters: 6 }, 6, 3);
+    expect(cursor).toEqual({ lineIndex: 2, visibleCharacters: 6, complete: true });
   });
 });
 
