@@ -8,7 +8,7 @@ test('initial state starts at the clear house scene', () => {
     stage: 'intro',
     muted: false,
   });
-  expect(getStageCopy(state).actionLabel).toBe('点击中央验光图像，开始焦距校准');
+  expect(getStageCopy(state).actionLabel).toBe('开始验光测试');
 });
 
 test('each confirmation advances one scene', () => {
@@ -18,8 +18,8 @@ test('each confirmation advances one scene', () => {
 
   state = advanceState(state, 'CONFIRM');
   expect(state).toEqual({ stage: 'drift', muted: false });
-  expect(getStageCopy(state).title).toBe('房屋位置发生偏移');
-  expect(getStageCopy(state).actionLabel).toBe('拖动偏移影像回到中央准星');
+  expect(getStageCopy(state).title).toBe('测试流程出现异常');
+  expect(getStageCopy(state).actionLabel).toBe('继续校准并对齐影像');
 });
 
 test('drift advances to reveal and reveal resets cleanly', () => {
@@ -27,6 +27,8 @@ test('drift advances to reveal and reveal resets cleanly', () => {
 
   state = advanceState(state, 'CONTINUE');
   expect(state).toEqual({ stage: 'reveal', muted: false });
+  expect(getStageCopy(state).title).toBe('PRTS // 回传通道被占用');
+  expect(getStageCopy(state).note).toContain('TO BE CONTINUED');
   expect(advanceState(state, 'START')).toBe(state);
 
   state = advanceState(state, 'RESET');

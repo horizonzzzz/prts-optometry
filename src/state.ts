@@ -16,10 +16,10 @@ export type StageCopy = {
 
 const COPY: Readonly<Record<Stage, Readonly<StageCopy>>> = Object.freeze({
   intro: Object.freeze({
-    eyebrow: 'INTAKE / 远距辨认',
+    eyebrow: 'INTAKE / 例行验光',
     title: '请注视远处的房屋',
-    note: '点击中央图像，开始焦距校准',
-    actionLabel: '点击中央验光图像，开始焦距校准',
+    note: '阿米娅与凯尔希将引导你完成测试',
+    actionLabel: '开始验光测试',
   }),
   calibrate: Object.freeze({
     eyebrow: 'CALIBRATE / 焦距校准',
@@ -28,15 +28,15 @@ const COPY: Readonly<Record<Stage, Readonly<StageCopy>>> = Object.freeze({
     actionLabel: '在图像清晰时确认焦距',
   }),
   drift: Object.freeze({
-    eyebrow: 'ANOMALY / 视觉偏移',
-    title: '房屋位置发生偏移',
-    note: '拖动房屋影像，使其与中央准星重合',
-    actionLabel: '拖动偏移影像回到中央准星',
+    eyebrow: 'ANOMALY / 未知视觉偏移',
+    title: '测试流程出现异常',
+    note: '保留终端连接，将影像拖回中央准星',
+    actionLabel: '继续校准并对齐影像',
   }),
   reveal: Object.freeze({
-    eyebrow: 'REVEAL / 影像回收',
-    title: 'PRTS // 视觉回收完成',
-    note: '你看到的，从来不止一层。',
+    eyebrow: 'REVEAL / 未授权连接',
+    title: 'PRTS // 回传通道被占用',
+    note: '记录尚未结束。继续观察。TO BE CONTINUED.',
     actionLabel: '重新校准',
   }),
 });
