@@ -234,6 +234,18 @@
       "sourceType": "github",
       "skillPath": "skills/review-animations/SKILL.md",
       "computedHash": "c92905bff59c3007d07c2638a2a83d5d71c901feef108cce1da0bf3c7cafd579"
+    },
+    "storyboard-manager": {
+      "source": "ailabs-393/ai-labs-claude-skills",
+      "sourceType": "github",
+      "skillPath": "packages/skills/storyboard-manager/SKILL.md",
+      "computedHash": "3f1c42e36460df75f30a036ab04f19ff2c9cc44aeb946e91d71e8dcbb371aa78"
+    },
+    "visual-novel": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/genres/visual-novel/SKILL.md",
+      "computedHash": "a54c416758e088b26d1f539eda0dc25a216e7bf0c2b5a3b0db7c25f87e416993"
     }
   }
 }
