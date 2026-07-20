@@ -35,7 +35,7 @@ const SPEAKERS: Record<DialogueSpeaker, { name: string; code: string }> = {
   doctor: { name: '博士', code: 'DOCTOR // C-00' },
   amiya: { name: '阿米娅', code: 'AMIYA // R-01' },
   kaltsit: { name: '凯尔希', code: 'KALTSIT // M-01' },
-  priestess: { name: '普瑞赛斯', code: 'PRIESTESS // P-00' },
+  priestess: { name: '普瑞赛斯', code: 'SIGNAL // UNRESOLVED' },
 };
 
 const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
@@ -76,7 +76,12 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
   ],
 };
 
-const TYPE_INTERVAL = 0.036;
+const TYPE_INTERVALS: Record<DialogueSpeaker, number> = {
+  doctor: 0.032,
+  amiya: 0.036,
+  kaltsit: 0.03,
+  priestess: 0.058,
+};
 
 export function advanceDialogueCursor(cursor: DialogueCursor, lineLength: number, lineCount: number): DialogueCursor {
   if (cursor.complete) return cursor;
@@ -374,11 +379,14 @@ export function createVisionDialogueScene(textures: VisionSceneTextures, initial
     }
 
     lineElapsed += delta;
+    const currentSpeaker = line().speaker;
+    const isPriestess = currentSpeaker === 'priestess';
+    const typeInterval = TYPE_INTERVALS[currentSpeaker];
     if (active && !currentReducedMotion && cursor.visibleCharacters < characters.length) {
       typeElapsed += delta;
-      const nextCount = Math.min(characters.length, cursor.visibleCharacters + Math.floor(typeElapsed / TYPE_INTERVAL));
+      const nextCount = Math.min(characters.length, cursor.visibleCharacters + Math.floor(typeElapsed / typeInterval));
       if (nextCount !== cursor.visibleCharacters) {
-        typeElapsed %= TYPE_INTERVAL;
+        typeElapsed %= typeInterval;
         cursor.visibleCharacters = nextCount;
         updateVisibleText();
       }
@@ -388,11 +396,13 @@ export function createVisionDialogueScene(textures: VisionSceneTextures, initial
     const enter = Math.min(lineElapsed / 0.22, 1);
     const eased = 1 - Math.pow(1 - enter, 3);
     const bob = Math.sin(time * 2.2) * 1.2;
+    const aberration = isPriestess ? 7 : stage === 'drift' ? 5 : 3;
+    const signalJitter = isPriestess ? Math.sin(time * 31) * 1.2 : 0;
     portrait.y = portraitY + bob;
-    portrait.alpha = eased;
+    portrait.alpha = isPriestess ? eased * (0.9 + Math.sin(time * 17) * 0.1) : eased;
     portrait.scale.set(portraitScale * (0.95 + eased * 0.05));
-    portraitCyan.position.set(portrait.x - 3 - (1 - eased) * 5, portraitY + 1 + bob);
-    portraitRed.position.set(portrait.x + 3 + (1 - eased) * 5, portraitY - 1 + bob);
+    portraitCyan.position.set(portrait.x - aberration - (1 - eased) * 5 + signalJitter, portraitY + 1 + bob);
+    portraitRed.position.set(portrait.x + aberration + (1 - eased) * 5 - signalJitter, portraitY - 1 + bob);
     portraitCyan.scale.set(portrait.scale.x);
     portraitRed.scale.set(portrait.scale.x);
     portraitCyan.alpha = 0.06 + Math.abs(Math.sin(time * 3.1)) * 0.09;
