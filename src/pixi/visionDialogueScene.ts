@@ -40,24 +40,31 @@ const SPEAKERS: Record<DialogueSpeaker, { name: string; code: string }> = {
 
 const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
   intro: [
-    { speaker: 'amiya', text: '博士，远距光学阵列已经接通。能看见中央的房屋吗？' },
-    { speaker: 'doctor', text: '轮廓清晰。背景信号稳定，可以开始。' },
-    { speaker: 'amiya', text: '收到。完成通讯后，点击影像启动焦距校准。' },
+    { speaker: 'amiya', text: '博士，远距观测终端已经准备好了。今天先做一次视觉校准。' },
+    { speaker: 'doctor', text: '中央影像清晰。能辨认出房屋和周围的轮廓。' },
+    { speaker: 'amiya', text: '那就好。请跟着系统提示，确认远距焦点。' },
+    { speaker: 'amiya', text: '通讯确认后，点击中央影像。我们会一直在这里。' },
   ],
   calibrate: [
-    { speaker: 'kaltsit', text: '系统会循环改变焦距。博士，留意房屋边缘。' },
-    { speaker: 'doctor', text: '在轮廓最清晰的瞬间锁定，对吗？' },
-    { speaker: 'kaltsit', text: '没错。确认焦距后，进入偏移测试。' },
+    { speaker: 'kaltsit', text: '焦距正在按周期变化。观察房屋边缘，不要被背景噪声干扰。' },
+    { speaker: 'doctor', text: '在轮廓最清晰的瞬间锁定焦点。' },
+    { speaker: 'kaltsit', text: '正确。测试只需要你的判断，不必迁就设备的读数。' },
+    { speaker: 'kaltsit', text: '焦距确认。继续执行偏移测试，保持注意力。' },
   ],
   drift: [
-    { speaker: 'doctor', text: '画面偏离了准星，信号里出现了双重回波。' },
-    { speaker: 'amiya', text: '不是设备故障。请拖动影像，让房屋重新与准星重合。' },
-    { speaker: 'doctor', text: '明白。归零后继续回收残余视觉信号。' },
+    { speaker: 'doctor', text: '影像偏离准星。偏移量正在增大，信号里出现了第二层回波。' },
+    { speaker: 'amiya', text: '等一下……这不在测试流程里。凯尔希，这个信号像是设备故障吗？' },
+    { speaker: 'kaltsit', text: '不是设备故障。影像仍然稳定，博士，继续操作。' },
+    { speaker: 'amiya', text: '可是那里面像是有另一个轮廓……请把影像拉回准星。' },
+    { speaker: 'doctor', text: '我看见了。先完成校准，无论它是什么。' },
   ],
   reveal: [
-    { speaker: 'amiya', text: '回收完成……但终端识别出了不属于测试的影像。' },
-    { speaker: 'doctor', text: 'PRTS，把信号源放大。' },
-    { speaker: 'priestess', text: '连接已经建立。博士，请确认你所看到的记录。' },
+    { speaker: 'amiya', text: '回收完成……但终端识别出了不属于测试的影像。它在回应我们的观测。' },
+    { speaker: 'kaltsit', text: '终端没有失控。博士，保持观察，把记录交给PRTS。' },
+    { speaker: 'doctor', text: 'PRTS，放大信号。阿米娅、凯尔希，保持记录。我们不会退后。' },
+    { speaker: 'priestess', text: '连接已建立。博士，是我。普瑞赛斯。' },
+    { speaker: 'amiya', text: '博士，我们都在这里。无论你看见什么，我不会退后。' },
+    { speaker: 'kaltsit', text: '无需恐惧。继续记录。你们所看到的，将由我们共同承担。' },
   ],
 };
 
