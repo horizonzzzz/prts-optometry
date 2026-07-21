@@ -18,7 +18,7 @@ const COPY: Readonly<Record<Stage, Readonly<StageCopy>>> = Object.freeze({
   intro: Object.freeze({
     eyebrow: 'INTAKE / 例行验光',
     title: '请注视远处的房屋',
-    note: '阿米娅与凯尔希将引导你完成测试',
+    note: '点击中央图像，开始焦距校准',
     actionLabel: '开始验光测试',
   }),
   calibrate: Object.freeze({
@@ -46,7 +46,11 @@ export function createInitialState(): AppState {
 }
 
 export function getStageCopy(state: AppState): StageCopy {
-  return COPY[state.stage] ?? COPY.intro;
+  return getStageCopyForStage(state.stage);
+}
+
+export function getStageCopyForStage(stage: Stage): StageCopy {
+  return COPY[stage] ?? COPY.intro;
 }
 
 export function advanceState(state: AppState, action: Action): AppState {

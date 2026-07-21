@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { createInitialState, advanceState, getStageCopy, type AppState } from './state';
+import { createInitialState, advanceState, getStageCopy, getStageCopyForStage, type AppState } from './state';
 
 test('initial state starts at the clear house scene', () => {
   const state = createInitialState();
@@ -9,6 +9,7 @@ test('initial state starts at the clear house scene', () => {
     muted: false,
   });
   expect(getStageCopy(state).actionLabel).toBe('开始验光测试');
+  expect(getStageCopyForStage('intro').note).toBe('点击中央图像，开始焦距校准');
 });
 
 test('each confirmation advances one scene', () => {

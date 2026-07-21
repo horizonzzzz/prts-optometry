@@ -50,7 +50,6 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
     { speaker: 'doctor', text: '房屋在清晰和模糊之间变化。' },
     { speaker: 'amiya', text: '我会记录每一次确认，博士。' },
     { speaker: 'kaltsit', text: '在轮廓最清晰处确认。' },
-    { speaker: 'doctor', text: '锁定了。下一项。' },
   ],
   drift: [
     { speaker: 'doctor', text: '影像偏离准星。房屋轮廓与定位点不再重合。' },
@@ -59,7 +58,6 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
     { speaker: 'kaltsit', text: '不是故障。影像仍然稳定。阿米娅，记录时间和读数。' },
     { speaker: 'amiya', text: '可是那里面……有另一个轮廓。博士，它——它好像在看你。' },
     { speaker: 'kaltsit', text: '博士，继续操作，把影像拉回准星。' },
-    { speaker: 'doctor', text: '明白。先不动它——完整记录优先。' },
   ],
   reveal: [
     { speaker: 'amiya', text: '回收程序本应结束……不对，终端拒绝退出。' },

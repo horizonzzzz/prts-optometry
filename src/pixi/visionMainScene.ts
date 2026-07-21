@@ -11,6 +11,7 @@ import {
 } from 'pixi.js';
 import type { Stage } from '../state';
 import { createVisionDialogueScene } from './visionDialogueScene';
+import { createVisionOperationPanel } from './visionOperationPanel';
 import type { VisionSceneTextures } from './visionSceneAssets';
 import {
   addText,
@@ -50,6 +51,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const chrome = new Container({ label: 'main-chrome' });
   const flash = new Graphics();
   const dialogue = createVisionDialogueScene(textures, initialReducedMotion);
+  const operation = createVisionOperationPanel();
 
   const backdrop = new Sprite(textures.grid);
   const mask = new Sprite(textures.mask);
@@ -156,7 +158,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   layer.addChild(backdrop, shade, mask, diagonal, grid, stageGlow, body, copy, dialogue.layer, chrome, grain, scanline, filter);
   body.addChild(bodyBorder, bodyNumber, metaTopDot, metaTop, metaRuleTop, metaSignal, metaBottomDot, metaBottom, metaRuleBottom, metaPhase, haloShadow, halo, houseGroup, revealGroup, calibrationAlert, moduleTag, moduleText);
   calibrationAlert.addChild(calibrationAlertBg, calibrationAlertAccent, calibrationAlertCode, calibrationAlertMessage);
-  copy.addChild(resetButton, resetLabel, resetCode);
+  copy.addChild(operation.layer, resetButton, resetLabel, resetCode);
   chrome.addChild(topBar, topAccent, rhodes, brandName, brandSub, stageCodeBg, stageCode, soundBars, soundLabel, railLeft, railMiddle, railRight, railRuleLeft, railRuleRight);
 
   backdrop.alpha = 0.94;
@@ -757,6 +759,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     drawPolygon(moduleTag, [[moduleRight - 184, moduleY - 17], [moduleRight + 2, moduleY - 17], [moduleRight - 8, moduleY + 4], [moduleRight - 184, moduleY + 4]], COLORS.graphite, 1);
 
     const copyLayout = drawCopy(copyTop, copyPanelWidth, copyPanelLeft, copyPanelHeight);
+    operation.layout(copyLayout.dialogue);
     dialogue.layout(copyLayout.dialogue);
 
     topBar.clear();
@@ -898,6 +901,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
 
   function moveDriftBy(deltaX: number, deltaY: number) {
     if (currentStage !== 'drift' || driftLocked || !Number.isFinite(deltaX) || !Number.isFinite(deltaY)) return;
+    operation.clearFeedback();
     driftTween?.kill();
     driftTween = null;
     houseViewport.scale.set(1);
@@ -921,6 +925,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     calibrationAlertCode.text = confirmed ? 'LOCK 100' : 'ERR 03';
     calibrationAlertCode.style.fill = confirmed ? COLORS.graphite : COLORS.pale;
     calibrationAlertMessage.text = confirmed ? 'OFFSET ALIGNED\n偏移已归零' : 'OFFSET UNRESOLVED\n请拖动影像对准准星';
+    operation.setFeedback(
+      confirmed ? '影像已对齐 / OFFSET ALIGNED' : '偏移未归零，请继续拖动影像',
+      confirmed ? 'success' : 'error',
+    );
 
     if (confirmed) {
       driftOffsetX = 0;
@@ -971,6 +979,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     calibrationAlertCode.text = confirmed ? 'LOCK 100' : 'ERR 02';
     calibrationAlertCode.style.fill = confirmed ? COLORS.graphite : COLORS.pale;
     calibrationAlertMessage.text = confirmed ? 'FOCUS LOCKED\n焦距已锁定' : 'FOCUS UNSTABLE\n请在清晰时点击';
+    operation.setFeedback(
+      confirmed ? '焦距已锁定 / FOCUS LOCKED' : '焦距不稳定，请在清晰时重试',
+      confirmed ? 'success' : 'error',
+    );
 
     if (confirmed) {
       houseBlur.strength = 0;
@@ -1158,6 +1170,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       calibrationAlert.alpha = 0;
       window.clearTimeout(flashTimer);
       dialogue.selectStage(stage);
+      operation.selectStage(stage);
       updateCopy(stage);
     },
     applyStage,
@@ -1165,7 +1178,11 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     moveDriftBy,
     confirmDrift,
     startDialogue: dialogue.start,
-    advanceDialogue: dialogue.advance,
+    advanceDialogue() {
+      const snapshot = dialogue.advance();
+      if (snapshot.complete) operation.show();
+      return snapshot;
+    },
     getDialogueSnapshot: dialogue.getSnapshot,
     triggerRevealFlash,
     setMuted,

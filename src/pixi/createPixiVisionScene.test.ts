@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './createPixiVisionScene';
 import { getInitialDriftOffset } from './visionSceneModel';
 import { advanceDialogueCursor } from './visionDialogueScene';
+import { getOperationPanelContent } from './visionOperationPanel';
 
 describe('getCopyHeight', () => {
   it('keeps the Pixi copy block aligned with the responsive DOM layout', () => {
@@ -28,6 +29,27 @@ describe('dialogue progression', () => {
 
     cursor = advanceDialogueCursor({ ...cursor, visibleCharacters: 6 }, 6, 3);
     expect(cursor).toEqual({ lineIndex: 2, visibleCharacters: 6, complete: true });
+  });
+});
+
+describe('operation panel content', () => {
+  it('turns stage copy and interaction feedback into a single control surface', () => {
+    expect(getOperationPanelContent('intro')).toMatchObject({
+      title: '开始验光测试',
+      status: '等待操作 / INPUT REQUIRED',
+      tone: 'idle',
+    });
+    expect(getOperationPanelContent('drift')).toMatchObject({
+      status: '检测到第二组回波 / ALIGN REQUIRED',
+      tone: 'warning',
+    });
+    expect(getOperationPanelContent('calibrate', {
+      message: '焦距不稳定，请在清晰时重试',
+      tone: 'error',
+    })).toMatchObject({
+      status: '焦距不稳定，请在清晰时重试',
+      tone: 'error',
+    });
   });
 });
 
