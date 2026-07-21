@@ -239,6 +239,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   let driftOffsetX = 0;
   let driftOffsetY = 0;
   let flashTimer = 0;
+  let operationPending = false;
 
   function drawScreenGrid(graphics: Graphics, x: number, y: number, gridWidth: number, gridHeight: number, alpha: number) {
     graphics.clear();
@@ -1063,6 +1064,23 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       .fromTo(soundLabel, { alpha: 0.45 }, { alpha: 1, duration: 0.18, ease: 'power2.out', immediateRender: false }, 0.04);
   }
 
+  function showOperationPanel() {
+    operationPending = false;
+    gsap.killTweensOf(operation.layer);
+    operation.show();
+    if (currentReducedMotion) return;
+
+    gsap.fromTo(
+      operation.layer,
+      { alpha: 0 },
+      {
+        alpha: 1,
+        duration: 0.18,
+        ease: 'power2.out',
+      },
+    );
+  }
+
   function tick(time: number, stageTime: number) {
     if (currentStage === 'calibrate') {
       const calibration = calibrationLocked ? 0 : getCalibrationBlurAmount(stageTime);
@@ -1147,6 +1165,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       originiumCoreGlow.tint = 0xffffff;
     }
     dialogue.tick(time);
+    if (operationPending && !dialogue.layer.visible) showOperationPanel();
   }
 
   return {
@@ -1169,6 +1188,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       calibrationFeedbackTimeline = null;
       calibrationAlert.alpha = 0;
       window.clearTimeout(flashTimer);
+      operationPending = false;
+      gsap.killTweensOf(operation.layer);
       dialogue.selectStage(stage);
       operation.selectStage(stage);
       updateCopy(stage);
@@ -1180,7 +1201,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     startDialogue: dialogue.start,
     advanceDialogue() {
       const snapshot = dialogue.advance();
-      if (snapshot.complete) operation.show();
+      if (snapshot.complete) {
+        operationPending = true;
+        if (!dialogue.layer.visible) showOperationPanel();
+      }
       return snapshot;
     },
     getDialogueSnapshot: dialogue.getSnapshot,
@@ -1189,6 +1213,13 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     setReducedMotion(reducedMotion: boolean) {
       currentReducedMotion = reducedMotion;
       dialogue.setReducedMotion(reducedMotion);
+      if (reducedMotion && operationPending) {
+        dialogue.layer.visible = false;
+        showOperationPanel();
+      } else if (reducedMotion && operation.layer.visible) {
+        gsap.killTweensOf(operation.layer);
+        operation.show();
+      }
       window.clearTimeout(flashTimer);
       driftTween?.kill();
       driftTween = null;
@@ -1221,6 +1252,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       driftTween = null;
       soundTimeline?.kill();
       soundTimeline = null;
+      gsap.killTweensOf(operation.layer);
       window.clearTimeout(flashTimer);
     },
   };
