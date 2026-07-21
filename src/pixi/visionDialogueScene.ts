@@ -41,8 +41,8 @@ const SPEAKERS: Record<DialogueSpeaker, { name: string; code: string }> = {
 const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
   intro: [
     { speaker: 'amiya', text: '博士，医疗部的远距验光终端已经准备好了。' },
-    { speaker: 'kaltsit', text: '仅开放视觉反馈权限。不会读取你的医疗档案。' },
-    { speaker: 'amiya', text: '请注视中央的远处影像。看清房屋的轮廓就好。' },
+    { speaker: 'kaltsit', text: '仅开放视觉反馈权限，不会对你的眼睛造成影响。' },
+    { speaker: 'amiya', text: '注视中央的远处影像，看清房屋的轮廓就好。' },
     { speaker: 'doctor', text: '……清晰。开始吧。' },
   ],
   calibrate: [
@@ -53,15 +53,15 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
   ],
   drift: [
     { speaker: 'doctor', text: '影像偏离准星。房屋轮廓与定位点不再重合。' },
-    { speaker: 'amiya', text: '等一下……信号里出现了第二组回波。' },
+    { speaker: 'amiya', text: '等一下……出现了异常信号。' },
     { speaker: 'amiya', text: '这……这不在流程里。凯尔希医生，是设备的问题吗？' },
     { speaker: 'kaltsit', text: '不是故障。影像仍然稳定。阿米娅，记录时间和读数。' },
     { speaker: 'amiya', text: '可是那里面……有另一个轮廓。博士，它——它好像在看你。' },
     { speaker: 'kaltsit', text: '博士，继续操作，把影像拉回准星。' },
   ],
   reveal: [
-    { speaker: 'amiya', text: '回收程序本应结束……不对，终端拒绝退出。' },
-    { speaker: 'kaltsit', text: '有人正在改写回传权限。PRTS，保留本地记录。' },
+    { speaker: 'amiya', text: '验光程序本应结束……不对，终端拒绝退出。' },
+    { speaker: 'kaltsit', text: '有人正在改写终端权限。PRTS，保留本地记录。' },
     { speaker: 'doctor', text: '……影像变了。房屋后面——那不是背景，是另一处空间。' },
     { speaker: 'priestess', text: '不要关闭它，预言家。……这条通路，我走了很久才找到。' },
     { speaker: 'priestess', text: '你丢失了一些东西。我只是……想把它还给你。' },
@@ -70,7 +70,7 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
     { speaker: 'doctor', text: '明白。……都别断开。我们看完它。' },
     { speaker: 'priestess', text: '下一次……我会亲口告诉你。你曾经是谁，你答应过我什么。' },
     { speaker: 'amiya', text: '不管博士忘记了什么……我都会陪在博士身边。这一点，不会改变。' },
-    { speaker: 'kaltsit', text: '记录保存。博士，断开通道连接。' },
+    { speaker: 'kaltsit', text: '记录保存。博士，断开终端连接。' },
   ],
 };
 

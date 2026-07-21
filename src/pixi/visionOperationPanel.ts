@@ -24,7 +24,7 @@ type OperationPanelBounds = {
 const DEFAULT_STATUS: Record<Stage, OperationFeedback> = {
   intro: { message: '等待操作 / INPUT REQUIRED', tone: 'idle' },
   calibrate: { message: '焦距窗口活动中 / FOCUS READY', tone: 'idle' },
-  drift: { message: '检测到第二组回波 / ALIGN REQUIRED', tone: 'warning' },
+  drift: { message: '检测数据流异常 / ALIGN REQUIRED', tone: 'warning' },
   reveal: { message: '回传通道占用 / RECORD LOCKED', tone: 'warning' },
 };
 
