@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useReducer, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import qrNode01 from '../../assets/7521a33230186fc1435c3077c4449634.png';
 import qrNode02 from '../../assets/b3a33055da1d8f99363e4042f4df035f.jpg';
 import ambientAudio from '../../assets/audio/bgm.ea4286.mp3';
@@ -27,6 +27,8 @@ export default function PixiVisionPage() {
   const [interactionMessage, setInteractionMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
+  const visionHitRef = useRef<HTMLButtonElement | null>(null);
+  const dialogueHitRef = useRef<HTMLButtonElement | null>(null);
   const qrDialogRef = useRef<HTMLDialogElement | null>(null);
   const sceneRef = useRef<PixiVisionScene | null>(null);
   const reducedMotionRef = useRef(false);
@@ -35,6 +37,7 @@ export default function PixiVisionPage() {
   const ambientRef = useRef<HTMLAudioElement | null>(null);
   const revealRef = useRef<HTMLAudioElement | null>(null);
   const previousAudioStageRef = useRef(state.stage);
+  const focusVisionAfterEntryRef = useRef(false);
   const snowNoiseRef = useRef<{
     context: AudioContext;
     gain: GainNode;
@@ -119,6 +122,14 @@ export default function PixiVisionPage() {
   useEffect(() => {
     sceneRef.current?.setReducedMotion(reducedMotion);
   }, [reducedMotion]);
+
+  useLayoutEffect(() => {
+    if (!started || !stageReady || !focusVisionAfterEntryRef.current) return;
+    const nextControl = dialogue?.complete ? visionHitRef.current : dialogueHitRef.current;
+    if (!nextControl) return;
+    focusVisionAfterEntryRef.current = false;
+    nextControl.focus();
+  }, [dialogue?.complete, stageReady, started]);
 
   useEffect(() => {
     if (!ready || !started) return;
@@ -217,6 +228,7 @@ export default function PixiVisionPage() {
     startAmbientAudio();
     setEntryDeparting(true);
     sceneRef.current?.setStarted(true, () => {
+      focusVisionAfterEntryRef.current = true;
       setStarted(true);
       setEntryDeparting(false);
     });
@@ -339,6 +351,7 @@ export default function PixiVisionPage() {
       />
 
       <button
+        ref={visionHitRef}
         className="pixi-hit pixi-vision-hit"
         type="button"
         onClick={handleVisionActivate}
@@ -355,6 +368,7 @@ export default function PixiVisionPage() {
 
       {started && stageReady && dialogue && !dialogue.complete && (
         <button
+          ref={dialogueHitRef}
           className="pixi-hit pixi-dialogue-hit"
           type="button"
           onClick={handleDialogueAdvance}
