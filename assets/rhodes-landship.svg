@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 120">
+  <title>Rhodes Island landship fighter silhouette</title>
+  <g fill="none" stroke-linejoin="round">
+    <path d="M90 4 113 30 155 43 176 71 139 78 126 105 90 116 54 105 41 78 4 71 25 43 67 30Z" fill="#dce9e4" stroke="#0d1112" stroke-width="5"/>
+    <path d="M90 10 105 36 137 47 119 58 109 94 90 107 71 94 61 58 43 47 75 36Z" fill="#171c1f" stroke="#5dd5de" stroke-width="3"/>
+    <path d="m18 66 39-12 10 19-30 3Zm144 0-39-12-10 19 30 3Z" fill="#59666b" stroke="#0d1112" stroke-width="3"/>
+    <path d="M90 25 105 49 90 74 75 49Z" fill="#dce9e4" stroke="#0d1112" stroke-width="3"/>
+    <path d="m90 38 7 11-7 12-7-12Z" fill="#00a7bd"/>
+    <path d="M65 84h50M72 94h36" stroke="#5dd5de" stroke-width="3"/>
+    <path d="m67 101-8 15m54-15 8 15" stroke="#e5c546" stroke-width="5" stroke-linecap="round"/>
+  </g>
+</svg>

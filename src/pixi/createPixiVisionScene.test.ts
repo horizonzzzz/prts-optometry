@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './createPixiVisionScene';
 import { getInitialDriftOffset } from './visionSceneModel';
+import { circlesOverlap, shouldBattleExplode } from './visionBattleScene';
 import { advanceDialogueCursor } from './visionDialogueScene';
 import { getOperationPanelContent } from './visionOperationPanel';
 
@@ -124,5 +125,15 @@ describe('getRevealFractureKick', () => {
     expect(getRevealFractureKick(1.8)).toBe(0);
     expect(getRevealFractureKick(1.8 + Math.PI / (2 * 1.65))).toBe(-6);
     expect(getRevealFractureKick(1.8 + Math.PI / (2 * 3.1))).toBe(4);
+  });
+});
+
+describe('battle ending', () => {
+  it('keeps the ship invincible while ending the encounter within the fixed window', () => {
+    expect(circlesOverlap(0, 0, 10, 19, 0, 9)).toBe(true);
+    expect(circlesOverlap(0, 0, 10, 20, 0, 9)).toBe(false);
+    expect(shouldBattleExplode(15.49, 100)).toBe(false);
+    expect(shouldBattleExplode(15.5, 40)).toBe(true);
+    expect(shouldBattleExplode(16.8, 0)).toBe(true);
   });
 });

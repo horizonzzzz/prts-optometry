@@ -91,6 +91,10 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     setCssVar(host, '--pixi-dialogue-top', mainLayout.dialogue.top);
     setCssVar(host, '--pixi-dialogue-width', mainLayout.dialogue.width);
     setCssVar(host, '--pixi-dialogue-height', mainLayout.dialogue.height);
+    setCssVar(host, '--pixi-battle-left', mainLayout.battle.left);
+    setCssVar(host, '--pixi-battle-top', mainLayout.battle.top);
+    setCssVar(host, '--pixi-battle-width', mainLayout.battle.width);
+    setCssVar(host, '--pixi-battle-height', mainLayout.battle.height);
     if (mainLayout.reset) {
       setCssVar(host, '--pixi-reset-left', mainLayout.reset.left);
       setCssVar(host, '--pixi-reset-top', mainLayout.reset.top);
@@ -260,6 +264,21 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     confirmCalibration,
     moveDriftBy: main.moveDriftBy,
     confirmDrift: main.confirmDrift,
+    primeBattleAudio: main.primeBattleAudio,
+    startBattle(onComplete: () => void) {
+      main.startBattle(onComplete);
+      app.render();
+    },
+    moveBattleBy: main.moveBattleBy,
+    startEpilogue() {
+      const snapshot = main.startEpilogue();
+      app.render();
+      return snapshot;
+    },
+    showEndingControls() {
+      main.showEndingControls();
+      app.render();
+    },
     advanceDialogue() {
       const snapshot = main.advanceDialogue();
       app.render();

@@ -10,6 +10,7 @@ import {
   type Application,
 } from 'pixi.js';
 import type { Stage } from '../state';
+import { createVisionBattleScene } from './visionBattleScene';
 import { createVisionDialogueScene } from './visionDialogueScene';
 import { createVisionOperationPanel } from './visionOperationPanel';
 import type { VisionSceneTextures } from './visionSceneAssets';
@@ -52,6 +53,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const flash = new Graphics();
   const dialogue = createVisionDialogueScene(textures, initialReducedMotion);
   const operation = createVisionOperationPanel();
+  const battle = createVisionBattleScene(textures.landship, initialReducedMotion);
 
   const backdrop = new Sprite(textures.grid);
   const mask = new Sprite(textures.mask);
@@ -155,7 +157,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const resetLabel = addText('RESET', new TextStyle({ fill: COLORS.night, fontFamily: 'Bender, sans-serif', fontSize: 10, fontWeight: '700', letterSpacing: 1.5 }));
   const resetCode = addText('R-00', new TextStyle({ fill: 0x627176, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 0.8 }));
 
-  layer.addChild(backdrop, shade, mask, diagonal, grid, stageGlow, body, copy, dialogue.layer, chrome, grain, scanline, filter);
+  layer.addChild(backdrop, shade, mask, diagonal, grid, stageGlow, body, copy, dialogue.layer, battle.layer, chrome, grain, scanline, filter);
   body.addChild(bodyBorder, bodyNumber, metaTopDot, metaTop, metaRuleTop, metaSignal, metaBottomDot, metaBottom, metaRuleBottom, metaPhase, haloShadow, halo, houseGroup, revealGroup, calibrationAlert, moduleTag, moduleText);
   calibrationAlert.addChild(calibrationAlertBg, calibrationAlertAccent, calibrationAlertCode, calibrationAlertMessage);
   copy.addChild(operation.layer, resetButton, resetLabel, resetCode);
@@ -240,6 +242,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   let driftOffsetY = 0;
   let flashTimer = 0;
   let operationPending = false;
+  let revealView: 'dialogue' | 'battle' | 'epilogue' | 'complete' = 'dialogue';
+  let endingControlsVisible = false;
 
   function drawScreenGrid(graphics: Graphics, x: number, y: number, gridWidth: number, gridHeight: number, alpha: number) {
     graphics.clear();
@@ -587,15 +591,15 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     const copyHeight = fixedHeight ?? height - copyTopValue - (veryShortScreen ? 10 : shortScreen ? 10 : 18);
     const reveal = currentStage === 'reveal';
     const panelBottom = copyTopValue + copyHeight;
-    resetButton.visible = reveal;
-    resetLabel.visible = reveal;
-    resetCode.visible = reveal;
+    resetButton.visible = reveal && endingControlsVisible;
+    resetLabel.visible = reveal && endingControlsVisible;
+    resetCode.visible = reveal && endingControlsVisible;
     const dialogueBounds = { left: panelLeft, top: copyTopValue, width: panelWidthValue, height: copyHeight };
     if (!reveal) return { dialogue: dialogueBounds, reset: undefined };
 
     const resetX = panelLeft + 14;
     const resetWidth = 94;
-    const resetHeight = 36;
+    const resetHeight = 44;
     const resetY = panelBottom - resetHeight - 16;
     const resetPoints: Array<[number, number]> = [[0, 0], [resetWidth - 8, 0], [resetWidth, 8], [resetWidth, resetHeight], [8, resetHeight], [0, resetHeight - 8]];
     drawPolygon(resetButton, resetPoints, COLORS.ice, 1);
@@ -621,6 +625,13 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     bodyTop = (wideLayout ? 18 : height <= 700 ? 10 : 16) + headerHeight + railHeight;
     const contentX = panelX + padding;
     const contentWidth = panelWidth - padding * 2;
+    const battleWidth = Math.min(contentWidth, 560);
+    const battleBounds = {
+      left: panelX + (panelWidth - battleWidth) / 2,
+      top: headerHeight + 10,
+      width: battleWidth,
+      height: Math.max(height - headerHeight - bottomPadding - 20, 1),
+    };
     let bodyBottom: number;
     let copyPanelLeft: number;
     let copyPanelWidth: number;
@@ -762,6 +773,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     const copyLayout = drawCopy(copyTop, copyPanelWidth, copyPanelLeft, copyPanelHeight);
     operation.layout(copyLayout.dialogue);
     dialogue.layout(copyLayout.dialogue);
+    battle.layout(battleBounds);
 
     topBar.clear();
     topBar.rect(panelX, 0, panelWidth, headerHeight).fill({ color: currentStage === 'reveal' ? COLORS.night : COLORS.graphite, alpha: currentStage === 'reveal' ? 0.15 : 1 });
@@ -813,6 +825,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       soundTop: 2,
       soundWidth: soundRight - soundLeft,
       dialogue: copyLayout.dialogue,
+      battle: battleBounds,
       reset: copyLayout.reset,
     };
   }
@@ -874,13 +887,18 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     originiumAura.alpha = stage === 'reveal' ? 1 : 0;
     revealScan.x = stage === 'reveal' && !currentReducedMotion ? -revealWidth * 0.72 : stage === 'reveal' ? revealWidth * 0.72 : -revealWidth * 0.72;
     revealScan.alpha = stage === 'reveal' && !currentReducedMotion ? 0 : stage === 'reveal' ? 0.26 : 0;
-    const resetAlpha = complete ? 1 : 0;
+    const resetAlpha = complete && endingControlsVisible ? 1 : 0;
     resetButton.alpha = resetAlpha;
     resetLabel.alpha = resetAlpha;
     resetCode.alpha = resetAlpha;
     flash.alpha = 0;
     houseViewport.scale.set(1);
     applyDriftPosition();
+    const battleVisible = stage === 'reveal' && revealView === 'battle';
+    battle.layer.visible = battleVisible;
+    copy.visible = !battleVisible;
+    if (stage === 'reveal' && revealView !== 'dialogue') revealGroup.visible = false;
+    if (battleVisible) dialogue.layer.visible = false;
   }
 
   function applyDriftPosition(updatePosition = true) {
@@ -1043,6 +1061,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   }
 
   function setMuted(muted: boolean) {
+    battle.setMuted(muted);
     const animate = currentMuted !== null && currentMuted !== muted && !currentReducedMotion;
     const heights = getSoundBarHeights(muted);
     currentMuted = muted;
@@ -1125,9 +1144,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       revealScan.x = -revealWidth * 0.72 + revealWidth * 1.44 * scanProgress;
       revealScan.alpha = (1 - settleProgress) * scanProgress * (0.12 + Math.abs(Math.sin(time * 2.2)) * 0.14);
       complete = settleProgress >= 1;
-      resetButton.alpha = settleProgress;
-      resetLabel.alpha = settleProgress;
-      resetCode.alpha = settleProgress;
+      const resetAlpha = endingControlsVisible ? settleProgress : 0;
+      resetButton.alpha = resetAlpha;
+      resetLabel.alpha = resetAlpha;
+      resetCode.alpha = resetAlpha;
 
       const motion = complete ? 0.15 : 1 - settleProgress * 0.85;
       const breath = 0.5 + 0.5 * Math.sin(time * 1.55);
@@ -1166,6 +1186,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       originiumCoreGlow.tint = 0xffffff;
     }
     dialogue.tick(time);
+    battle.tick(time);
     if (operationPending && !dialogue.layer.visible) showOperationPanel();
   }
 
@@ -1176,6 +1197,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     layout,
     selectStage(stage: Stage) {
       currentStage = stage;
+      revealView = 'dialogue';
+      endingControlsVisible = false;
+      battle.reset();
+      copy.visible = true;
       complete = false;
       calibrationLocked = false;
       driftLocked = false;
@@ -1200,6 +1225,35 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     moveDriftBy,
     confirmDrift,
     startDialogue: dialogue.start,
+    primeBattleAudio: battle.primeAudio,
+    startBattle(onBattleComplete: () => void) {
+      if (revealView === 'battle') return;
+      revealView = 'battle';
+      operationPending = false;
+      revealGroup.visible = false;
+      dialogue.layer.visible = false;
+      copy.visible = false;
+      battle.start(onBattleComplete);
+    },
+    moveBattleBy: battle.moveBy,
+    startEpilogue() {
+      revealView = 'epilogue';
+      battle.hide();
+      revealGroup.visible = false;
+      copy.visible = true;
+      return dialogue.startEpilogue();
+    },
+    showEndingControls() {
+      revealView = 'complete';
+      endingControlsVisible = true;
+      copy.visible = true;
+      resetButton.visible = true;
+      resetLabel.visible = true;
+      resetCode.visible = true;
+      resetButton.alpha = 1;
+      resetLabel.alpha = 1;
+      resetCode.alpha = 1;
+    },
     advanceDialogue() {
       const snapshot = dialogue.advance();
       if (snapshot.complete) {
@@ -1214,6 +1268,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     setReducedMotion(reducedMotion: boolean) {
       currentReducedMotion = reducedMotion;
       dialogue.setReducedMotion(reducedMotion);
+      battle.setReducedMotion(reducedMotion);
       if (reducedMotion && operationPending) {
         dialogue.layer.visible = false;
         showOperationPanel();
@@ -1255,6 +1310,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       soundTimeline = null;
       gsap.killTweensOf(operation.layer);
       window.clearTimeout(flashTimer);
+      battle.destroy();
     },
   };
 }

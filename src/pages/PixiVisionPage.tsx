@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useReducer, useRef, useState, type MouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { useEffect, useLayoutEffect, useReducer, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
 import qrNode01 from '../../assets/7521a33230186fc1435c3077c4449634.png';
 import qrNode02 from '../../assets/b3a33055da1d8f99363e4042f4df035f.jpg';
 import ambientAudio from '../../assets/audio/bgm.ea4286.mp3';
@@ -29,11 +29,13 @@ export default function PixiVisionPage() {
   const canvasHostRef = useRef<HTMLDivElement | null>(null);
   const visionHitRef = useRef<HTMLButtonElement | null>(null);
   const dialogueHitRef = useRef<HTMLButtonElement | null>(null);
+  const battleHitRef = useRef<HTMLButtonElement | null>(null);
   const qrDialogRef = useRef<HTMLDialogElement | null>(null);
   const sceneRef = useRef<PixiVisionScene | null>(null);
   const reducedMotionRef = useRef(false);
   const transitionTimerRef = useRef(0);
   const driftPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const battlePointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
   const ambientRef = useRef<HTMLAudioElement | null>(null);
   const revealRef = useRef<HTMLAudioElement | null>(null);
   const previousAudioStageRef = useRef(state.stage);
@@ -131,6 +133,12 @@ export default function PixiVisionPage() {
     nextControl.focus();
   }, [dialogue?.complete, stageReady, started]);
 
+  useLayoutEffect(() => {
+    if (state.stage !== 'reveal') return;
+    if (state.revealPhase === 'battle') battleHitRef.current?.focus();
+    if (state.revealPhase === 'epilogue' && dialogue && !dialogue.complete) dialogueHitRef.current?.focus();
+  }, [dialogue, state.revealPhase, state.stage]);
+
   useEffect(() => {
     if (!ready || !started) return;
     driftPointerRef.current = null;
@@ -145,6 +153,29 @@ export default function PixiVisionPage() {
       setStageReady(true);
     });
   }, [ready, started, state.stage]);
+
+  useEffect(() => {
+    if (!ready || !started || state.stage !== 'reveal') return;
+    if (state.revealPhase === 'battle') {
+      battlePointerRef.current = null;
+      setDialogue(null);
+      setDialogueAnnouncement('PRTS：近防模式启动。');
+      sceneRef.current?.startBattle(() => dispatch('SHOW_EPILOGUE'));
+      return;
+    }
+
+    if (state.revealPhase === 'epilogue') {
+      const snapshot = sceneRef.current?.startEpilogue() ?? null;
+      setDialogue(snapshot);
+      setDialogueAnnouncement(snapshot ? `${snapshot.speakerName}：${snapshot.text}` : '');
+      return;
+    }
+
+    if (state.revealPhase === 'complete') {
+      sceneRef.current?.showEndingControls();
+      setDialogueAnnouncement('连接已中断。');
+    }
+  }, [ready, started, state.revealPhase, state.stage]);
 
   useEffect(() => {
     if (!ready) return;
@@ -189,6 +220,8 @@ export default function PixiVisionPage() {
   const copy = getStageCopy(state);
   const liveNote = copy.note.endsWith('。') ? copy.note : `${copy.note}。`;
   const dialogueComplete = dialogue?.complete ?? false;
+  const battleActive = state.stage === 'reveal' && state.revealPhase === 'battle';
+  const endingComplete = state.stage === 'reveal' && state.revealPhase === 'complete';
   const visionUnavailable = !ready || !stageReady || !dialogueComplete || Boolean(error) || !started || entryDeparting || state.stage === 'reveal';
 
   function startAmbientAudio() {
@@ -266,6 +299,15 @@ export default function PixiVisionPage() {
     if (!next) return;
     setDialogue(next);
     if (next.complete) {
+      if (state.stage === 'reveal' && state.revealPhase === 'dialogue') {
+        sceneRef.current?.primeBattleAudio();
+        dispatch('BEGIN_BATTLE');
+        return;
+      }
+      if (state.stage === 'reveal' && state.revealPhase === 'epilogue') {
+        dispatch('COMPLETE_REVEAL');
+        return;
+      }
       setDialogueAnnouncement(`${copy.actionLabel}。`);
     } else if (next.lineIndex !== previousLine) {
       setDialogueAnnouncement(`${next.speakerName}：${next.text}`);
@@ -314,8 +356,42 @@ export default function PixiVisionPage() {
     if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   }
 
+  function handleBattlePointerDown(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (!battleActive || event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    battlePointerRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+  }
+
+  function handleBattlePointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
+    const pointer = battlePointerRef.current;
+    if (!pointer || pointer.pointerId !== event.pointerId || !battleActive) return;
+    event.preventDefault();
+    sceneRef.current?.moveBattleBy(event.clientX - pointer.x, event.clientY - pointer.y);
+    pointer.x = event.clientX;
+    pointer.y = event.clientY;
+  }
+
+  function releaseBattlePointer(event: ReactPointerEvent<HTMLButtonElement>) {
+    if (battlePointerRef.current?.pointerId !== event.pointerId) return;
+    battlePointerRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+  }
+
+  function handleBattleKeyDown(event: ReactKeyboardEvent<HTMLButtonElement>) {
+    let deltaX = 0;
+    let deltaY = 0;
+    if (event.key === 'ArrowLeft') deltaX = -18;
+    else if (event.key === 'ArrowRight') deltaX = 18;
+    else if (event.key === 'ArrowUp') deltaY = -18;
+    else if (event.key === 'ArrowDown') deltaY = 18;
+    else return;
+    event.preventDefault();
+    sceneRef.current?.moveBattleBy(deltaX, deltaY);
+  }
+
   function handleReset() {
-    if (!ready || !stageReady || !dialogueComplete) return;
+    if (!ready || !stageReady || !endingComplete) return;
     setStageReady(false);
     dispatch('RESET');
   }
@@ -325,7 +401,7 @@ export default function PixiVisionPage() {
   }
 
   return (
-    <main className="pixi-page" data-stage={state.stage} data-started={started} data-entry-departing={entryDeparting} aria-label="视觉筛查体验">
+    <main className="pixi-page" data-stage={state.stage} data-reveal-phase={state.revealPhase} data-started={started} data-entry-departing={entryDeparting} aria-label="视觉筛查体验">
       <div ref={canvasHostRef} className="pixi-canvas-host" aria-hidden="true" />
       {!ready && !error && <div className="pixi-loading">PRTS // INITIALIZING OPTICAL ARRAY</div>}
 
@@ -366,6 +442,23 @@ export default function PixiVisionPage() {
         aria-label={state.stage === 'drift' ? `${copy.actionLabel}，键盘用户按回车完成对准` : copy.actionLabel}
       />
 
+      {battleActive && (
+        <button
+          ref={battleHitRef}
+          className="pixi-hit pixi-battle-hit"
+          type="button"
+          onPointerDown={handleBattlePointerDown}
+          onPointerMove={handleBattlePointerMove}
+          onPointerUp={releaseBattlePointer}
+          onPointerCancel={releaseBattlePointer}
+          onLostPointerCapture={(event) => {
+            if (battlePointerRef.current?.pointerId === event.pointerId) battlePointerRef.current = null;
+          }}
+          onKeyDown={handleBattleKeyDown}
+          aria-label="移动罗德岛本舰躲避弹幕，战机会自动射击，受到命中不会失败"
+        />
+      )}
+
       {started && stageReady && dialogue && !dialogue.complete && (
         <button
           ref={dialogueHitRef}
@@ -376,7 +469,7 @@ export default function PixiVisionPage() {
         />
       )}
 
-      {state.stage === 'reveal' && stageReady && dialogueComplete && (
+      {endingComplete && stageReady && (
         <>
           <button
             className="pixi-hit pixi-reset-hit"
@@ -392,7 +485,7 @@ export default function PixiVisionPage() {
             aria-haspopup="dialog"
             aria-controls="pixi-qr-dialog"
           >
-            <span>接入通讯终端</span>
+            <span>个人信息</span>
             <strong>QR-02</strong>
           </button>
         </>

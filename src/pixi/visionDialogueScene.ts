@@ -71,8 +71,14 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
     { speaker: 'priestess', text: '下一次……我会亲口告诉你。你曾经是谁，你答应过我什么。' },
     { speaker: 'amiya', text: '不管博士忘记了什么……我都会陪在博士身边。这一点，不会改变。' },
     { speaker: 'kaltsit', text: '记录保存。博士，断开终端连接。' },
+    { speaker: 'amiya', text: '连接没有断开……终端正在加载“近防模式”？' },
+    { speaker: 'kaltsit', text: '……谁把罗德岛本舰登记成了操作端。博士，准备接管。' },
   ],
 };
+
+const EPILOGUE_SCRIPT: readonly DialogueLine[] = [
+  { speaker: 'priestess', text: '这条记录，我会保留。至于失败……我还会回来的~' },
+];
 
 const TYPE_INTERVALS: Record<DialogueSpeaker, number> = {
   doctor: 0.032,
@@ -161,6 +167,7 @@ export function createVisionDialogueScene(textures: VisionSceneTextures, initial
   portraitRed.tint = COLORS.red;
 
   let stage: Stage = 'intro';
+  let currentLines = DIALOGUE_SCRIPT.intro;
   let cursor: DialogueCursor = { lineIndex: 0, visibleCharacters: 0, complete: false };
   let currentReducedMotion = initialReducedMotion;
   let characters: string[] = [];
@@ -175,7 +182,7 @@ export function createVisionDialogueScene(textures: VisionSceneTextures, initial
   let bounds: DialogueBounds = { left: 20, top: 640, width: 350, height: 176 };
 
   function lines() {
-    return DIALOGUE_SCRIPT[stage];
+    return currentLines;
   }
 
   function line() {
@@ -307,6 +314,7 @@ export function createVisionDialogueScene(textures: VisionSceneTextures, initial
 
   function selectStage(nextStage: Stage) {
     stage = nextStage;
+    currentLines = DIALOGUE_SCRIPT[nextStage];
     cursor = { lineIndex: 0, visibleCharacters: 0, complete: false };
     active = false;
     dismissing = false;
@@ -314,6 +322,20 @@ export function createVisionDialogueScene(textures: VisionSceneTextures, initial
     layer.alpha = 1;
     lastTime = 0;
     applyLine();
+  }
+
+  function startEpilogue() {
+    stage = 'reveal';
+    currentLines = EPILOGUE_SCRIPT;
+    cursor = { lineIndex: 0, visibleCharacters: 0, complete: false };
+    active = false;
+    dismissing = false;
+    layer.visible = false;
+    layer.alpha = 1;
+    lastTime = 0;
+    applyLine();
+    start();
+    return snapshot();
   }
 
   function start() {
@@ -417,6 +439,7 @@ export function createVisionDialogueScene(textures: VisionSceneTextures, initial
     layout,
     selectStage,
     start,
+    startEpilogue,
     advance,
     getSnapshot: snapshot,
     setReducedMotion,

@@ -7,6 +7,7 @@ test('initial state starts at the clear house scene', () => {
   expect(state).toEqual({
     stage: 'intro',
     muted: false,
+    revealPhase: 'dialogue',
   });
   expect(getStageCopy(state).actionLabel).toBe('开始验光测试');
   expect(getStageCopyForStage('intro').note).toBe('点击中央图像，开始焦距校准');
@@ -18,36 +19,44 @@ test('each confirmation advances one scene', () => {
   expect(state.stage).toBe('calibrate');
 
   state = advanceState(state, 'CONFIRM');
-  expect(state).toEqual({ stage: 'drift', muted: false });
+  expect(state).toEqual({ stage: 'drift', muted: false, revealPhase: 'dialogue' });
   expect(getStageCopy(state).title).toBe('测试流程出现异常');
   expect(getStageCopy(state).actionLabel).toBe('继续校准并对齐影像');
 });
 
 test('drift advances to reveal and reveal resets cleanly', () => {
-  let state: AppState = { stage: 'drift', muted: false };
+  let state: AppState = { stage: 'drift', muted: false, revealPhase: 'dialogue' };
 
   state = advanceState(state, 'CONTINUE');
-  expect(state).toEqual({ stage: 'reveal', muted: false });
+  expect(state).toEqual({ stage: 'reveal', muted: false, revealPhase: 'dialogue' });
   expect(getStageCopy(state).title).toBe('PRTS // 回传通道被占用');
   expect(getStageCopy(state).note).toContain('TO BE CONTINUED');
   expect(advanceState(state, 'START')).toBe(state);
+
+  state = advanceState(state, 'BEGIN_BATTLE');
+  expect(state.revealPhase).toBe('battle');
+  state = advanceState(state, 'SHOW_EPILOGUE');
+  expect(state.revealPhase).toBe('epilogue');
+  state = advanceState(state, 'COMPLETE_REVEAL');
+  expect(state.revealPhase).toBe('complete');
 
   state = advanceState(state, 'RESET');
   expect(state).toEqual(createInitialState());
 });
 
 test('invalid actions do not mutate the current state', () => {
-  const state: AppState = { stage: 'drift', muted: true };
+  const state: AppState = { stage: 'drift', muted: true, revealPhase: 'dialogue' };
 
   expect(advanceState(state, 'CONFIRM')).toEqual(state);
   expect(advanceState(state, 'UNKNOWN')).toEqual(state);
 });
 
 test('mute action toggles without changing the screening stage', () => {
-  const state: AppState = { stage: 'calibrate', muted: false };
+  const state: AppState = { stage: 'calibrate', muted: false, revealPhase: 'dialogue' };
 
   expect(advanceState(state, 'TOGGLE_MUTE')).toEqual({
     stage: 'calibrate',
     muted: true,
+    revealPhase: 'dialogue',
   });
 });

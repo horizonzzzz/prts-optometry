@@ -137,6 +137,11 @@ export type PixiVisionScene = {
   confirmDrift: (bypassAlignment?: boolean) => boolean;
   advanceDialogue: () => DialogueSnapshot;
   getDialogueSnapshot: () => DialogueSnapshot;
+  primeBattleAudio: () => void;
+  startBattle: (onComplete: () => void) => void;
+  moveBattleBy: (deltaX: number, deltaY: number) => void;
+  startEpilogue: () => DialogueSnapshot;
+  showEndingControls: () => void;
   setMuted: (muted: boolean) => void;
   setReducedMotion: (reducedMotion: boolean) => void;
   reset: () => void;

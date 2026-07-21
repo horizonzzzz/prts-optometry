@@ -1,10 +1,13 @@
 export type Stage = 'intro' | 'calibrate' | 'drift' | 'reveal';
 
+export type RevealPhase = 'dialogue' | 'battle' | 'epilogue' | 'complete';
+
 export type Action = 'START' | 'CONFIRM' | 'CONTINUE' | 'RESET' | 'TOGGLE_MUTE' | string;
 
 export type AppState = {
   stage: Stage;
   muted: boolean;
+  revealPhase: RevealPhase;
 };
 
 export type StageCopy = {
@@ -42,7 +45,7 @@ const COPY: Readonly<Record<Stage, Readonly<StageCopy>>> = Object.freeze({
 });
 
 export function createInitialState(): AppState {
-  return { stage: 'intro', muted: false };
+  return { stage: 'intro', muted: false, revealPhase: 'dialogue' };
 }
 
 export function getStageCopy(state: AppState): StageCopy {
@@ -71,7 +74,19 @@ export function advanceState(state: AppState, action: Action): AppState {
   }
 
   if (state.stage === 'drift' && action === 'CONTINUE') {
-    return { ...state, stage: 'reveal' };
+    return { ...state, stage: 'reveal', revealPhase: 'dialogue' };
+  }
+
+  if (state.stage === 'reveal' && state.revealPhase === 'dialogue' && action === 'BEGIN_BATTLE') {
+    return { ...state, revealPhase: 'battle' };
+  }
+
+  if (state.stage === 'reveal' && state.revealPhase === 'battle' && action === 'SHOW_EPILOGUE') {
+    return { ...state, revealPhase: 'epilogue' };
+  }
+
+  if (state.stage === 'reveal' && state.revealPhase === 'epilogue' && action === 'COMPLETE_REVEAL') {
+    return { ...state, revealPhase: 'complete' };
   }
 
   return state;
