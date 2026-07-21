@@ -1066,6 +1066,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
 
   function showOperationPanel() {
     operationPending = false;
+    if (currentStage === 'reveal') return;
     gsap.killTweensOf(operation.layer);
     operation.show();
     if (currentReducedMotion) return;
