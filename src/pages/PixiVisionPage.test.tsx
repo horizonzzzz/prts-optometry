@@ -151,6 +151,6 @@ describe('PixiVisionPage', () => {
     expect(container?.querySelector('.pixi-qr-trigger')).toBeNull();
     expect(container?.querySelector('dialog')).toBeNull();
     expect(container?.querySelector<HTMLButtonElement>('.pixi-reset-hit')).not.toBeNull();
-    expect(container?.querySelector('[aria-live="polite"]')?.textContent).toContain('通讯终端接入');
+    expect(container?.querySelector('[aria-live="polite"]')?.textContent).toContain('通讯链路已解锁');
   });
 });

@@ -170,7 +170,7 @@ export default function PixiVisionPage() {
 
     if (state.revealPhase === 'complete') {
       sceneRef.current?.showEndingControls();
-      setDialogueAnnouncement('连接已中断。通讯终端接入，欢迎加好友，通讯节点 A 和 B 二维码已显示。');
+      setDialogueAnnouncement('连接已中断。通讯链路已解锁，QQ 与微信二维码已显示。');
     }
   }, [ready, started, state.revealPhase, state.stage]);
 
