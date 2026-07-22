@@ -68,7 +68,8 @@ export function createVisionProfileScene(qrTextures: readonly [Texture, Texture]
   const rules = new Graphics();
   const eyebrow = addText('PRTS // LINKAGE ARCHIVE', new TextStyle({ fill: COLORS.originiumSoft, fontFamily: 'Bender, sans-serif', fontSize: 8, letterSpacing: 1.6 }));
   const title = addText('通讯链路已解锁', new TextStyle({ fill: 0xe7ece9, fontFamily: "Bender, SourceHan, 'Noto Sans SC', sans-serif", fontSize: 24, fontWeight: '600' }));
-  const description = addText('IDENTITY VERIFIED // 欢迎通过以下节点添加好友', new TextStyle({ fill: 0x91a09d, fontFamily: "Bender, SourceHan, 'Noto Sans SC', sans-serif", fontSize: 10, letterSpacing: 0.4 }));
+  const description = addText('IDENTITY VERIFIED // 欢迎加好友（', new TextStyle({ fill: 0x91a09d, fontFamily: "Bender, SourceHan, 'Noto Sans SC', sans-serif", fontSize: 10, letterSpacing: 0.4 }));
+  const customCopy = addText('梦到啥做啥，OOC致歉', new TextStyle({ fill: 0xb7c2bf, fontFamily: "SourceHan, 'Noto Sans SC', sans-serif", fontSize: 10, lineHeight: 12, wordWrap: true }));
   const channelIndex = addText('02', new TextStyle({ fill: COLORS.pale, fontFamily: 'Novecento, Bender, sans-serif', fontSize: 72, fontWeight: '700' }));
   const footerLeft = addText('LINK STATUS // 02 NODES ONLINE', new TextStyle({ fill: 0x66716f, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 0.8 }));
   const footerRight = addText('RHODES ISLAND / EXTERNAL RELAY', new TextStyle({ fill: 0x66716f, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 0.8 }));
@@ -94,7 +95,7 @@ export function createVisionProfileScene(qrTextures: readonly [Texture, Texture]
   layer.addChildAt(field, 0);
   layer.addChildAt(axis, 1);
   layer.addChildAt(rules, 2);
-  layer.addChild(eyebrow, title, description, channelIndex, footerLeft, footerRight);
+  layer.addChild(eyebrow, title, description, customCopy, channelIndex, footerLeft, footerRight);
   layer.visible = false;
   let reducedMotion = initialReducedMotion;
 
@@ -147,6 +148,8 @@ export function createVisionProfileScene(qrTextures: readonly [Texture, Texture]
     eyebrow.position.set(panel.left + 8, panel.top + 6);
     title.position.set(panel.left + 8, panel.top + 24);
     description.position.set(panel.left + 8, panel.top + 58);
+    customCopy.style.wordWrapWidth = panel.width - 16;
+    customCopy.position.set(panel.left + 8, panel.top + 79);
     channelIndex.position.set(panelRight - 7, panel.top - 10);
     footerLeft.position.set(panel.left + 2, footerRuleY + 10);
     footerRight.position.set(panelRight - 2, footerRuleY + 10);

@@ -48,7 +48,7 @@ describe('operation panel content', () => {
       tone: 'idle',
     });
     expect(getOperationPanelContent('drift')).toMatchObject({
-      status: '检测到第二组回波 / ALIGN REQUIRED',
+      status: '检测到异常信号 / SIGNAL ANOMALY',
       tone: 'warning',
     });
     expect(getOperationPanelContent('calibrate', {

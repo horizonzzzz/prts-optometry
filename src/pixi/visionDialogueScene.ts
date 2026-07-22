@@ -71,13 +71,13 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
     { speaker: 'priestess', text: '下一次……我会亲口告诉你。你曾经是谁，你答应过我什么。' },
     { speaker: 'amiya', text: '不管博士忘记了什么……我都会陪在博士身边。这一点，不会改变。' },
     { speaker: 'kaltsit', text: '记录保存。博士，断开终端连接。' },
-    { speaker: 'amiya', text: '连接没有断开……终端正在加载“近防模式”？' },
-    { speaker: 'kaltsit', text: '……谁把罗德岛本舰登记成了操作端。博士，准备接管。' },
+    { speaker: 'amiya', text: '连接没有断开……PRTS正在进入“防卫模式”？' },
+    { speaker: 'kaltsit', text: '博士，准备接管。' },
   ],
 };
 
 const EPILOGUE_SCRIPT: readonly DialogueLine[] = [
-  { speaker: 'priestess', text: '这条记录，我会保留。至于失败……我还会回来的~' },
+  { speaker: 'priestess', text: '我还会回来的~' },
 ];
 
 const TYPE_INTERVALS: Record<DialogueSpeaker, number> = {
