@@ -5,6 +5,8 @@ import {
   Sprite,
   type Texture,
 } from 'pixi.js';
+import battleShotAudio from '../../assets/audio/battle-shot.wav';
+import battleVictoryAudio from '../../assets/audio/battle-victory.wav';
 import { COLORS } from './visionSceneModel';
 
 type BattleBounds = {
@@ -44,6 +46,8 @@ const FORCE_EXPLOSION_TIME = 16.8;
 const EXPLOSION_TIME = 1.1;
 const REQUIRED_HITS = 40;
 const CURTAIN_GAPS = [2, 5, 3, 6, 4] as const;
+const SHOT_VOLUME = 0.3;
+const VICTORY_VOLUME = 0.5;
 
 export function circlesOverlap(ax: number, ay: number, ar: number, bx: number, by: number, br: number) {
   return Math.hypot(ax - bx, ay - by) <= ar + br;
@@ -72,6 +76,7 @@ export function isCircularGapIndex(index: number, center: number, count: number)
 
 export function createVisionBattleScene(landshipTexture: Texture, portraitTexture: Texture, initialReducedMotion: boolean) {
   const layer = new Container({ label: 'vision-battle' });
+  const effectAudio = new Audio(battleShotAudio);
   const field = new Graphics();
   const curtainWarningLayer = new Container();
   const enemyBulletLayer = new Container();
@@ -217,58 +222,27 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   let pendingCurtainAt = Number.POSITIVE_INFINITY;
   let onComplete: (() => void) | undefined;
   let reducedMotionTimer = 0;
-  let audioContext: AudioContext | null = null;
-  let masterGain: GainNode | null = null;
+  let effectSource = battleShotAudio;
+
+  effectAudio.preload = 'auto';
 
   function primeAudio() {
-    if (muted || audioContext) return;
-    try {
-      audioContext = new AudioContext();
-      masterGain = audioContext.createGain();
-      masterGain.gain.value = 0.22;
-      masterGain.connect(audioContext.destination);
-      void audioContext.resume().catch(() => undefined);
-    } catch {
-      audioContext = null;
-      masterGain = null;
-    }
+    playEffect(battleShotAudio, SHOT_VOLUME);
   }
 
-  function playTone(startFrequency: number, endFrequency: number, duration: number, volume: number, type: OscillatorType) {
+  function playEffect(source: string, volume: number) {
     if (muted) return;
-    primeAudio();
-    if (!audioContext || !masterGain) return;
-    const now = audioContext.currentTime;
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(startFrequency, now);
-    oscillator.frequency.exponentialRampToValueAtTime(endFrequency, now + duration);
-    gain.gain.setValueAtTime(volume, now);
-    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-    oscillator.connect(gain).connect(masterGain);
-    oscillator.start(now);
-    oscillator.stop(now + duration);
+    if (effectSource !== source) {
+      effectSource = source;
+      effectAudio.src = source;
+    }
+    effectAudio.volume = volume;
+    effectAudio.currentTime = 0;
+    void effectAudio.play().catch(() => undefined);
   }
 
   function playExplosion() {
-    if (muted) return;
-    primeAudio();
-    if (!audioContext || !masterGain) return;
-    playTone(130, 34, 0.72, 0.42, 'sawtooth');
-    const length = Math.floor(audioContext.sampleRate * 0.65);
-    const buffer = audioContext.createBuffer(1, length, audioContext.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let index = 0; index < length; index += 1) data[index] = (Math.random() * 2 - 1) * (1 - index / length);
-    const source = audioContext.createBufferSource();
-    const filterNode = audioContext.createBiquadFilter();
-    const gain = audioContext.createGain();
-    filterNode.type = 'lowpass';
-    filterNode.frequency.value = 1100;
-    gain.gain.value = 0.38;
-    source.buffer = buffer;
-    source.connect(filterNode).connect(gain).connect(masterGain);
-    source.start();
+    playEffect(battleVictoryAudio, VICTORY_VOLUME);
   }
 
   // ponytail: bounded pools make linear lookup cheaper than owning free-list machinery here.
@@ -314,7 +288,7 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     const dy = boss.y - shotY;
     const length = Math.max(Math.hypot(dx, dy), 1);
     spawn(playerBullets, player.x, shotY, (dx / length) * 430, (dy / length) * 430, 4);
-    playTone(780, 420, 0.045, 0.12, 'square');
+    playEffect(battleShotAudio, SHOT_VOLUME);
   }
 
   function spawnFan() {
@@ -469,7 +443,6 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     flash.alpha = 0;
     player.position.set(bounds.left + bounds.width / 2, bounds.top + bounds.height + 80);
     for (const shard of shards) shard.view.visible = false;
-    primeAudio();
 
     if (reducedMotion) {
       boss.scale.set(1);
@@ -518,7 +491,6 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
           playerHitRing.visible = true;
           playerHitRing.alpha = 1;
           playerHitRing.scale.set(0.72);
-          playTone(150, 72, 0.1, 0.24, 'sawtooth');
         }
       } else if (
         bullet.view.x < bounds.left - margin
@@ -643,8 +615,8 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     },
     setMuted(nextMuted: boolean) {
       muted = nextMuted;
-      if (!muted) primeAudio();
-      if (masterGain) masterGain.gain.value = muted ? 0 : 0.22;
+      effectAudio.muted = muted;
+      if (muted) effectAudio.pause();
     },
     setReducedMotion(nextReducedMotion: boolean) {
       reducedMotion = nextReducedMotion;
@@ -656,9 +628,8 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     reset,
     destroy() {
       reset();
-      void audioContext?.close().catch(() => undefined);
-      audioContext = null;
-      masterGain = null;
+      effectAudio.pause();
+      effectAudio.currentTime = 0;
     },
   };
 }
