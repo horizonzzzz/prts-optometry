@@ -61,6 +61,7 @@ afterEach(async () => {
   container?.remove();
   root = undefined;
   container = undefined;
+  vi.useRealTimers();
   vi.restoreAllMocks();
 });
 
@@ -95,5 +96,61 @@ describe('PixiVisionPage', () => {
     });
 
     expect(container?.querySelector('.pixi-error')?.textContent).toContain('WebGL');
+  });
+
+  it('delegates the final profile to Pixi with reset as the only DOM action', async () => {
+    vi.useFakeTimers();
+    const scene = createScene();
+    let currentStage = 'intro';
+    const activeDialogue: DialogueSnapshot = { complete: false, lineCount: 1, lineIndex: 0, speaker: 'priestess', speakerName: '普瑞赛斯', text: '' };
+    const completeDialogue: DialogueSnapshot = { ...activeDialogue, complete: true };
+    vi.mocked(scene.confirmCalibration).mockReturnValue(true);
+    vi.mocked(scene.confirmDrift).mockReturnValue(true);
+    vi.mocked(scene.setStage).mockImplementation((stage, onReady) => {
+      currentStage = stage;
+      onReady?.();
+    });
+    vi.mocked(scene.getDialogueSnapshot).mockImplementation(() => currentStage === 'reveal' ? activeDialogue : completeDialogue);
+    vi.mocked(scene.advanceDialogue).mockReturnValue(completeDialogue);
+    vi.mocked(scene.startBattle).mockImplementation((onComplete) => onComplete());
+    vi.mocked(createPixiVisionScene).mockImplementation(async ({ onEntryReady }) => {
+      onEntryReady?.();
+      return scene;
+    });
+
+    await renderPage();
+    await act(async () => {
+      container?.querySelector<HTMLButtonElement>('[aria-label="开始验光"]')?.click();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      container?.querySelector<HTMLButtonElement>('.pixi-vision-hit')?.click();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      container?.querySelector<HTMLButtonElement>('.pixi-vision-hit')?.click();
+      vi.advanceTimersByTime(180);
+      await Promise.resolve();
+    });
+    await act(async () => {
+      container?.querySelector<HTMLButtonElement>('.pixi-vision-hit')?.click();
+      vi.advanceTimersByTime(260);
+      await Promise.resolve();
+    });
+    await act(async () => {
+      container?.querySelector<HTMLButtonElement>('.pixi-dialogue-hit')?.click();
+      await Promise.resolve();
+    });
+    await act(async () => {
+      container?.querySelector<HTMLButtonElement>('.pixi-dialogue-hit')?.click();
+      await Promise.resolve();
+    });
+
+    expect(scene.showEndingControls).toHaveBeenCalledOnce();
+    expect(container?.querySelector('.pixi-profile')).toBeNull();
+    expect(container?.querySelector('.pixi-qr-trigger')).toBeNull();
+    expect(container?.querySelector('dialog')).toBeNull();
+    expect(container?.querySelector<HTMLButtonElement>('.pixi-reset-hit')).not.toBeNull();
+    expect(container?.querySelector('[aria-live="polite"]')?.textContent).toContain('通讯终端接入');
   });
 });

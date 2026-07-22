@@ -13,6 +13,7 @@ import type { Stage } from '../state';
 import { createVisionBattleScene } from './visionBattleScene';
 import { createVisionDialogueScene } from './visionDialogueScene';
 import { createVisionOperationPanel } from './visionOperationPanel';
+import { createVisionProfileScene } from './visionProfileScene';
 import type { VisionSceneTextures } from './visionSceneAssets';
 import {
   addText,
@@ -54,6 +55,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const dialogue = createVisionDialogueScene(textures, initialReducedMotion);
   const operation = createVisionOperationPanel();
   const battle = createVisionBattleScene(textures.landship, textures.portrait, initialReducedMotion);
+  const profile = createVisionProfileScene([textures.qrNode01, textures.qrNode02], initialReducedMotion);
 
   const backdrop = new Sprite(textures.grid);
   const mask = new Sprite(textures.mask);
@@ -157,7 +159,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const resetLabel = addText('RESET', new TextStyle({ fill: COLORS.night, fontFamily: 'Bender, sans-serif', fontSize: 10, fontWeight: '700', letterSpacing: 1.5 }));
   const resetCode = addText('R-00', new TextStyle({ fill: 0x627176, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 0.8 }));
 
-  layer.addChild(backdrop, shade, mask, diagonal, grid, stageGlow, body, copy, dialogue.layer, battle.layer, chrome, grain, scanline, filter);
+  layer.addChild(backdrop, shade, mask, diagonal, grid, stageGlow, body, copy, dialogue.layer, battle.layer, profile.layer, chrome, grain, scanline, filter);
   body.addChild(bodyBorder, bodyNumber, metaTopDot, metaTop, metaRuleTop, metaSignal, metaBottomDot, metaBottom, metaRuleBottom, metaPhase, haloShadow, halo, houseGroup, revealGroup, calibrationAlert, moduleTag, moduleText);
   calibrationAlert.addChild(calibrationAlertBg, calibrationAlertAccent, calibrationAlertCode, calibrationAlertMessage);
   copy.addChild(operation.layer, resetButton, resetLabel, resetCode);
@@ -742,7 +744,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     calibrationAlert.position.set(visualX, visualY + frameSize / 2 - 25);
     drawCalibrationAlert(Math.min(frameSize * 0.86, 260));
     revealGroup.position.set(visualX, visualY);
-    revealGroup.visible = currentStage === 'reveal';
+    revealGroup.visible = currentStage === 'reveal' && revealView === 'dialogue';
     revealGroup.pivot.set(0, 0);
     drawReveal();
     revealFrame.position.set(0, 0);
@@ -771,6 +773,15 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     drawPolygon(moduleTag, [[moduleRight - 184, moduleY - 17], [moduleRight + 2, moduleY - 17], [moduleRight - 8, moduleY + 4], [moduleRight - 184, moduleY + 4]], COLORS.graphite, 1);
 
     const copyLayout = drawCopy(copyTop, copyPanelWidth, copyPanelLeft, copyPanelHeight);
+    const profileTop = headerHeight + 12;
+    const profileBottom = copyLayout.reset?.top ?? height - bottomPadding;
+    profile.layout({
+      left: contentX,
+      top: profileTop,
+      width: contentWidth,
+      height: Math.max(profileBottom - profileTop - 12, 1),
+      wide: wideLayout,
+    });
     operation.layout(copyLayout.dialogue);
     dialogue.layout(copyLayout.dialogue);
     battle.layout(battleBounds);
@@ -842,8 +853,10 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     complete = currentReducedMotion && stage === 'reveal';
     body.x = 0;
     body.y = 0;
+    body.visible = revealView !== 'complete';
     houseGroup.visible = stage !== 'reveal';
-    revealGroup.visible = stage === 'reveal';
+    revealGroup.visible = stage === 'reveal' && revealView === 'dialogue';
+    profile.layer.visible = stage === 'reveal' && revealView === 'complete';
     houseBlur.strength = stage === 'calibrate' && !currentReducedMotion ? 9 : stage === 'drift' && !driftLocked ? 2 : 0;
     houseNoise.noise = stage === 'drift' ? 0.16 : 0.045;
     houseBase.alpha = stage === 'drift' && !driftLocked ? 0.62 : 1;
@@ -1187,6 +1200,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     }
     dialogue.tick(time);
     battle.tick(time);
+    profile.tick(time);
     if (operationPending && !dialogue.layer.visible) showOperationPanel();
   }
 
@@ -1199,6 +1213,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       currentStage = stage;
       revealView = 'dialogue';
       endingControlsVisible = false;
+      body.visible = true;
+      profile.hide();
       battle.reset();
       copy.visible = true;
       complete = false;
@@ -1231,6 +1247,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       revealView = 'battle';
       operationPending = false;
       revealGroup.visible = false;
+      profile.hide();
+      body.visible = true;
       dialogue.layer.visible = false;
       copy.visible = false;
       battle.start(onBattleComplete);
@@ -1240,13 +1258,21 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       revealView = 'epilogue';
       battle.hide();
       revealGroup.visible = false;
+      profile.hide();
+      body.visible = true;
       copy.visible = true;
       return dialogue.startEpilogue();
     },
     showEndingControls() {
       revealView = 'complete';
       endingControlsVisible = true;
+      operationPending = false;
+      gsap.killTweensOf(operation.layer);
+      operation.layer.visible = false;
+      dialogue.layer.visible = false;
+      body.visible = false;
       copy.visible = true;
+      profile.show();
       resetButton.visible = true;
       resetLabel.visible = true;
       resetCode.visible = true;
@@ -1269,6 +1295,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       currentReducedMotion = reducedMotion;
       dialogue.setReducedMotion(reducedMotion);
       battle.setReducedMotion(reducedMotion);
+      profile.setReducedMotion(reducedMotion);
       if (reducedMotion && operationPending) {
         dialogue.layer.visible = false;
         showOperationPanel();
@@ -1311,6 +1338,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       gsap.killTweensOf(operation.layer);
       window.clearTimeout(flashTimer);
       battle.destroy();
+      profile.destroy();
     },
   };
 }

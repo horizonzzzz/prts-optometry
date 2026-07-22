@@ -10,6 +10,7 @@ import {
 } from './visionBattleScene';
 import { advanceDialogueCursor } from './visionDialogueScene';
 import { getOperationPanelContent } from './visionOperationPanel';
+import { getVisionProfileLayout } from './visionProfileScene';
 
 describe('getCopyHeight', () => {
   it('keeps the Pixi copy block aligned with the responsive DOM layout', () => {
@@ -65,6 +66,21 @@ describe('isWideLayout', () => {
     expect(isWideLayout(1440, 900)).toBe(true);
     expect(isWideLayout(390, 844)).toBe(false);
     expect(isWideLayout(1440, 640)).toBe(false);
+  });
+});
+
+describe('final profile layout', () => {
+  it('keeps both QR nodes inside the profile above reset on mobile and wide screens', () => {
+    const mobile = getVisionProfileLayout({ left: 20, top: 57, width: 350, height: 705, wide: false });
+    const shortMobile = getVisionProfileLayout({ left: 20, top: 57, width: 350, height: 429, wide: false });
+    const wide = getVisionProfileLayout({ left: 40, top: 70, width: 880, height: 382, wide: true });
+
+    expect(mobile.nodes[0].top + mobile.nodes[0].height).toBeLessThan(mobile.nodes[1].top);
+    expect(mobile.nodes[1].top + mobile.nodes[1].height).toBeLessThan(mobile.footerRuleY);
+    expect(shortMobile.nodes.every((node) => node.qrSize >= 90)).toBe(true);
+    expect(wide.nodes[0].top).toBe(wide.nodes[1].top);
+    expect(wide.nodes[0].left + wide.nodes[0].width).toBeLessThan(wide.nodes[1].left);
+    expect(wide.nodes.every((node) => node.top + node.height < wide.footerRuleY)).toBe(true);
   });
 });
 
