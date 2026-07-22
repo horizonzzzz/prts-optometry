@@ -455,7 +455,7 @@ export default function PixiVisionPage() {
             if (battlePointerRef.current?.pointerId === event.pointerId) battlePointerRef.current = null;
           }}
           onKeyDown={handleBattleKeyDown}
-          aria-label="移动罗德岛本舰躲避弹幕，战机会自动射击，受到命中不会失败"
+          aria-label="移动罗德岛本舰躲避弹幕，本舰会自动射击，受到命中不会失败"
         />
       )}
 

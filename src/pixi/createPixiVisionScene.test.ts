@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './createPixiVisionScene';
 import { getInitialDriftOffset } from './visionSceneModel';
-import { circlesOverlap, shouldBattleExplode } from './visionBattleScene';
+import {
+  circlesOverlap,
+  getBattleTimelinePhase,
+  getCurtainSafeGapIndex,
+  isCircularGapIndex,
+  shouldBattleExplode,
+} from './visionBattleScene';
 import { advanceDialogueCursor } from './visionDialogueScene';
 import { getOperationPanelContent } from './visionOperationPanel';
 
@@ -135,5 +141,21 @@ describe('battle ending', () => {
     expect(shouldBattleExplode(15.49, 100)).toBe(false);
     expect(shouldBattleExplode(15.5, 40)).toBe(true);
     expect(shouldBattleExplode(16.8, 0)).toBe(true);
+  });
+});
+
+describe('battle pacing', () => {
+  it('moves through the four attack phrases on fixed boundaries', () => {
+    expect(getBattleTimelinePhase(1.69)).toBe('enter');
+    expect(getBattleTimelinePhase(1.7)).toBe('query');
+    expect(getBattleTimelinePhase(5.2)).toBe('archive');
+    expect(getBattleTimelinePhase(9.6)).toBe('overwrite');
+    expect(getBattleTimelinePhase(14.4)).toBe('disconnect');
+  });
+
+  it('keeps deterministic gaps in curtain and ring waves', () => {
+    expect([0, 1, 2, 3, 4].map(getCurtainSafeGapIndex)).toEqual([2, 5, 3, 6, 4]);
+    expect([17, 0, 1].every((index) => isCircularGapIndex(index, 0, 18))).toBe(true);
+    expect(isCircularGapIndex(2, 0, 18)).toBe(false);
   });
 });

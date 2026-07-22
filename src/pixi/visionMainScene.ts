@@ -53,7 +53,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const flash = new Graphics();
   const dialogue = createVisionDialogueScene(textures, initialReducedMotion);
   const operation = createVisionOperationPanel();
-  const battle = createVisionBattleScene(textures.landship, initialReducedMotion);
+  const battle = createVisionBattleScene(textures.landship, textures.portrait, initialReducedMotion);
 
   const backdrop = new Sprite(textures.grid);
   const mask = new Sprite(textures.mask);
