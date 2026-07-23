@@ -89,6 +89,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   const railLeft = addText('RI-07', new TextStyle({ fill: 0x59666b, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.2 }));
   const railMiddle = addText('OPTICAL CONTROL', new TextStyle({ fill: 0x59666b, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.2 }));
   const railRight = addText('PRTS // LIVE', new TextStyle({ fill: 0x59666b, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.2 }));
+  railMiddle.anchor.set(0.5, 0);
   const railRuleLeft = new Graphics();
   const railRuleRight = new Graphics();
 
@@ -849,7 +850,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     soundBars.position.set(soundLabel.x - soundLabel.width - 16, 24);
     soundLabel.style.fill = currentMuted ? COLORS.red : currentStage === 'reveal' ? 0x9aa9a6 : 0xbac6c3;
     railLeft.position.set(panelX + padding, headerHeight + 7);
-    railMiddle.position.set(panelX + panelWidth / 2 - 52, headerHeight + 7);
+    railMiddle.position.set(panelX + panelWidth / 2, headerHeight + 7);
     railRight.position.set(panelX + panelWidth - padding - 63, headerHeight + 7);
     railRuleLeft.clear().rect(panelX + padding + 112, headerHeight + 10, panelWidth / 2 - 180, 1).fill({ color: COLORS.clinicShadow, alpha: 0.8 });
     railRuleRight.clear().rect(panelX + panelWidth / 2 + 64, headerHeight + 10, panelWidth / 2 - padding - 64, 1).fill({ color: COLORS.clinicShadow, alpha: 0.8 });
