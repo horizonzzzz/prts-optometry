@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './createPixiVisionScene';
-import { getInitialDriftOffset } from './visionSceneModel';
+import { getInitialDriftOffset, scrambleTerminalText } from './visionSceneModel';
 import {
   circlesOverlap,
   getBattleTimelinePhase,
@@ -81,6 +81,19 @@ describe('final profile layout', () => {
     expect(wide.nodes[0].top).toBe(wide.nodes[1].top);
     expect(wide.nodes[0].left + wide.nodes[0].width).toBeLessThan(wide.nodes[1].left);
     expect(wide.nodes.every((node) => node.top + node.height < wide.footerRuleY)).toBe(true);
+  });
+});
+
+describe('terminal corruption', () => {
+  it('changes visible glyphs while preserving whitespace and line shape', () => {
+    const source = 'PRTS / 终端\n03 / 04';
+    const result = scrambleTerminalText(source, () => 0);
+
+    expect(result).not.toBe(source);
+    expect(Array.from(result)).toHaveLength(Array.from(source).length);
+    Array.from(source).forEach((character, index) => {
+      if (/\s/u.test(character)) expect(Array.from(result)[index]).toBe(character);
+    });
   });
 });
 

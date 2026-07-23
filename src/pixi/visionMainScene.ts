@@ -36,6 +36,7 @@ import {
   getStageReadyTime,
   isDriftAligned,
   isWideLayout,
+  scrambleTerminalText,
   STAGE_META,
 } from './visionSceneModel';
 
@@ -246,6 +247,45 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
   let operationPending = false;
   let revealView: 'dialogue' | 'battle' | 'epilogue' | 'complete' = 'dialogue';
   let endingControlsVisible = false;
+  let terminalCorruptionFrame = -1;
+
+  const terminalTextTargets = [
+    [brandName, () => 'PRTS'],
+    [brandSub, () => 'PERSONAL RECORD TERMINAL'],
+    [stageCode, () => STAGE_META[currentStage].code],
+    [soundLabel, () => 'SOUND'],
+    [railLeft, () => 'RI-07'],
+    [railMiddle, () => 'OPTICAL CONTROL'],
+    [railRight, () => 'PRTS // LIVE'],
+    [metaTop, () => 'OPTICAL ARRAY'],
+    [metaSignal, () => STAGE_META[currentStage].signal],
+    [metaBottom, () => currentStage === 'reveal' ? STAGE_META[currentStage].signal : 'FOCAL DISTANCE / 30 CM'],
+    [metaPhase, () => `PHASE / ${STAGE_META[currentStage].index}`],
+    [moduleText, () => getModuleCopy(currentStage)],
+  ] as const;
+
+  function getModuleCopy(stage: Stage) {
+    return stage === 'intro'
+      ? 'TAP IMAGE // START CALIBRATION'
+      : stage === 'calibrate'
+        ? 'TAP ON CLEAR // FOCUS LOCK'
+        : stage === 'drift'
+          ? 'DRAG IMAGE // ALIGN RETICLE'
+          : 'OPTICAL MODULE // ACTIVE';
+  }
+
+  function updateTerminalCorruption(frame: number, force = false) {
+    if (currentStage !== 'drift' || (!force && frame === terminalCorruptionFrame)) return;
+    terminalCorruptionFrame = frame;
+    terminalTextTargets.forEach(([target, source], index) => {
+      if (force || (frame + index) % 3 === 0) target.text = scrambleTerminalText(source());
+    });
+  }
+
+  function restoreTerminalCopy() {
+    terminalTextTargets.forEach(([target, source]) => { target.text = source(); });
+    terminalCorruptionFrame = -1;
+  }
 
   function drawScreenGrid(graphics: Graphics, x: number, y: number, gridWidth: number, gridHeight: number, alpha: number) {
     graphics.clear();
@@ -825,6 +865,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     scanline.alpha = currentStage === 'drift' ? 0.4 : 1;
     flash.clear().rect(0, 0, width, height).fill({ color: 0xeffff8, alpha: 1 });
     flash.alpha = 0;
+    updateTerminalCorruption(Math.max(terminalCorruptionFrame, 0), true);
 
     const soundRight = panelX + panelWidth - padding;
     const soundLeft = soundRight - soundLabel.width - 24;
@@ -845,7 +886,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     metaSignal.text = STAGE_META[stage].signal;
     metaBottom.text = stage === 'reveal' ? STAGE_META[stage].signal : 'FOCAL DISTANCE / 30 CM';
     metaPhase.text = `PHASE / ${STAGE_META[stage].index}`;
-    moduleText.text = stage === 'intro' ? 'TAP IMAGE // START CALIBRATION' : stage === 'calibrate' ? 'TAP ON CLEAR // FOCUS LOCK' : stage === 'drift' ? 'DRAG IMAGE // ALIGN RETICLE' : 'OPTICAL MODULE // ACTIVE';
+    moduleText.text = getModuleCopy(stage);
   }
 
   function applyStage() {
@@ -996,6 +1037,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       });
     }
 
+    updateTerminalCorruption(Math.max(terminalCorruptionFrame, 0), true);
     app.render();
     return confirmed;
   }
@@ -1198,6 +1240,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       originiumShards.alpha = fractureKick === 0 ? 0.55 + revealEase * 0.4 : 0.45;
       originiumCoreGlow.tint = 0xffffff;
     }
+    updateTerminalCorruption(Math.floor(time / 0.02));
     dialogue.tick(time);
     battle.tick(time);
     profile.tick(time);
@@ -1229,6 +1272,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
       calibrationFeedbackTimeline?.kill();
       calibrationFeedbackTimeline = null;
       calibrationAlert.alpha = 0;
+      restoreTerminalCopy();
       window.clearTimeout(flashTimer);
       operationPending = false;
       gsap.killTweensOf(operation.layer);

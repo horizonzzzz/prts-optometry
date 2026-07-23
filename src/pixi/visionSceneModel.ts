@@ -33,6 +33,24 @@ export const STAGE_ACCENTS: Record<Stage, number> = {
   reveal: COLORS.ice,
 };
 
+const TERMINAL_GLITCH_ASCII = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#%?@';
+const TERMINAL_GLITCH_WIDE = '▦▧◇◆△▽◁▷';
+const WIDE_CHARACTER = /^[\u3000-\u30ff\u3400-\u9fff\uf900-\ufaff\uff01-\uff60]$/u;
+
+export function scrambleTerminalText(text: string, random = Math.random) {
+  return Array.from(text, (character) => {
+    if (/\s/u.test(character)) return character;
+
+    const glyphs = WIDE_CHARACTER.test(character) ? TERMINAL_GLITCH_WIDE : TERMINAL_GLITCH_ASCII;
+    const sample = random();
+    const randomValue = Number.isFinite(sample) ? Math.max(sample, 0) : 0;
+    const index = Math.min(Math.floor(randomValue * glyphs.length), glyphs.length - 1);
+    const replacement = glyphs[index] ?? glyphs[0];
+    if (replacement !== character) return replacement;
+    return glyphs[(index + 1) % glyphs.length] ?? replacement;
+  }).join('');
+}
+
 const STAGE_READY_TIME: Record<Stage, number> = {
   intro: 0,
   calibrate: 0,
