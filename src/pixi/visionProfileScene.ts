@@ -85,7 +85,7 @@ export function createVisionProfileScene(qrTextures: readonly [Texture, Texture]
     const scan = new Graphics();
     const accent = index === 0 ? COLORS.teal : COLORS.originiumSoft;
     const code = addText(`NODE // 0${index + 1}`, new TextStyle({ fill: accent, fontFamily: 'Bender, sans-serif', fontSize: 8, letterSpacing: 1.25 }));
-    const name = addText(index === 0 ? 'QQ CHANNEL' : 'WECHAT CHANNEL', new TextStyle({ fill: 0xc4cdca, fontFamily: 'Bender, sans-serif', fontSize: 9, letterSpacing: 0.8 }));
+    const name = addText(index === 0 ? 'QQ CHANNEL' : 'SENKONGDAO CHANNEL', new TextStyle({ fill: 0xc4cdca, fontFamily: 'Bender, sans-serif', fontSize: 9, letterSpacing: 0.8 }));
     name.anchor.set(1, 0);
     nodeLayer.addChild(qrBacking, qr, scan, nodeFrame, code, name);
     layer.addChild(nodeLayer);
