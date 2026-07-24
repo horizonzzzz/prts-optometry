@@ -77,6 +77,7 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
 };
 
 const EPILOGUE_SCRIPT: readonly DialogueLine[] = [
+  { speaker: 'priestess', text: '……博士，先把这块黄油拿掉。' },
   { speaker: 'priestess', text: '我还会回来的~' },
 ];
 

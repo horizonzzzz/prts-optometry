@@ -3,11 +3,18 @@ import {
   Graphics,
   GraphicsContext,
   Sprite,
+  TextStyle,
   type Texture,
 } from 'pixi.js';
 import battleShotAudio from '../../assets/audio/battle-shot.wav';
 import battleVictoryAudio from '../../assets/audio/battle-victory.wav';
+import { addText } from './visionSceneGraphics';
 import { COLORS } from './visionSceneModel';
+
+// PvZ-style butter — the Priestess "butter on head" meme palette.
+const BUTTER = 0xf6df7d;
+const BUTTER_LIGHT = 0xfdf3b3;
+const BUTTER_DEEP = 0xc79b2f;
 
 type BattleBounds = {
   left: number;
@@ -43,7 +50,12 @@ const OVERWRITE_TIME = 9.6;
 const DISCONNECT_TIME = 14.4;
 const MIN_EXPLOSION_TIME = 15.5;
 const FORCE_EXPLOSION_TIME = 16.8;
-const EXPLOSION_TIME = 1.1;
+// Victory now plays a butter-seal sequence: drop -> land/squash -> freeze label -> fade.
+const EXPLOSION_TIME = 2.5;
+const BUTTER_DROP_TIME = 0.38;
+const BUTTER_SQUASH_TIME = 0.3;
+const BUTTER_FADE_START = 2.05;
+const HIT_STUN_TIME = 0.15;
 const REQUIRED_HITS = 40;
 const CURTAIN_GAPS = [2, 5, 3, 6, 4] as const;
 const SHOT_VOLUME = 0.3;
@@ -91,15 +103,24 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   const bossPortrait = new Sprite(portraitTexture);
   const bossFractures = new Graphics();
   const bossCore = new Graphics();
+  const bossButter = new Graphics();
   const landship = new Sprite(landshipTexture);
   const player = new Container({ label: 'rhodes-landship' });
   const playerCore = new Graphics();
   const playerHitRing = new Graphics();
   const explosionLayer = new Container();
+  const victoryButter = new Graphics();
+  const victoryLabel = addText('BUTTERED // 封印完成', new TextStyle({
+    fill: BUTTER,
+    fontFamily: "Bender, SourceHan, 'Noto Sans SC', sans-serif",
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 2.2,
+  }));
   const flash = new Graphics();
 
-  layer.addChild(field, curtainWarningLayer, enemyBulletLayer, playerBulletLayer, boss, player, playerHitRing, explosionLayer, flash);
-  boss.addChild(bossAura, bossBody, bossPortraitGroup, bossFractures, bossCore);
+  layer.addChild(field, curtainWarningLayer, enemyBulletLayer, playerBulletLayer, boss, player, playerHitRing, explosionLayer, victoryButter, victoryLabel, flash);
+  boss.addChild(bossAura, bossBody, bossPortraitGroup, bossFractures, bossCore, bossButter);
   bossPortraitGroup.addChild(bossPortraitMask, bossPortraitCyan, bossPortraitRed, bossPortrait);
   player.addChild(landship, playerCore);
   const bossPortraitScale = Math.max(68 / Math.max(portraitTexture.width, 1), 104 / Math.max(portraitTexture.height, 1));
@@ -153,11 +174,59 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   playerHitRing.circle(0, 0, 34).stroke({ width: 3, color: COLORS.red, alpha: 1 });
   playerHitRing.visible = false;
 
+  // Giant falling butter block — meme composition, pivot at its melty bottom center.
+  victoryButter
+    .roundRect(-72, -92, 144, 78, 12)
+    .fill({ color: BUTTER, alpha: 1 })
+    .roundRect(-72, -92, 144, 78, 12)
+    .stroke({ width: 3, color: BUTTER_DEEP, alpha: 0.92 })
+    .roundRect(-56, -82, 40, 15, 7)
+    .fill({ color: BUTTER_LIGHT, alpha: 0.92 })
+    .roundRect(-68, -18, 26, 18, 8)
+    .fill({ color: BUTTER, alpha: 1 })
+    .roundRect(-28, -18, 20, 26, 9)
+    .fill({ color: BUTTER, alpha: 1 })
+    .roundRect(6, -18, 26, 16, 8)
+    .fill({ color: BUTTER, alpha: 1 })
+    .roundRect(44, -18, 20, 22, 9)
+    .fill({ color: BUTTER, alpha: 1 });
+  victoryButter.visible = false;
+  victoryLabel.anchor.set(0.5);
+  victoryLabel.visible = false;
+
+  function drawBossButter(progress: number) {
+    bossButter.clear();
+    if (progress <= 0) return;
+    // Butter pat growing on top of the boss diamond (top vertex at y = -48).
+    const w = 16 + progress * 34;
+    const h = 9 + progress * 13;
+    const top = -48 - h + 3;
+    bossButter
+      .roundRect(-w / 2, top, w, h, 4)
+      .fill({ color: BUTTER, alpha: 0.98 })
+      .roundRect(-w / 2, top, w, h, 4)
+      .stroke({ width: 1.5, color: BUTTER_DEEP, alpha: 0.9 })
+      .roundRect(-w / 2 + 3, top + 2, w * 0.3, h * 0.32, 2)
+      .fill({ color: BUTTER_LIGHT, alpha: 0.9 });
+    if (progress > 0.3) {
+      // Drips running down the upper diamond edges.
+      const drip = (progress - 0.3) / 0.7;
+      bossButter.roundRect(-w * 0.34, -48, 4, 8 + drip * 16, 2).fill({ color: BUTTER, alpha: 0.9 });
+      bossButter.roundRect(w * 0.22, -48, 4, 5 + drip * 22, 2).fill({ color: BUTTER, alpha: 0.85 });
+      if (progress > 0.65) bossButter.roundRect(-2, -47, 4, 4 + drip * 12, 2).fill({ color: BUTTER_LIGHT, alpha: 0.8 });
+    }
+  }
+
+  // PvZ-style butter pat — tumbling rounded block with highlight and a trailing droplet.
   const playerBulletContext = new GraphicsContext()
-    .roundRect(-2, -11, 4, 22, 2)
-    .fill({ color: COLORS.pale, alpha: 1 })
-    .roundRect(-3.5, -12, 7, 24, 3)
-    .stroke({ width: 1, color: COLORS.cyan, alpha: 0.86 });
+    .roundRect(-7, -6, 14, 12, 3.5)
+    .fill({ color: BUTTER, alpha: 1 })
+    .roundRect(-7, -6, 14, 12, 3.5)
+    .stroke({ width: 1.5, color: BUTTER_DEEP, alpha: 0.92 })
+    .roundRect(-4.5, -4, 5.5, 3.5, 1.5)
+    .fill({ color: BUTTER_LIGHT, alpha: 0.92 })
+    .circle(0, 9.5, 1.7)
+    .fill({ color: BUTTER, alpha: 0.8 });
   const enemyBulletContext = new GraphicsContext()
     .moveTo(0, -9).lineTo(5, 0).lineTo(0, 9).lineTo(-5, 0).closePath()
     .fill({ color: COLORS.originium, alpha: 0.96 })
@@ -167,9 +236,12 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   const curtainWarningContext = new GraphicsContext()
     .moveTo(0, 0).lineTo(6, 8).lineTo(0, 16).lineTo(-6, 8).closePath()
     .stroke({ width: 1.5, color: COLORS.originiumSoft, alpha: 0.92 });
+  // Butter droplets sprayed on landing.
   const shardContext = new GraphicsContext()
-    .moveTo(0, -8).lineTo(5, 5).lineTo(0, 9).lineTo(-4, 4).closePath()
-    .fill({ color: COLORS.originium, alpha: 0.94 });
+    .circle(0, 0, 4.2)
+    .fill({ color: BUTTER, alpha: 0.95 })
+    .circle(-1.3, -1.3, 1.5)
+    .fill({ color: BUTTER_LIGHT, alpha: 0.9 });
 
   function makePool(count: number, context: GraphicsContext, parent: Container) {
     return Array.from({ length: count }, () => {
@@ -209,6 +281,9 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   let playerInvulnerability = 0;
   let playerHitElapsed = 0;
   let bossHitElapsed = 0;
+  let stunTimer = 0;
+  let butterLanded = false;
+  let butterStep = -1;
   let shipHalfWidth = 42;
   let shipHalfHeight = 42;
   let nextPlayerShot = ENTER_TIME + 0.1;
@@ -336,15 +411,15 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     if (exploding) return;
     exploding = true;
     explosionElapsed = 0;
+    butterLanded = false;
     clearBullets();
     clearCurtainWarning();
-    playExplosion();
-    for (const shard of shards) {
-      shard.view.position.copyFrom(boss.position);
-      shard.view.rotation = 0;
-      shard.view.alpha = 1;
-      shard.view.visible = true;
-    }
+    victoryButter.visible = true;
+    victoryButter.alpha = 1;
+    victoryButter.scale.set(1);
+    victoryButter.position.set(boss.x, bounds.top - 70);
+    victoryLabel.visible = false;
+    victoryLabel.alpha = 1;
   }
 
   function finish() {
@@ -434,6 +509,14 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     bossCore.alpha = 1;
     bossCore.rotation = 0;
     bossCore.scale.set(1);
+    bossPortraitGroup.y = 0;
+    bossButter.clear();
+    bossButter.scale.set(1);
+    stunTimer = 0;
+    butterLanded = false;
+    butterStep = -1;
+    victoryButter.visible = false;
+    victoryLabel.visible = false;
     player.visible = true;
     player.alpha = 1;
     landship.tint = 0xffffff;
@@ -467,10 +550,12 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
       if (!bullet.active) continue;
       bullet.view.x += bullet.vx * delta;
       bullet.view.y += bullet.vy * delta;
+      bullet.view.rotation += delta * 7;
       if (Math.abs(bullet.view.x - boss.x) <= 38 && Math.abs(bullet.view.y - boss.y) <= 50) {
         release(bullet);
         hits += 1;
         bossHitElapsed = 0.1;
+        stunTimer = HIT_STUN_TIME;
       } else if (bullet.view.y < bounds.top - margin) {
         release(bullet);
       }
@@ -511,16 +596,57 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
 
     if (exploding) {
       explosionElapsed += delta;
-      const collapse = Math.min(explosionElapsed / 0.62, 1);
-      boss.scale.set(Math.max(1 - collapse * 0.94, 0.06), 1 + collapse * 0.12);
-      boss.alpha = explosionElapsed < 0.5 ? 1 : Math.max(1 - (explosionElapsed - 0.5) * 2.4, 0);
-      bossPortraitGroup.alpha = Math.max(1 - collapse * 1.3, 0);
-      flash.alpha = Math.max(0.62 - explosionElapsed * 1.5, 0);
-      for (const shard of shards) {
-        shard.view.x += shard.vx * delta;
-        shard.view.y += shard.vy * delta;
-        shard.view.rotation += shard.spin * delta;
-        shard.view.alpha = Math.max(1 - explosionElapsed / EXPLOSION_TIME, 0);
+      const dropProgress = Math.min(explosionElapsed / BUTTER_DROP_TIME, 1);
+      const landY = boss.y - 40;
+      victoryButter.x = boss.x;
+      victoryButter.y = bounds.top - 70 + (landY - (bounds.top - 70)) * dropProgress * dropProgress;
+
+      if (dropProgress >= 1 && !butterLanded) {
+        // Impact frame: meme composition achieved — butter lands square on her head.
+        butterLanded = true;
+        playExplosion();
+        flash.alpha = 0.58;
+        for (let index = 0; index < shards.length; index += 1) {
+          const shard = shards[index];
+          const angle = (index / shards.length) * Math.PI * 2;
+          const speed = 110 + (index % 7) * 22;
+          shard.vx = Math.cos(angle) * speed;
+          shard.vy = Math.sin(angle) * speed - 90;
+          shard.view.position.set(boss.x, boss.y - 36);
+          shard.view.rotation = 0;
+          shard.view.alpha = 1;
+          shard.view.visible = true;
+        }
+      }
+
+      if (butterLanded) {
+        const squash = Math.min((explosionElapsed - BUTTER_DROP_TIME) / BUTTER_SQUASH_TIME, 1);
+        const squashEase = 1 - Math.pow(1 - squash, 3);
+        victoryButter.scale.set(1 + 0.26 * squashEase, 1 - 0.32 * squashEase);
+        boss.scale.set(1 + squashEase * 0.1, Math.max(1 - squashEase * 0.42, 0.58));
+        bossPortraitGroup.y = squashEase * 7;
+        flash.alpha = Math.max(flash.alpha - delta * 1.7, 0);
+        for (const shard of shards) {
+          if (!shard.view.visible) continue;
+          shard.vy += 340 * delta;
+          shard.view.x += shard.vx * delta;
+          shard.view.y += shard.vy * delta;
+          shard.view.rotation += shard.spin * delta;
+          shard.view.alpha = Math.max(1 - (explosionElapsed - BUTTER_DROP_TIME) / 1.3, 0);
+        }
+        if (explosionElapsed >= BUTTER_DROP_TIME + BUTTER_SQUASH_TIME && !victoryLabel.visible) {
+          victoryLabel.visible = true;
+          victoryLabel.position.set(boss.x, boss.y + 82);
+        }
+        if (victoryLabel.visible && explosionElapsed < BUTTER_FADE_START) {
+          victoryLabel.alpha = 0.6 + Math.abs(Math.sin(time * 6)) * 0.4;
+        }
+        if (explosionElapsed >= BUTTER_FADE_START) {
+          const fade = Math.max(1 - (explosionElapsed - BUTTER_FADE_START) / (EXPLOSION_TIME - BUTTER_FADE_START), 0);
+          victoryButter.alpha = fade;
+          victoryLabel.alpha = fade;
+          boss.alpha = fade;
+        }
       }
       if (explosionElapsed >= EXPLOSION_TIME) finish();
       return;
@@ -532,9 +658,19 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     player.y = bounds.top + bounds.height + 80 + (bounds.top + bounds.height * 0.84 - bounds.top - bounds.height - 80) * eased;
     const bossScale = 2.7 - eased * 1.7;
     const damageProgress = Math.min(hits / REQUIRED_HITS, 1);
-    const hitScale = bossHitElapsed > 0 ? 1.045 : 1;
-    const hitJitter = bossHitElapsed > 0 ? Math.sin(time * 90) * 3.2 : 0;
-    boss.scale.set(bossScale * hitScale);
+    const hitScale = bossHitElapsed > 0 ? 1.03 : 1;
+    // Meme-style reaction: instead of violent glitching she just... droops, resigned.
+    const hitDroop = bossHitElapsed > 0 ? (bossHitElapsed / 0.1) * 4 : 0;
+    const hitJitter = bossHitElapsed > 0 ? Math.sin(time * 90) * 1.2 : 0;
+    boss.scale.set(bossScale * hitScale, bossScale * (2 - hitScale));
+    bossPortraitGroup.y = hitDroop;
+    const nextButterStep = Math.ceil(damageProgress * 10);
+    if (nextButterStep !== butterStep) {
+      butterStep = nextButterStep;
+      drawBossButter(damageProgress);
+    }
+    const butterSquash = bossHitElapsed > 0 ? bossHitElapsed / 0.1 : 0;
+    bossButter.scale.set(1 + butterSquash * 0.22, 1 - butterSquash * 0.26);
     bossAura.rotation = -time * 0.08;
     bossAura.alpha = 0.45 + Math.abs(Math.sin(time * 2.4)) * 0.42;
     bossBody.rotation = Math.sin(time * 1.1) * 0.012 * damageProgress;
@@ -565,6 +701,15 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
       while (elapsed >= nextPlayerShot) {
         spawnPlayerShot();
         nextPlayerShot += 0.24;
+      }
+      // Butter stun: freshly buttered, her fire-control clocks briefly freeze.
+      if (stunTimer > 0) {
+        stunTimer = Math.max(stunTimer - delta, 0);
+        nextQuery += delta;
+        nextArchive += delta;
+        nextOverwrite += delta;
+        nextDisconnect += delta;
+        if (Number.isFinite(pendingCurtainAt)) pendingCurtainAt += delta;
       }
       if (pendingCurtainWave >= 0 && elapsed >= pendingCurtainAt) spawnCurtain(pendingCurtainWave);
 
@@ -600,6 +745,8 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     clearCurtainWarning();
     layer.visible = false;
     playerHitRing.visible = false;
+    victoryButter.visible = false;
+    victoryLabel.visible = false;
     for (const shard of shards) shard.view.visible = false;
   }
 
