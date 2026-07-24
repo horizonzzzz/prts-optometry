@@ -211,7 +211,9 @@ export function createVisionDialogueScene(textures: VisionSceneTextures, initial
       doctor: textures.dialogueDoctor,
       amiya: textures.dialogueAmiya,
       kaltsit: textures.dialogueKaltsit,
-      priestess: textures.dialoguePriestess,
+      priestess: currentLines === EPILOGUE_SCRIPT
+        ? textures.dialoguePriestessButter
+        : textures.dialoguePriestess,
     }[speaker];
     portrait.texture = texture;
     portraitCyan.texture = texture;

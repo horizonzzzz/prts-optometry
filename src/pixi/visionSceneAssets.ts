@@ -3,6 +3,7 @@ import dialogueAmiyaAsset from '../../assets/dialogue/amiya.png';
 import dialogueDoctorAsset from '../../assets/dialogue/doctor.png';
 import dialogueKaltsitAsset from '../../assets/dialogue/kaltsit.png';
 import dialoguePriestessAsset from '../../assets/dialogue/priestess.png';
+import dialoguePriestessButterAsset from '../../assets/dialogue/priestess-butter.png';
 import qrNode01Asset from '../../assets/7521a33230186fc1435c3077c4449634.png';
 import qrNode02Asset from '../../assets/b3a33055da1d8f99363e4042f4df035f.jpg';
 import blueprintAsset from '../../assets/official-terminal-blueprint.jpg';
@@ -15,7 +16,7 @@ import houseAsset from '../../assets/vision-house.jpg';
 import { Assets, type Texture } from 'pixi.js';
 
 export async function loadVisionSceneTextures() {
-  const [grid, blueprint, mask, rhodes, particle, house, portrait, landship, dialogueDoctor, dialogueAmiya, dialogueKaltsit, dialoguePriestess, qrNode01, qrNode02] = await Promise.all([
+  const [grid, blueprint, mask, rhodes, particle, house, portrait, landship, dialogueDoctor, dialogueAmiya, dialogueKaltsit, dialoguePriestess, dialoguePriestessButter, qrNode01, qrNode02] = await Promise.all([
     Assets.load<Texture>(gridAsset),
     Assets.load<Texture>(blueprintAsset),
     Assets.load<Texture>(maskAsset),
@@ -28,11 +29,12 @@ export async function loadVisionSceneTextures() {
     Assets.load<Texture>({ src: dialogueAmiyaAsset, data: { scaleMode: 'nearest' } }),
     Assets.load<Texture>({ src: dialogueKaltsitAsset, data: { scaleMode: 'nearest' } }),
     Assets.load<Texture>({ src: dialoguePriestessAsset, data: { scaleMode: 'nearest' } }),
+    Assets.load<Texture>({ src: dialoguePriestessButterAsset, data: { scaleMode: 'nearest' } }),
     Assets.load<Texture>(qrNode01Asset),
     Assets.load<Texture>(qrNode02Asset),
   ]);
 
-  return { grid, blueprint, mask, rhodes, particle, house, portrait, landship, dialogueDoctor, dialogueAmiya, dialogueKaltsit, dialoguePriestess, qrNode01, qrNode02 };
+  return { grid, blueprint, mask, rhodes, particle, house, portrait, landship, dialogueDoctor, dialogueAmiya, dialogueKaltsit, dialoguePriestess, dialoguePriestessButter, qrNode01, qrNode02 };
 }
 
 export type VisionSceneTextures = Awaited<ReturnType<typeof loadVisionSceneTextures>>;
