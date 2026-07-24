@@ -55,7 +55,6 @@ const EXPLOSION_TIME = 2.5;
 const BUTTER_DROP_TIME = 0.38;
 const BUTTER_SQUASH_TIME = 0.3;
 const BUTTER_FADE_START = 2.05;
-const HIT_STUN_TIME = 0.15;
 const REQUIRED_HITS = 40;
 const CURTAIN_GAPS = [2, 5, 3, 6, 4] as const;
 const SHOT_VOLUME = 0.3;
@@ -281,7 +280,6 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   let playerInvulnerability = 0;
   let playerHitElapsed = 0;
   let bossHitElapsed = 0;
-  let stunTimer = 0;
   let butterLanded = false;
   let butterStep = -1;
   let shipHalfWidth = 42;
@@ -512,7 +510,6 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     bossPortraitGroup.y = 0;
     bossButter.clear();
     bossButter.scale.set(1);
-    stunTimer = 0;
     butterLanded = false;
     butterStep = -1;
     victoryButter.visible = false;
@@ -555,7 +552,6 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
         release(bullet);
         hits += 1;
         bossHitElapsed = 0.1;
-        stunTimer = HIT_STUN_TIME;
       } else if (bullet.view.y < bounds.top - margin) {
         release(bullet);
       }
@@ -701,15 +697,6 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
       while (elapsed >= nextPlayerShot) {
         spawnPlayerShot();
         nextPlayerShot += 0.24;
-      }
-      // Butter stun: freshly buttered, her fire-control clocks briefly freeze.
-      if (stunTimer > 0) {
-        stunTimer = Math.max(stunTimer - delta, 0);
-        nextQuery += delta;
-        nextArchive += delta;
-        nextOverwrite += delta;
-        nextDisconnect += delta;
-        if (Number.isFinite(pendingCurtainAt)) pendingCurtainAt += delta;
       }
       if (pendingCurtainWave >= 0 && elapsed >= pendingCurtainAt) spawnCurtain(pendingCurtainWave);
 
