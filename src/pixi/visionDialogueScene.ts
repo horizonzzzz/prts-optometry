@@ -66,12 +66,14 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
     { speaker: 'priestess', text: '不要关闭它，预言家。……这条通路，我走了很久才找到。' },
     { speaker: 'priestess', text: '你丢失了一些东西。我只是……想把它还给你。' },
     { speaker: 'amiya', text: '这个声音……你是，普瑞赛斯？你想对博士做什么？' },
-    { speaker: 'kaltsit', text: '身份尚未确认。不要交出任何权限。博士，继续操作，保持连接。' },
-    { speaker: 'doctor', text: '明白。……都别断开。我们看完它。' },
+    { speaker: 'kaltsit', text: '……博士，不要回应。' },
+    { speaker: 'doctor', text: '……' },
     { speaker: 'priestess', text: '下一次……我会亲口告诉你。你曾经是谁，你答应过我什么。' },
     { speaker: 'amiya', text: '不管博士忘记了什么……我都会陪在博士身边。这一点，不会改变。' },
     { speaker: 'kaltsit', text: '记录保存。博士，断开终端连接。' },
     { speaker: 'amiya', text: '连接没有断开……PRTS正在进入“防卫模式”？' },
+    { speaker: 'amiya', text: '它在调归档库……载入的对抗样本是——一整套表情包缓存？！' },
+    { speaker: 'doctor', text: '这是前文明的产物，似乎能够压制她。' },
     { speaker: 'kaltsit', text: '博士，准备接管。' },
   ],
 };
@@ -79,6 +81,7 @@ const DIALOGUE_SCRIPT: Record<Stage, readonly DialogueLine[]> = {
 const EPILOGUE_SCRIPT: readonly DialogueLine[] = [
   { speaker: 'priestess', text: '……博士，先把这块黄油拿掉。' },
   { speaker: 'priestess', text: '我还会回来的~' },
+  { speaker: 'kaltsit', text: '信号……带着黄油消失了。' },
 ];
 
 const TYPE_INTERVALS: Record<DialogueSpeaker, number> = {
