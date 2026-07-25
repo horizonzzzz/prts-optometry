@@ -10,6 +10,7 @@ import { createPixiVisionScene, type DialogueSnapshot, type PixiVisionScene } fr
 
 const AMBIENT_VOLUME = 0.35;
 const REVEAL_VOLUME = 0.5;
+const BATTLE_REVEAL_VOLUME = 0.28;
 const SNOW_NOISE_VOLUME = 0.02;
 
 export default function PixiVisionPage() {
@@ -197,7 +198,7 @@ export default function PixiVisionPage() {
 
     if (state.stage === 'reveal') {
       ambient.pause();
-      reveal.volume = REVEAL_VOLUME;
+      reveal.volume = state.revealPhase === 'battle' ? BATTLE_REVEAL_VOLUME : REVEAL_VOLUME;
       if (enteringReveal) reveal.currentTime = 0;
       void reveal.play().catch(() => undefined);
       return;
@@ -212,7 +213,7 @@ export default function PixiVisionPage() {
 
     ambient.volume = AMBIENT_VOLUME;
     void ambient.play().catch(() => undefined);
-  }, [started, state.muted, state.stage]);
+  }, [started, state.muted, state.stage, state.revealPhase]);
 
   const copy = getStageCopy(state);
   const liveNote = copy.note.endsWith('。') ? copy.note : `${copy.note}。`;

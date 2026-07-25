@@ -6,8 +6,7 @@ import {
   TextStyle,
   type Texture,
 } from 'pixi.js';
-import battleShotAudio from '../../assets/audio/battle-shot.wav';
-import battleVictoryAudio from '../../assets/audio/battle-victory.wav';
+import { createVisionBattleAudio } from './visionBattleAudio';
 import { addText } from './visionSceneGraphics';
 import { COLORS } from './visionSceneModel';
 
@@ -57,8 +56,6 @@ const BUTTER_SQUASH_TIME = 0.3;
 const BUTTER_FADE_START = 2.05;
 const REQUIRED_HITS = 40;
 const CURTAIN_GAPS = [2, 5, 3, 6, 4] as const;
-const SHOT_VOLUME = 0.3;
-const VICTORY_VOLUME = 0.5;
 
 export function circlesOverlap(ax: number, ay: number, ar: number, bx: number, by: number, br: number) {
   return Math.hypot(ax - bx, ay - by) <= ar + br;
@@ -87,7 +84,7 @@ export function isCircularGapIndex(index: number, center: number, count: number)
 
 export function createVisionBattleScene(landshipTexture: Texture, portraitTexture: Texture, initialReducedMotion: boolean) {
   const layer = new Container({ label: 'vision-battle' });
-  const effectAudio = new Audio(battleShotAudio);
+  const battleAudio = createVisionBattleAudio();
   const field = new Graphics();
   const curtainWarningLayer = new Container();
   const enemyBulletLayer = new Container();
@@ -295,27 +292,10 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   let pendingCurtainAt = Number.POSITIVE_INFINITY;
   let onComplete: (() => void) | undefined;
   let reducedMotionTimer = 0;
-  let effectSource = battleShotAudio;
-
-  effectAudio.preload = 'auto';
+  let lastDamageAudioAt = Number.NEGATIVE_INFINITY;
 
   function primeAudio() {
-    playEffect(battleShotAudio, SHOT_VOLUME);
-  }
-
-  function playEffect(source: string, volume: number) {
-    if (muted) return;
-    if (effectSource !== source) {
-      effectSource = source;
-      effectAudio.src = source;
-    }
-    effectAudio.volume = volume;
-    effectAudio.currentTime = 0;
-    void effectAudio.play().catch(() => undefined);
-  }
-
-  function playExplosion() {
-    playEffect(battleVictoryAudio, VICTORY_VOLUME);
+    battleAudio.prime();
   }
 
   // ponytail: bounded pools make linear lookup cheaper than owning free-list machinery here.
@@ -361,10 +341,11 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     const dy = boss.y - shotY;
     const length = Math.max(Math.hypot(dx, dy), 1);
     spawn(playerBullets, player.x, shotY, (dx / length) * 430, (dy / length) * 430, 4);
-    playEffect(battleShotAudio, SHOT_VOLUME);
+    battleAudio.playShot();
   }
 
   function spawnFan() {
+    battleAudio.playPattern();
     const aim = Math.atan2(player.y - boss.y, player.x - boss.x);
     for (const offset of [-0.5, -0.25, 0, 0.25, 0.5]) {
       const angle = aim + offset;
@@ -373,6 +354,7 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   }
 
   function spawnRing() {
+    battleAudio.playPattern();
     const count = 18;
     const rotation = elapsed * 0.35;
     const aim = Math.atan2(player.y - boss.y, player.x - boss.x);
@@ -393,6 +375,7 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     }
     pendingCurtainWave = waveIndex;
     pendingCurtainAt = elapsed + 0.35;
+    battleAudio.playWarning();
   }
 
   function spawnCurtain(waveIndex: number) {
@@ -484,6 +467,7 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     disconnectWave = 0;
     pendingCurtainWave = -1;
     pendingCurtainAt = Number.POSITIVE_INFINITY;
+    lastDamageAudioAt = Number.NEGATIVE_INFINITY;
     onComplete = complete;
     clearBullets();
     clearCurtainWarning();
@@ -528,7 +512,7 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
       boss.scale.set(1);
       player.position.set(bounds.left + bounds.width / 2, bounds.top + bounds.height * 0.84);
       reducedMotionTimer = window.setTimeout(() => {
-        playExplosion();
+        battleAudio.playVictory();
         finish();
       }, 450);
     }
@@ -552,6 +536,7 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
         release(bullet);
         hits += 1;
         bossHitElapsed = 0.1;
+        battleAudio.playHit();
       } else if (bullet.view.y < bounds.top - margin) {
         release(bullet);
       }
@@ -568,6 +553,10 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
         if (playerInvulnerability <= 0) {
           playerInvulnerability = 0.42;
           playerHitElapsed = 0.24;
+          if (elapsed - lastDamageAudioAt >= 0.24) {
+            lastDamageAudioAt = elapsed;
+            battleAudio.playDamage();
+          }
           playerHitRing.position.copyFrom(player.position);
           playerHitRing.visible = true;
           playerHitRing.alpha = 1;
@@ -600,7 +589,7 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
       if (dropProgress >= 1 && !butterLanded) {
         // Impact frame: meme composition achieved — butter lands square on her head.
         butterLanded = true;
-        playExplosion();
+        battleAudio.playVictory();
         flash.alpha = 0.58;
         for (let index = 0; index < shards.length; index += 1) {
           const shard = shards[index];
@@ -749,8 +738,7 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     },
     setMuted(nextMuted: boolean) {
       muted = nextMuted;
-      effectAudio.muted = muted;
-      if (muted) effectAudio.pause();
+      battleAudio.setMuted(muted);
     },
     setReducedMotion(nextReducedMotion: boolean) {
       reducedMotion = nextReducedMotion;
@@ -762,8 +750,7 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     reset,
     destroy() {
       reset();
-      effectAudio.pause();
-      effectAudio.currentTime = 0;
+      battleAudio.destroy();
     },
   };
 }
