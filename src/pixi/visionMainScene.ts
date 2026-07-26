@@ -20,6 +20,7 @@ import {
   drawDashedCircle,
   drawDiamond,
   drawDiamondStroke,
+  drawHazardStripes,
   drawLine,
   drawOriginiumCore,
   drawPolygon,
@@ -315,6 +316,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     const bottom = 19;
     calibrationAlertBg.clear();
     drawPolygon(calibrationAlertBg, [[left + 8, top], [right, top], [right, bottom - 8], [right - 8, bottom], [left, bottom], [left, top + 8]], COLORS.graphite, 0.96);
+    // Fixed hazard-stripe footer — stays yellow/black regardless of accent tint.
+    drawHazardStripes(calibrationAlertBg, left + 55, bottom - 5, alertWidth - 67, 4, COLORS.yellow, COLORS.night, 0.9, 10);
     calibrationAlertAccent.clear().rect(left, top, 49, 38).fill({ color: 0xffffff, alpha: 1 });
     calibrationAlertCode.position.set(left + 9, -4);
     calibrationAlertMessage.position.set(left + 59, -12);
@@ -785,7 +788,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     calibrationAlert.position.set(visualX, visualY + frameSize / 2 - 25);
     drawCalibrationAlert(Math.min(frameSize * 0.86, 260));
     revealGroup.position.set(visualX, visualY);
-    revealGroup.visible = currentStage === 'reveal' && revealView === 'dialogue';
+    revealGroup.visible = currentStage === 'reveal' && (revealView === 'dialogue' || revealView === 'epilogue');
+    revealGroup.alpha = revealView === 'epilogue' ? 0.42 : 1;
     revealGroup.pivot.set(0, 0);
     drawReveal();
     revealFrame.position.set(0, 0);
@@ -897,7 +901,8 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     body.y = 0;
     body.visible = revealView !== 'complete';
     houseGroup.visible = stage !== 'reveal';
-    revealGroup.visible = stage === 'reveal' && revealView === 'dialogue';
+    revealGroup.visible = stage === 'reveal' && (revealView === 'dialogue' || revealView === 'epilogue');
+    revealGroup.alpha = revealView === 'epilogue' ? 0.42 : 1;
     profile.layer.visible = stage === 'reveal' && revealView === 'complete';
     houseBlur.strength = stage === 'calibrate' && !currentReducedMotion ? 9 : stage === 'drift' && !driftLocked ? 2 : 0;
     houseNoise.noise = stage === 'drift' ? 0.16 : 0.045;
@@ -952,7 +957,7 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     const battleVisible = stage === 'reveal' && revealView === 'battle';
     battle.layer.visible = battleVisible;
     copy.visible = !battleVisible;
-    if (stage === 'reveal' && revealView !== 'dialogue') revealGroup.visible = false;
+    if (stage === 'reveal' && (revealView === 'battle' || revealView === 'complete')) revealGroup.visible = false;
     if (battleVisible) dialogue.layer.visible = false;
   }
 
@@ -1302,7 +1307,9 @@ export function createVisionMainScene({ app, textures, reducedMotion: initialRed
     startEpilogue() {
       revealView = 'epilogue';
       battle.hide();
-      revealGroup.visible = false;
+      // Keep a dimmed residual of the reveal visual — a fading signal, not a void.
+      revealGroup.visible = true;
+      revealGroup.alpha = 0.42;
       profile.hide();
       body.visible = true;
       copy.visible = true;

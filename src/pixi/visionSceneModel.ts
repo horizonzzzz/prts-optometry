@@ -5,13 +5,15 @@ export const COLORS = {
   clinicShadow: 0xaeb8ba,
   graphite: 0x171c1f,
   muted: 0x59666b,
-  cyan: 0x00a7bd,
-  teal: 0x5dd5de,
-  red: 0xb82b38,
+  // PRTS terminal blue — cold and saturated, matching the official UI accent
+  cyan: 0x0098dc,
+  teal: 0x41b9ee,
+  red: 0xcc2e3d,
   night: 0x0d1112,
   ice: 0xdce9e4,
   pale: 0xedf2f1,
-  yellow: 0xe5c546,
+  // Hazard-stripe warning yellow — the vivid official caution color
+  yellow: 0xffd802,
   // Originium amber — pale gold used by PRTS crystal debris / core marks
   originium: 0xf0d878,
   originiumSoft: 0xe8c86a,

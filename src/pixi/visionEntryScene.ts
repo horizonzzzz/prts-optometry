@@ -1,6 +1,6 @@
 import { Container, Graphics, Sprite, TextStyle } from 'pixi.js';
 import type { VisionSceneTextures } from './visionSceneAssets';
-import { addText, drawLine, drawPolygon, fitCover } from './visionSceneGraphics';
+import { addText, drawDiamondStroke, drawHazardStripes, drawLine, drawPolygon, fitCover } from './visionSceneGraphics';
 import { COLORS, getEntryBootState, isWideLayout } from './visionSceneModel';
 
 type EntrySceneOptions = {
@@ -70,6 +70,8 @@ export function createVisionEntryScene({ textures, onReady }: EntrySceneOptions)
     drawLine(reticleCross, 5, 0, 33, 0, 1, COLORS.pale, 0.72);
     drawLine(reticleCross, 0, -33, 0, -5, 1, COLORS.pale, 0.72);
     drawLine(reticleCross, 0, 5, 0, 33, 1, COLORS.pale, 0.72);
+    // Static diamond between the rotating rings — the Arknights reticle motif.
+    drawDiamondStroke(reticleCross, size * 0.58, size * 0.72, COLORS.teal, 0.38, 1);
   }
 
   function drawButton(x: number, y: number, buttonWidth: number) {
@@ -77,11 +79,13 @@ export function createVisionEntryScene({ textures, onReady }: EntrySceneOptions)
     const points: Array<[number, number]> = [[0, 0], [buttonWidth - 13, 0], [buttonWidth, 13], [buttonWidth, buttonHeight], [13, buttonHeight], [0, buttonHeight - 13]];
     button.position.set(x, y);
     buttonShadow.clear();
-    drawPolygon(buttonShadow, points.map(([px, py]) => [px + 7, py + 7]), COLORS.cyan, 0.28);
+    drawPolygon(buttonShadow, points.map(([px, py]) => [px + 7, py + 7]), COLORS.shadow, 0.6);
     drawPolygon(buttonBg, points, COLORS.yellow, 1);
-    buttonIndex.position.set(12, 25);
-    buttonLabel.position.set(49, 13);
-    buttonHint.position.set(49, 40);
+    // Hazard-stripe grip on the left edge — signature warning texture.
+    drawHazardStripes(buttonBg, 0, 0, 11, buttonHeight - 13, COLORS.yellow, COLORS.night, 0.88, 11);
+    buttonIndex.position.set(19, 25);
+    buttonLabel.position.set(52, 13);
+    buttonHint.position.set(52, 40);
     buttonArrow.position.set(buttonWidth - 36, 22);
     buttonBg.alpha = 1;
   }

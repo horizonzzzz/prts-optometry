@@ -61,7 +61,7 @@
 }
 
 #screening-app[data-stage='calibrate'] .visual-stage::before { content: '02'; }
-#screening-app[data-stage='drift'] .visual-stage::before { content: '03'; color: rgba(184, 43, 56, 0.12); }
+#screening-app[data-stage='drift'] .visual-stage::before { content: '03'; color: rgba(204, 46, 61, 0.12); }
 
 .visual-stage::after {
   position: absolute;
@@ -84,7 +84,7 @@
   border: 2px solid var(--graphite);
   border-radius: 0;
   background: rgba(245, 247, 246, 0.64);
-  box-shadow: 11px 11px 0 rgba(23, 28, 31, 0.12), -5px -5px 0 rgba(0, 167, 189, 0.24);
+  box-shadow: 11px 11px 0 rgba(23, 28, 31, 0.12), -5px -5px 0 rgba(0, 152, 220, 0.24);
   opacity: 1;
   clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
   transition: border-color 0.55s ease, box-shadow 0.55s ease, transform 0.8s ease;
@@ -107,11 +107,11 @@
 
 .visual-stage:has(.vision-frame:hover) .visual-halo {
   border-color: var(--cyan);
-  box-shadow: 14px 14px 0 rgba(23, 28, 31, 0.16), -5px -5px 0 rgba(0, 167, 189, 0.48);
+  box-shadow: 14px 14px 0 rgba(23, 28, 31, 0.16), -5px -5px 0 rgba(0, 152, 220, 0.48);
 }
 
 .vision-frame:focus-visible {
-  outline: 1px solid rgba(181, 54, 61, 0.72);
+  outline: 1px solid rgba(204, 46, 61, 0.72);
   outline-offset: 10px;
 }
 
@@ -147,7 +147,7 @@
   border: 8px solid #080c0e;
   border-radius: 50%;
   background: #080c0e;
-  box-shadow: 0 0 0 1px rgba(0, 167, 189, 0.46), inset 0 0 28px rgba(0, 0, 0, 0.38);
+  box-shadow: 0 0 0 1px rgba(0, 152, 220, 0.46), inset 0 0 28px rgba(0, 0, 0, 0.38);
 }
 
 .house-viewport {
@@ -173,7 +173,7 @@
 .house-viewport::before {
   background-image:
     repeating-linear-gradient(to bottom, rgba(235, 246, 244, 0.2) 0 1px, transparent 1px 4px),
-    repeating-linear-gradient(90deg, rgba(0, 167, 189, 0.1) 0 1px, transparent 1px 7px);
+    repeating-linear-gradient(90deg, rgba(0, 152, 220, 0.1) 0 1px, transparent 1px 7px);
   background-position: 0 0, 0 0;
   background-size: 100% 4px, 100% 100%;
   mix-blend-mode: screen;
@@ -184,7 +184,7 @@
   bottom: auto;
   height: 36%;
   background:
-    linear-gradient(to bottom, transparent 0 22%, rgba(237, 242, 241, 0.18) 22% 32%, rgba(0, 167, 189, 0.3) 32% 38%, rgba(181, 54, 61, 0.24) 38% 44%, transparent 44% 100%),
+    linear-gradient(to bottom, transparent 0 22%, rgba(237, 242, 241, 0.18) 22% 32%, rgba(0, 152, 220, 0.3) 32% 38%, rgba(204, 46, 61, 0.24) 38% 44%, transparent 44% 100%),
     repeating-linear-gradient(to bottom, transparent 0 6px, rgba(235, 246, 244, 0.14) 6px 7px, transparent 7px 12px);
   box-shadow: 0 0 22px rgba(220, 246, 239, 0.22);
   mix-blend-mode: screen;

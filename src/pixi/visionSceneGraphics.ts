@@ -108,6 +108,37 @@ export function drawLine(graphics: Graphics, x1: number, y1: number, x2: number,
   graphics.moveTo(x1, y1).lineTo(x2, y2).stroke({ width, color, alpha });
 }
 
+/**
+ * Diagonal hazard stripes clipped to a rect — the classic warning texture.
+ * Draws a base-colored band with 45° stripes on top; does not clear, so it
+ * can be layered onto an existing graphics. Stripes are rasterized as short
+ * horizontal slices, which keeps the clipping trivial and pixel-crisp.
+ */
+export function drawHazardStripes(
+  graphics: Graphics,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  baseColor: number,
+  stripeColor: number,
+  stripeAlpha = 1,
+  period = 14,
+) {
+  graphics.rect(x, y, width, height).fill({ color: baseColor, alpha: 1 });
+  const stripeWidth = period / 2;
+  const step = 2;
+  for (let sy = 0; sy < height; sy += step) {
+    const sliceHeight = Math.min(step, height - sy);
+    const shift = ((height - sy) % period) - period;
+    for (let sx = shift; sx < width; sx += period) {
+      const startX = Math.max(x + sx, x);
+      const endX = Math.min(x + sx + stripeWidth, x + width);
+      if (endX > startX) graphics.rect(startX, y + sy, endX - startX, sliceHeight).fill({ color: stripeColor, alpha: stripeAlpha });
+    }
+  }
+}
+
 export function setCssVar(host: HTMLElement, name: string, value: number) {
   host.parentElement?.style.setProperty(name, `${Math.round(value)}px`);
 }

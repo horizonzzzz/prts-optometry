@@ -9,7 +9,7 @@ const PixiVisionPage = lazy(() => import('./pages/PixiVisionPage'));
 
 createRoot(document.querySelector('#root')!).render(
   <HashRouter>
-    <Suspense fallback={<div className="pixi-loading">LOADING VISUAL TERMINAL</div>}>
+    <Suspense fallback={<div className="pixi-loading">PRTS // INITIALIZING OPTICAL ARRAY</div>}>
       <Routes>
         <Route path="/" element={<PixiVisionPage />} />
         <Route path="/legacy-dom" element={<LegacyDomPage />} />

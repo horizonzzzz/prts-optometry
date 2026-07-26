@@ -15,7 +15,7 @@
 #screening-app[data-stage='drift'] {
   color: #edf2f1;
   background:
-    radial-gradient(circle at 52% 49%, rgba(184, 43, 56, 0.34), rgba(8, 12, 14, 0.08) 35%, rgba(8, 12, 14, 0.96) 72%),
+    radial-gradient(circle at 52% 49%, rgba(204, 46, 61, 0.34), rgba(8, 12, 14, 0.08) 35%, rgba(8, 12, 14, 0.96) 72%),
     linear-gradient(135deg, #111719, #080c0e 68%);
 }
 
@@ -40,7 +40,7 @@
 #screening-app[data-stage='drift'] .visual-halo {
   border-color: rgba(237, 242, 241, 0.42);
   background: rgba(8, 12, 14, 0.46);
-  box-shadow: 11px 11px 0 rgba(184, 43, 56, 0.24), -5px -5px 0 rgba(0, 167, 189, 0.2);
+  box-shadow: 11px 11px 0 rgba(204, 46, 61, 0.24), -5px -5px 0 rgba(0, 152, 220, 0.2);
 }
 
 #screening-app[data-stage='calibrate'] .house-image-base {
@@ -93,8 +93,8 @@
 
 #screening-app[data-stage='drift'] .vision-halo,
 #screening-app.is-drifting .visual-halo {
-  border-color: rgba(181, 54, 61, 0.38);
-  box-shadow: 0 0 0 18px rgba(181, 54, 61, 0.035), 0 0 70px rgba(181, 54, 61, 0.11);
+  border-color: rgba(204, 46, 61, 0.38);
+  box-shadow: 0 0 0 18px rgba(204, 46, 61, 0.035), 0 0 70px rgba(204, 46, 61, 0.11);
 }
 
 @keyframes house-tv-tear {

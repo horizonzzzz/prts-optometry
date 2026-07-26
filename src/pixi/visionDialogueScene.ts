@@ -138,7 +138,7 @@ export function createVisionDialogueScene(textures: VisionSceneTextures, initial
   const footer = addText('FICTIONAL VISUAL EFFECT / NOT A MEDICAL TEST', new TextStyle({
     fill: 0x71817e,
     fontFamily: 'Bender, sans-serif',
-    fontSize: 7,
+    fontSize: 8,
     letterSpacing: 0.9,
   }));
   const continueMark = new Graphics();
