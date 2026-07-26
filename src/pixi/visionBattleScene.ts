@@ -7,7 +7,7 @@ import {
   type Texture,
 } from 'pixi.js';
 import { createVisionBattleAudio } from './visionBattleAudio';
-import { addText } from './visionSceneGraphics';
+import { addText, drawHazardStripes } from './visionSceneGraphics';
 import { COLORS } from './visionSceneModel';
 
 // PvZ-style butter — the Priestess "butter on head" meme palette.
@@ -56,6 +56,9 @@ const BUTTER_SQUASH_TIME = 0.3;
 const BUTTER_FADE_START = 2.05;
 const REQUIRED_HITS = 40;
 const CURTAIN_GAPS = [2, 5, 3, 6, 4] as const;
+// Max aim correction (radians off straight-up) for player shots — small enough
+// that landing hits requires actually lining the landship up with the boss.
+const PLAYER_AIM_ASSIST = 0.2;
 
 export function circlesOverlap(ax: number, ay: number, ar: number, bx: number, by: number, br: number) {
   return Math.hypot(ax - bx, ay - by) <= ar + br;
@@ -63,6 +66,16 @@ export function circlesOverlap(ax: number, ay: number, ar: number, bx: number, b
 
 export function shouldBattleExplode(elapsed: number, hits: number) {
   return elapsed >= FORCE_EXPLOSION_TIME || (elapsed >= MIN_EXPLOSION_TIME && hits >= REQUIRED_HITS);
+}
+
+/**
+ * Seal readiness shown by the HUD bar. Hits and timeline are both required for
+ * the seal, so the bar tracks the slower of the two, with the force-explosion
+ * clock as a floor — it reaches 1 at exactly the moment shouldBattleExplode fires.
+ */
+export function getSealProgress(elapsed: number, hits: number) {
+  const suppression = Math.min(hits / REQUIRED_HITS, elapsed / MIN_EXPLOSION_TIME);
+  return Math.min(Math.max(suppression, elapsed / FORCE_EXPLOSION_TIME), 1);
 }
 
 export function getBattleTimelinePhase(elapsed: number): BattleTimelinePhase {
@@ -115,7 +128,47 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   }));
   const flash = new Graphics();
 
-  layer.addChild(field, curtainWarningLayer, enemyBulletLayer, playerBulletLayer, boss, player, playerHitRing, explosionLayer, victoryButter, victoryLabel, flash);
+  // PRTS combat HUD — phase readout, suppression meter, curtain warning band.
+  const hud = new Container({ label: 'battle-hud' });
+  const hudFrame = new Graphics();
+  const suppressBar = new Graphics();
+  const phaseLabel = addText('PRTS // SIGNAL LOCK', new TextStyle({
+    fill: COLORS.teal,
+    fontFamily: 'Bender, sans-serif',
+    fontSize: 8,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+  }));
+  const suppressLabel = addText(`SUPPRESS 00/${REQUIRED_HITS}`, new TextStyle({
+    fill: COLORS.originiumSoft,
+    fontFamily: 'Bender, sans-serif',
+    fontSize: 8,
+    letterSpacing: 1.1,
+  }));
+  const signalTag = addText('SIGNAL // PRIESTESS', new TextStyle({
+    fill: COLORS.originiumSoft,
+    fontFamily: 'Bender, sans-serif',
+    fontSize: 7,
+    letterSpacing: 1.4,
+  }));
+  const warnBand = new Container({ label: 'curtain-warning-band' });
+  const warnBandBg = new Graphics();
+  const warnText = addText('WARNING', new TextStyle({
+    fill: COLORS.yellow,
+    fontFamily: 'Bender, sans-serif',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 4,
+  }));
+
+  layer.addChild(field, curtainWarningLayer, enemyBulletLayer, playerBulletLayer, boss, player, playerHitRing, explosionLayer, victoryButter, victoryLabel, hud, flash);
+  hud.addChild(hudFrame, suppressBar, phaseLabel, suppressLabel, signalTag, warnBand);
+  warnBand.addChild(warnBandBg, warnText);
+  suppressLabel.anchor.set(1, 0);
+  signalTag.rotation = Math.PI / 2;
+  signalTag.alpha = 0.66;
+  warnText.anchor.set(0.5);
+  warnBand.visible = false;
   boss.addChild(bossAura, bossBody, bossPortraitGroup, bossFractures, bossCore, bossButter);
   bossPortraitGroup.addChild(bossPortraitMask, bossPortraitCyan, bossPortraitRed, bossPortrait);
   player.addChild(landship, playerCore);
@@ -293,6 +346,54 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
   let onComplete: (() => void) | undefined;
   let reducedMotionTimer = 0;
   let lastDamageAudioAt = Number.NEGATIVE_INFINITY;
+  let hudPhase: BattleTimelinePhase | 'seal' = 'enter';
+  let suppressShown = -1;
+  let suppressFilled = -1;
+
+  const HUD_PHASE_LABELS: Record<BattleTimelinePhase | 'seal', string> = {
+    enter: 'PRTS // SIGNAL LOCK',
+    query: 'PRTS // QUERY BURST',
+    archive: 'PRTS // ARCHIVE RING',
+    overwrite: 'PRTS // OVERWRITE CURTAIN',
+    disconnect: 'PRTS // DISCONNECT SURGE',
+    seal: 'PRTS // SEAL COMPLETE',
+  };
+
+  function setHudPhase(phase: BattleTimelinePhase | 'seal') {
+    if (phase === hudPhase) return;
+    hudPhase = phase;
+    phaseLabel.text = HUD_PHASE_LABELS[phase];
+  }
+
+  function drawSuppressBar(filled: number) {
+    suppressBar.clear();
+    const segmentCount = 10;
+    const barLeft = bounds.left + 12;
+    const barRight = bounds.left + bounds.width - 12;
+    const segmentGap = 3;
+    const segmentWidth = (barRight - barLeft - segmentGap * (segmentCount - 1)) / segmentCount;
+    for (let index = 0; index < segmentCount; index += 1) {
+      const x = barLeft + index * (segmentWidth + segmentGap);
+      const isFilled = index < filled;
+      suppressBar.rect(x, bounds.top + 24, segmentWidth, 3).fill({
+        color: isFilled ? BUTTER : COLORS.muted,
+        alpha: isFilled ? 0.95 : 0.3,
+      });
+    }
+  }
+
+  function updateSuppress() {
+    const shown = Math.min(hits, REQUIRED_HITS);
+    if (shown !== suppressShown) {
+      suppressShown = shown;
+      suppressLabel.text = `SUPPRESS ${String(shown).padStart(2, '0')}/${REQUIRED_HITS}`;
+    }
+    const filled = Math.floor(getSealProgress(elapsed, hits) * 10);
+    if (filled !== suppressFilled) {
+      suppressFilled = filled;
+      drawSuppressBar(filled);
+    }
+  }
 
   function primeAudio() {
     battleAudio.prime();
@@ -331,16 +432,16 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
 
   function clearCurtainWarning() {
     for (const warning of curtainWarnings) warning.visible = false;
+    warnBand.visible = false;
     pendingCurtainWave = -1;
     pendingCurtainAt = Number.POSITIVE_INFINITY;
   }
 
   function spawnPlayerShot() {
     const shotY = player.y - shipHalfHeight * 0.78;
-    const dx = boss.x - player.x;
-    const dy = boss.y - shotY;
-    const length = Math.max(Math.hypot(dx, dy), 1);
-    spawn(playerBullets, player.x, shotY, (dx / length) * 430, (dy / length) * 430, 4);
+    const aimOffset = Math.atan2(boss.x - player.x, shotY - boss.y);
+    const clamped = Math.max(-PLAYER_AIM_ASSIST, Math.min(PLAYER_AIM_ASSIST, aimOffset));
+    spawn(playerBullets, player.x, shotY, Math.sin(clamped) * 430, -Math.cos(clamped) * 430, 4);
     battleAudio.playShot();
   }
 
@@ -373,6 +474,8 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
       curtainWarnings[index].visible = index !== safeGap;
       curtainWarnings[index].alpha = 1;
     }
+    warnBand.visible = true;
+    warnBand.alpha = 1;
     pendingCurtainWave = waveIndex;
     pendingCurtainAt = elapsed + 0.35;
     battleAudio.playWarning();
@@ -395,6 +498,11 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     butterLanded = false;
     clearBullets();
     clearCurtainWarning();
+    setHudPhase('seal');
+    suppressShown = REQUIRED_HITS;
+    suppressFilled = 10;
+    suppressLabel.text = `SUPPRESS ${REQUIRED_HITS}/${REQUIRED_HITS}`;
+    drawSuppressBar(10);
     victoryButter.visible = true;
     victoryButter.alpha = 1;
     victoryButter.scale.set(1);
@@ -432,6 +540,29 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     field.rect(bounds.left, bounds.top, bounds.width, bounds.height).stroke({ width: 1, color: COLORS.originiumDeep, alpha: 0.42 });
     flash.clear().rect(bounds.left, bounds.top, bounds.width, bounds.height).fill({ color: COLORS.originium, alpha: 1 });
     flash.alpha = 0;
+
+    // HUD chrome — corner brackets, phase readout, suppression meter, warning band.
+    const right = bounds.left + bounds.width;
+    const bottom = bounds.top + bounds.height;
+    const bracket = 15;
+    const inset = 5;
+    hudFrame.clear();
+    hudFrame
+      .moveTo(bounds.left + inset, bounds.top + inset + bracket).lineTo(bounds.left + inset, bounds.top + inset).lineTo(bounds.left + inset + bracket, bounds.top + inset)
+      .moveTo(right - inset - bracket, bounds.top + inset).lineTo(right - inset, bounds.top + inset).lineTo(right - inset, bounds.top + inset + bracket)
+      .moveTo(right - inset, bottom - inset - bracket).lineTo(right - inset, bottom - inset).lineTo(right - inset - bracket, bottom - inset)
+      .moveTo(bounds.left + inset + bracket, bottom - inset).lineTo(bounds.left + inset, bottom - inset).lineTo(bounds.left + inset, bottom - inset - bracket)
+      .stroke({ width: 1.5, color: COLORS.pale, alpha: 0.5 });
+    phaseLabel.position.set(bounds.left + 12, bounds.top + 10);
+    suppressLabel.position.set(right - 12, bounds.top + 10);
+    drawSuppressBar(Math.max(suppressFilled, 0));
+    signalTag.position.set(right - 7, bounds.top + 40);
+    const bandY = bounds.top + bounds.height * 0.36;
+    warnBandBg.clear();
+    warnBandBg.rect(bounds.left + 1, bandY, bounds.width - 2, 22).fill({ color: COLORS.night, alpha: 0.85 });
+    drawHazardStripes(warnBandBg, bounds.left + 1, bandY, bounds.width - 2, 4, COLORS.yellow, COLORS.night, 0.92, 12);
+    drawHazardStripes(warnBandBg, bounds.left + 1, bandY + 18, bounds.width - 2, 4, COLORS.yellow, COLORS.night, 0.92, 12);
+    warnText.position.set(bounds.left + bounds.width / 2, bandY + 11);
     const curtainGap = bounds.width / 8;
     for (let index = 0; index < curtainWarnings.length; index += 1) {
       curtainWarnings[index].position.set(bounds.left + index * curtainGap, bounds.top + 5);
@@ -469,6 +600,11 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
     pendingCurtainAt = Number.POSITIVE_INFINITY;
     lastDamageAudioAt = Number.NEGATIVE_INFINITY;
     onComplete = complete;
+    hudPhase = 'enter';
+    phaseLabel.text = HUD_PHASE_LABELS.enter;
+    suppressShown = -1;
+    suppressFilled = -1;
+    updateSuppress();
     clearBullets();
     clearCurtainWarning();
     layer.visible = true;
@@ -636,6 +772,10 @@ export function createVisionBattleScene(landshipTexture: Texture, portraitTextur
       if (explosionElapsed >= EXPLOSION_TIME) finish();
       return;
     }
+
+    setHudPhase(getBattleTimelinePhase(elapsed));
+    updateSuppress();
+    if (warnBand.visible) warnBand.alpha = 0.55 + Math.abs(Math.sin(time * 18)) * 0.45;
 
     const enterProgress = Math.min(elapsed / ENTER_TIME, 1);
     const eased = 1 - Math.pow(1 - enterProgress, 3);

@@ -5,6 +5,7 @@ import {
   circlesOverlap,
   getBattleTimelinePhase,
   getCurtainSafeGapIndex,
+  getSealProgress,
   isCircularGapIndex,
   shouldBattleExplode,
 } from './visionBattleScene';
@@ -170,6 +171,19 @@ describe('battle ending', () => {
     expect(shouldBattleExplode(15.49, 100)).toBe(false);
     expect(shouldBattleExplode(15.5, 40)).toBe(true);
     expect(shouldBattleExplode(16.8, 0)).toBe(true);
+  });
+
+  it('fills the HUD seal bar at exactly the moment the seal can trigger', () => {
+    expect(getSealProgress(0, 0)).toBe(0);
+    // Maxed hits alone cannot complete the bar before the timeline allows the seal.
+    expect(getSealProgress(10, 100)).toBeLessThan(1);
+    expect(getSealProgress(15.49, 100)).toBeLessThan(1);
+    // Bar full ⟺ shouldBattleExplode: both paths reach 1 on their exact boundaries.
+    expect(getSealProgress(15.5, 40)).toBe(1);
+    expect(getSealProgress(15.5, 39)).toBeLessThan(1);
+    expect(getSealProgress(16.8, 0)).toBe(1);
+    // With few hits the force clock still raises the floor steadily.
+    expect(getSealProgress(8.4, 0)).toBeCloseTo(0.5);
   });
 });
 
