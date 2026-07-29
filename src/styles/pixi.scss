@@ -32,6 +32,59 @@
   background-size: 200% 100%;
 }
 
+.pixi-loading--blocked {
+  z-index: 6;
+  padding: 20px;
+  color: #e8edeb;
+}
+
+.pixi-loading--blocked::after {
+  display: none;
+}
+
+.pixi-loading__lock {
+  width: min(100%, 420px);
+  padding: 22px 24px 20px;
+  border: 1px solid rgba(65, 185, 238, 0.72);
+  border-left: 6px solid #41b9ee;
+  background: #171c1f;
+  box-shadow: inset 0 -5px 0 #ffd802, 9px 9px 0 rgba(0, 0, 0, 0.36);
+  clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
+}
+
+.pixi-loading__label,
+.pixi-loading__status,
+.pixi-loading__title {
+  margin: 0;
+}
+
+.pixi-loading__label,
+.pixi-loading__status {
+  font-family: var(--display);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+.pixi-loading__label {
+  color: #41b9ee;
+}
+
+.pixi-loading__title {
+  margin: 18px 0 20px;
+  color: #e8edeb;
+  font-family: var(--display), var(--sans);
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.pixi-loading__status {
+  padding-top: 12px;
+  border-top: 1px solid rgba(232, 237, 235, 0.22);
+  color: #ffd802;
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .pixi-loading::after {
     animation: pixi-loading-stripes 0.9s linear infinite;

@@ -14,6 +14,7 @@ const BATTLE_REVEAL_VOLUME = 0.28;
 const SNOW_NOISE_VOLUME = 0.02;
 
 export default function PixiVisionPage() {
+  const needsHide = import.meta.env.VITE_NEED_HIDE === 'true';
   const [state, dispatch] = useReducer(advanceState, undefined, createInitialState);
   const [started, setStarted] = useState(false);
   const [entryDeparting, setEntryDeparting] = useState(false);
@@ -220,7 +221,7 @@ export default function PixiVisionPage() {
   const dialogueComplete = dialogue?.complete ?? false;
   const battleActive = state.stage === 'reveal' && state.revealPhase === 'battle';
   const endingComplete = state.stage === 'reveal' && state.revealPhase === 'complete';
-  const visionUnavailable = !ready || !stageReady || !dialogueComplete || Boolean(error) || !started || entryDeparting || state.stage === 'reveal';
+  const visionUnavailable = needsHide || !ready || !stageReady || !dialogueComplete || Boolean(error) || !started || entryDeparting || state.stage === 'reveal';
 
   function startAmbientAudio() {
     const ambient = ambientRef.current;
@@ -255,7 +256,7 @@ export default function PixiVisionPage() {
   }
 
   function handleStart() {
-    if (!ready || !entryReady || error || started || entryDeparting) return;
+    if (needsHide || !ready || !entryReady || error || started || entryDeparting) return;
     startAmbientAudio();
     setEntryDeparting(true);
     sceneRef.current?.setStarted(true, () => {
@@ -401,7 +402,17 @@ export default function PixiVisionPage() {
   return (
     <main className="pixi-page" data-stage={state.stage} data-reveal-phase={state.revealPhase} data-started={started} data-entry-departing={entryDeparting} aria-label="视觉筛查体验">
       <div ref={canvasHostRef} className="pixi-canvas-host" aria-hidden="true" />
-      {!ready && !error && <div className="pixi-loading">PRTS // INITIALIZING OPTICAL ARRAY</div>}
+      {(!ready || needsHide) && !error && (
+        needsHide ? (
+          <div className="pixi-loading pixi-loading--blocked" role="alert">
+            <div className="pixi-loading__lock">
+              <p className="pixi-loading__label">PRTS // ACCESS CONTROL</p>
+              <p className="pixi-loading__title">验光终端暂未开放使用</p>
+              <p className="pixi-loading__status">TERMINAL STATUS: LOCKED</p>
+            </div>
+          </div>
+        ) : <div className="pixi-loading">PRTS // INITIALIZING OPTICAL ARRAY</div>
+      )}
 
       <div className="pixi-ui">
         <button
@@ -410,7 +421,7 @@ export default function PixiVisionPage() {
           onClick={handleMute}
           aria-pressed={state.muted}
           aria-label={state.muted ? '打开声音' : '关闭声音'}
-          disabled={!started || !ready}
+          disabled={needsHide || !started || !ready}
         >
           <span className="pixi-sr-only">{state.muted ? '打开声音' : '关闭声音'}</span>
         </button>
@@ -420,7 +431,7 @@ export default function PixiVisionPage() {
         className="pixi-hit pixi-entry-hit"
         type="button"
         onClick={handleStart}
-        disabled={started || entryDeparting || !ready || !entryReady || Boolean(error)}
+        disabled={needsHide || started || entryDeparting || !ready || !entryReady || Boolean(error)}
         aria-label="开始验光"
       />
 
@@ -472,7 +483,7 @@ export default function PixiVisionPage() {
           className="pixi-hit pixi-reset-hit"
           type="button"
           onClick={handleReset}
-          disabled={!ready}
+          disabled={needsHide || !ready}
           aria-label="重置并返回第一个画面"
         />
       )}

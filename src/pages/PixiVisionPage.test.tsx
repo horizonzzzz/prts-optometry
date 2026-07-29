@@ -62,10 +62,28 @@ afterEach(async () => {
   root = undefined;
   container = undefined;
   vi.useRealTimers();
+  vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 
 describe('PixiVisionPage', () => {
+  it('keeps the terminal locked when VITE_NEED_HIDE is true', async () => {
+    vi.stubEnv('VITE_NEED_HIDE', 'true');
+    const scene = createScene();
+    vi.mocked(createPixiVisionScene).mockImplementation(async ({ onEntryReady }) => {
+      onEntryReady?.();
+      return scene;
+    });
+
+    await renderPage();
+    const start = container?.querySelector<HTMLButtonElement>('[aria-label="开始验光"]');
+
+    expect(container?.querySelector('.pixi-loading--blocked')?.textContent).toContain('验光终端暂未开放使用');
+    expect(start?.disabled).toBe(true);
+    start?.click();
+    expect(scene.setStarted).not.toHaveBeenCalled();
+  });
+
   it('moves focus to the primary control after the entry handoff', async () => {
     const scene = createScene();
     vi.mocked(createPixiVisionScene).mockImplementation(async ({ onEntryReady }) => {
