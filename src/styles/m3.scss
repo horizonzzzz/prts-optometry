@@ -1,0 +1,24 @@
+.m3-shell { width: min(100%, 620px); margin: auto; padding: max(16px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); }
+.m3-back { font: 12px var(--display); letter-spacing: .1em; }
+.m3-heading { display: flex; justify-content: space-between; align-items: end; margin: 22px 0 16px; gap: 16px; }
+.m3-heading h1 { margin: 8px 0 0; font-size: 24px; font-weight: 500; }
+.m3-heading > span { color: #b9c4bf; font-size: 11px; }
+.m3-heading .terminal-eyebrow { margin: 0; font-size: 9px; }
+.m3-play { outline-offset: 6px; }
+.m3-viewport { position: relative; width: min(100%, max(240px, calc(100svh - 320px))); margin-inline: auto; aspect-ratio: 1; border: 1px solid #66828b77; background: #151f26; }
+.m3-canvas { width: 100%; height: 100%; }
+.m3-canvas canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
+.m3-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: #10171bf5; text-align: center; }
+.m3-overlay h2, .m3-overlay p { margin: 0; }
+.m3-overlay p { font-size: 13px; line-height: 1.8; }
+.m3-recall-image { width: 80%; max-height: 65%; image-rendering: pixelated; }
+.m3-action { padding: 12px 40px; color: #10171b; background: var(--yellow); cursor: pointer; }
+.m3-controls { display: grid; grid-template-columns: 72px 72px 1fr; gap: 16px; padding-top: 20px; touch-action: none; user-select: none; }
+.m3-control { min-height: 64px; border: 1px solid #7f979e; background: #26353b; color: #dce5e4; font-size: 24px; touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
+.m3-control--jump { justify-self: end; width: 112px; color: var(--yellow); border-color: #b7a850; font-size: 16px; }
+.m3-control:active { background: #49616b; }
+.m3-control:disabled { opacity: .4; cursor: default; }
+.m3-instructions { margin: 18px 0 0; color: #a3b5bb; font-size: 11px; line-height: 1.9; }
+.m3-shell .terminal-footer { padding-top: 20px; font-size: 9px; }
+@media (max-width: 360px) { .m3-shell { padding-left: 14px; padding-right: 14px; } .m3-controls { grid-template-columns: 64px 64px 1fr; gap: 12px; } .m3-control--jump { width: 96px; } }
+@media (min-width: 800px) { .m3-shell { width: 540px; } }

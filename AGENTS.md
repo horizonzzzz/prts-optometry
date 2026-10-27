@@ -2,12 +2,13 @@
 
 ## Project overview
 
-Mobile-first fictional vision-screening experience inspired by Arknights / PRTS. Users advance through four stages by tapping the central house view, then a PRTS reveal image.
+移动端优先的 PRTS 同人终端，包含验光体验和 M3 横版跳跃基础验证场。总菜单位于 `#/index`，旧验光根路由保留。
 
 Stack:
 
 - React 19 + TypeScript + Vite 8
 - PixiJS 8 (default visual terminal)
+- Phaser 4.2.1 + Arcade Physics（M3 独立 lazy 路由）
 - GSAP 3 (stage transitions in both Pixi and legacy DOM paths)
 - Sass/SCSS (no Tailwind)
 - React Router 7 (`HashRouter`)
@@ -64,7 +65,18 @@ fonts/                     # local Bender / Novecento / Source Han Sans SC
 |------|------|--------|
 | `#/` | `PixiVisionPage` | Default |
 | `#/legacy-dom` | `LegacyDomPage` | GSAP + DOM implementation |
-| other | redirect to `#/` | |
+| `#/index` | `IndexPage` | PRTS 总菜单 |
+| `#/m3` | `M3RescuePage` | Phaser + Arcade Physics 验证场 |
+| other | redirect to `#/index` | |
+
+### M3 原型
+
+- `src/m3/core/` 和 `world/` 不导入 Phaser/Pixi；手感决策、输入、流程与地图均可单测。
+- `createM3Scene.ts` 使用 Arcade 碰撞，关闭自动物理 update，通过 60Hz 累加器推进，每渲染帧最多 5 步。
+- `render/` 使用 Phaser Graphics 占位绘制；React 提供真实触控按钮和重试层，Canvas 为 `aria-hidden`。
+- Phaser 速度单位为 px/s，文档 px/帧速度乘 60、重力乘 3600；跳跃 HOLD/CUT/coyote/buffer 按物理步计时。
+- 保留 Arcade 默认垂直优先分离，`forceX=true` 会让相邻地砖接缝卡住角色。
+- M3 目前只有验证场，不包含正式六区和救援剧情；详细规划见 `docs/m3-rescue-game-design.md`。
 
 ### Interaction contract
 

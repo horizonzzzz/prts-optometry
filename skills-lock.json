@@ -5,19 +5,19 @@
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "skillPath": "skills/animation-vocabulary/SKILL.md",
-      "computedHash": "39319fc9a33c15be08666b3685f58666f042ff36bb902b7814c0834a5ba99df4"
+      "computedHash": "0058036865ecbb864fd0c4132efcc62425355d6e99c7e6ef6a936742d62a5dea"
     },
     "find-animation-opportunities": {
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "skillPath": "skills/find-animation-opportunities/SKILL.md",
-      "computedHash": "15dc983ce2cd00489fcdc4a92e2752d47e1620f7619038b00eb84c2b97d50597"
+      "computedHash": "465d087c41768e4f14ed640dd049036009f613feb55baaa5831b68b33178f9d2"
     },
     "game-design-theory": {
       "source": "pluginagentmarketplace/custom-plugin-game-developer",
       "sourceType": "github",
       "skillPath": "skills/game-design-theory/SKILL.md",
-      "computedHash": "60a7ad8dd95255ed22840e03d44fdee8be919a19471f723d509da7c43b7bf21b"
+      "computedHash": "e87a16b82d8379b1389c94b15b16d2f52a611338467291aeeec4f72a73a7fd96"
     },
     "game-ui-design": {
       "source": "omer-metin/skills-for-antigravity",
@@ -71,13 +71,19 @@
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "skillPath": "skills/improve-animations/SKILL.md",
-      "computedHash": "32f23d860467841f5b07cef198fb53efc70f2adaaa6144cf1a3434d782aed246"
+      "computedHash": "524ea241e41d58bbdd8e288700fe24f5725e2a2f3ae7186ad7cebf9055058356"
+    },
+    "phaser-core": {
+      "source": "gamedev-skills/awesome-gamedev-agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/web-engines/phaser-core/SKILL.md",
+      "computedHash": "abba729f89376b041e29144d4b8511b6e2a960d7c75f87f31fd4a53978898bd0"
     },
     "pixijs": {
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs/SKILL.md",
-      "computedHash": "3841d26daab0e91119af07fced716d508f01601e3ff072dd73404992f36a94f2"
+      "computedHash": "d62ec20ca610aeaf3ab0b84b94e218c00cfab9ef422b06e7a3779ed5840caa10"
     },
     "pixijs-accessibility": {
       "source": "pixijs/pixijs-skills",
@@ -89,13 +95,13 @@
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-application/SKILL.md",
-      "computedHash": "17cdbe975621930c1268585b8528a1cdfcca040b2340982326060434db5a9b0d"
+      "computedHash": "2ff17b8605f67f41d12e2b4f12112c91befe5a096a0a4b29f25dc65f28c4777a"
     },
     "pixijs-assets": {
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-assets/SKILL.md",
-      "computedHash": "10be9f4d243ccda92b47fb1bbd72a05ba0ff89d4f5cf218e71e27498cd725c0c"
+      "computedHash": "2c831499efc3b875a8f0b7d5264b4d7220e51cfeff65fc25e8ca046e74da10c3"
     },
     "pixijs-blend-modes": {
       "source": "pixijs/pixijs-skills",
@@ -113,19 +119,19 @@
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-core-concepts/SKILL.md",
-      "computedHash": "625cde7072b6f4cb178e55cc6da8616637f81b7b0d044579ab871a0823b25c20"
+      "computedHash": "b575ae19070eafd7504dfbee2ffb0c746b8c781c6ecd4b5455d189ba76d4024f"
     },
     "pixijs-create": {
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-create/SKILL.md",
-      "computedHash": "4fb084181f2585c1e130df85882f75a7fdc9af8c9c94c432d5098c1756f85ea8"
+      "computedHash": "9750f2ac93057dd01de7a245fb7ee484b2c587303ae6565d04ff6f13e611131e"
     },
     "pixijs-custom-rendering": {
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-custom-rendering/SKILL.md",
-      "computedHash": "94fa97b95ff8642c2575f65c911e3bb666ce5f785fcc2d4c9535db88ac39db9e"
+      "computedHash": "816dd3b2420731de46e345b58250693823dc467dfaf7165488968308d090442b"
     },
     "pixijs-environments": {
       "source": "pixijs/pixijs-skills",
@@ -137,7 +143,7 @@
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-events/SKILL.md",
-      "computedHash": "0989aa02f0c0673445a6b3b0c298f3c6b4c3a383668fa3656013754e6262300e"
+      "computedHash": "ced45cf4dc47caa02a3fac9ec313490d90cc6de4c16248c1984316b67cf24976"
     },
     "pixijs-filters": {
       "source": "pixijs/pixijs-skills",
@@ -149,13 +155,13 @@
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-html-source/SKILL.md",
-      "computedHash": "dee1cfeb34b6a921aab1524230a12fd588dc2d2394f1fa47af3f5272cb997d1d"
+      "computedHash": "93abd6be2e693a59673e9613db6ba2f99561ce1ac1eff2ff9684d6f61ac96cfa"
     },
     "pixijs-math": {
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-math/SKILL.md",
-      "computedHash": "d93e0363f7c88506ba1f85e192236b91683d3c4b14b7b01cc3190f8f758f44bf"
+      "computedHash": "54766d37e7332d1cf7d18eef3bfa812e646c8c263c57660f785c36e525cbe03b"
     },
     "pixijs-migration-v8": {
       "source": "pixijs/pixijs-skills",
@@ -167,7 +173,7 @@
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-performance/SKILL.md",
-      "computedHash": "d2855237ce322061d531135fac9956918db0226399af9a3ed46ad30ac50f100b"
+      "computedHash": "7da321f498f6f3595397266989898bcc2b02a2d46e154a88efce41766e312206"
     },
     "pixijs-scene-container": {
       "source": "pixijs/pixijs-skills",
@@ -179,7 +185,7 @@
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-scene-core-concepts/SKILL.md",
-      "computedHash": "4d6941225e873db2dc780a015d33cd698bcc547260975c3a338af5267d9c8b78"
+      "computedHash": "95174d1751f715c2efe42ec940837e9974c85d08f0cc29b6bbc3c985f3745392"
     },
     "pixijs-scene-dom-container": {
       "source": "pixijs/pixijs-skills",
@@ -197,7 +203,7 @@
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-scene-graphics/SKILL.md",
-      "computedHash": "67c471834d73a0f099be2ae535ea19531560e4c1799975ea0adc6e57698da973"
+      "computedHash": "423872ff78d31b77d4486b16f355e9173011fa9f0a9614902b4bb2eca35f15c6"
     },
     "pixijs-scene-mesh": {
       "source": "pixijs/pixijs-skills",
@@ -209,19 +215,19 @@
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-scene-particle-container/SKILL.md",
-      "computedHash": "f5de449f067e81cf8fbe2acca0ecac318aa54f9f3f8f705398f223885fa218a6"
+      "computedHash": "837ee0a8aadc14bcbdba308cc36792ff11bbc41f5efe65939a4a4b7d448e089e"
     },
     "pixijs-scene-sprite": {
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-scene-sprite/SKILL.md",
-      "computedHash": "14d8e3e00837e0e173007f4fcc5d1ab175dbda1ada016ee92b03e725b3ed0882"
+      "computedHash": "b4b1a983f96a9c06fe62e4a3889938e060c924d94e3ebce4771b07cc56a9dbc4"
     },
     "pixijs-scene-text": {
       "source": "pixijs/pixijs-skills",
       "sourceType": "github",
       "skillPath": "skills/pixijs-scene-text/SKILL.md",
-      "computedHash": "6056bc9b2da0df8e03f893b5065b060487e39c6232f91868067766758366ed6d"
+      "computedHash": "2dd70ab1dcb026a6512b321b372a4f5030fdbb2e22bf7fcfc2e67a9ce304af75"
     },
     "pixijs-ticker": {
       "source": "pixijs/pixijs-skills",
@@ -233,7 +239,7 @@
       "source": "emilkowalski/skills",
       "sourceType": "github",
       "skillPath": "skills/review-animations/SKILL.md",
-      "computedHash": "c92905bff59c3007d07c2638a2a83d5d71c901feef108cce1da0bf3c7cafd579"
+      "computedHash": "b4e5f0f4fe3e2743c85bf7354108f48a0b9d502cb20ef5c4a9c195da91f93736"
     },
     "storyboard-manager": {
       "source": "ailabs-393/ai-labs-claude-skills",
@@ -245,7 +251,7 @@
       "source": "gamedev-skills/awesome-gamedev-agent-skills",
       "sourceType": "github",
       "skillPath": "skills/genres/visual-novel/SKILL.md",
-      "computedHash": "a54c416758e088b26d1f539eda0dc25a216e7bf0c2b5a3b0db7c25f87e416993"
+      "computedHash": "aa9e5b179dd85341dd88b9fe65b0f8a2bab645a5065cea5b0389ebbdd702710a"
     }
   }
 }
