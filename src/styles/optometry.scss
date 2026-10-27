@@ -110,25 +110,14 @@
   z-index: 0;
 }
 
-.optometry-index-link {
-  position: absolute;
-  /* 让开 Pixi 绘制的顶部标识带，避免压住 logo 与终端名 */
-  top: calc(env(safe-area-inset-top) + 56px);
-  left: 20px;
-  z-index: 4;
-  padding: 8px 10px;
-  border: 1px solid rgba(125, 155, 163, 0.47);
-  background: rgba(16, 23, 27, 0.92);
-  color: #c8dce1;
-  font: 10px var(--display);
-  letter-spacing: 0.12em;
+.optometry-index-hit {
+  top: var(--optometry-index-top, 60px);
+  left: var(--optometry-index-left, 12px);
+  width: var(--optometry-index-width, 108px);
+  height: var(--optometry-index-height, 44px);
   text-decoration: none;
 }
 
-.optometry-index-link:focus-visible {
-  outline: 1px solid rgba(204, 46, 61, 0.78);
-  outline-offset: 4px;
-}
 
 .optometry-ui,
 .optometry-hit,

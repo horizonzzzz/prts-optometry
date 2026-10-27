@@ -106,6 +106,32 @@ describe('OptometryPage', () => {
     expect(document.activeElement).toBe(vision);
   });
 
+  it('shows the index link only while the entry screen is on display', async () => {
+    const scene = createScene();
+    let signalReady: (() => void) | undefined;
+    vi.mocked(createOptometryScene).mockImplementation(async ({ onEntryReady }) => {
+      signalReady = onEntryReady;
+      return scene;
+    });
+
+    await renderPage();
+    // 首屏还在 boot，Pixi 尚未画出入口，DOM 不提前露出点击区
+    expect(container?.querySelector('.optometry-index-hit')).toBeNull();
+
+    await act(async () => {
+      signalReady?.();
+      await Promise.resolve();
+    });
+    expect(container?.querySelector('.optometry-index-hit')).not.toBeNull();
+
+    await act(async () => {
+      container?.querySelector<HTMLButtonElement>('[aria-label="开始验光"]')?.click();
+      await Promise.resolve();
+    });
+    // 进入验光流程后让位给筛查画面，不再压住 Pixi 内容
+    expect(container?.querySelector('.optometry-index-hit')).toBeNull();
+  });
+
   it('shows the supported fallback when Pixi initialization fails', async () => {
     vi.mocked(createOptometryScene).mockRejectedValue(new Error('WebGL unavailable'));
 

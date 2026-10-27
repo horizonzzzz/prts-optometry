@@ -81,6 +81,10 @@ export async function createOptometryScene({ host, reducedMotion: initialReduced
     setCssVar(host, '--optometry-entry-y', entryLayout.buttonY);
     setCssVar(host, '--optometry-entry-width', entryLayout.buttonWidth);
     setCssVar(host, '--optometry-entry-height', 70);
+    setCssVar(host, '--optometry-index-left', entryLayout.index.left);
+    setCssVar(host, '--optometry-index-top', entryLayout.index.top);
+    setCssVar(host, '--optometry-index-width', entryLayout.index.width);
+    setCssVar(host, '--optometry-index-height', entryLayout.index.height);
     setCssVar(host, '--optometry-vision-left', mainLayout.visionLeft);
     setCssVar(host, '--optometry-vision-top', mainLayout.visionTop);
     setCssVar(host, '--optometry-vision-size', mainLayout.visionSize);

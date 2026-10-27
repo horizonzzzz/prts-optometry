@@ -119,9 +119,9 @@ Prefer keeping stage logic in `state.ts` and covered by `state.test.ts`. Do not 
 }
 ```
 
-React owns hit-testing (`optometry-entry-hit`, `optometry-vision-hit`, `optometry-reset-hit`, `optometry-sound-hit`). Pixi owns drawing and writes layout anchors back to the host via CSS custom properties (`--optometry-entry-*`, `--optometry-vision-*`, `--optometry-sound-*`, `--optometry-reset-*`). Keep that split: do not move primary click handling into Pixi unless accessibility and hit-target layout are updated together.
+React owns hit-testing (`optometry-entry-hit`, `optometry-vision-hit`, `optometry-reset-hit`, `optometry-sound-hit`, `optometry-index-hit`). Pixi owns drawing and writes layout anchors back to the host via CSS custom properties (`--optometry-entry-*`, `--optometry-vision-*`, `--optometry-sound-*`, `--optometry-reset-*`, `--optometry-index-*`). Keep that split: do not move primary click handling into Pixi unless accessibility and hit-target layout are updated together.
 
-The `#/` page also renders a `.optometry-index-link` back to `#/index`; it is only shown before the entry handoff completes, so it never sits on top of the screening stages.
+The `← INDEX` back control is drawn by the Pixi entry scene (inside the `chrome` container, so it fades in with `boot.action` and slides out with the handoff), and React renders only a transparent `Link.optometry-index-hit` over it. That hit box is deliberately taller than the drawn row (44px vs 24px) for touch; it renders only while `entryReady && !started`.
 
 Layout helpers under test:
 
@@ -243,6 +243,6 @@ Prefer local assets already vendored in-repo. Remote CDN fallbacks may exist in 
 - Mute must not restart or skip reveal transitions
 - Pixi resolution is capped at device DPR `2` intentionally for GPU cost
 - Entry handoff uses `setStarted(true, onComplete)`; do not mark React `started` before handoff completes
-- The `← INDEX` link on `#/` is gated on `!started`; the legacy DOM route keeps a fixed link instead
+- The `← INDEX` control on `#/` is Pixi-drawn and DOM-hit-tested: keep the drawing inside `chrome` so it inherits the boot fade and handoff slide; the legacy DOM route keeps its own fixed link
 - Hash router means deep links use `#/…`
 - `verbatimModuleSyntax` / `erasableSyntaxOnly`: use `import type` for type-only imports

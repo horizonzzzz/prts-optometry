@@ -3,6 +3,12 @@ import type { OptometrySceneTextures } from './optometrySceneAssets';
 import { addText, drawDiamondStroke, drawHazardStripes, drawLine, drawPolygon, fitCover } from './optometrySceneGraphics';
 import { COLORS, getEntryBootState, isWideLayout } from './optometrySceneModel';
 
+const INDEX_CHIP_WIDTH = 92;
+const INDEX_CHIP_HEIGHT = 24;
+// 绘制尺寸对触控偏小，DOM 命中区横向补 8px、总高补到 44px
+const INDEX_HIT_INSET_X = 8;
+const INDEX_HIT_HEIGHT = 44;
+const INDEX_CHIP_TOP = 70;
 type EntrySceneOptions = {
   textures: OptometrySceneTextures;
   onReady?: () => void;
@@ -26,6 +32,9 @@ export function createOptometryEntryScene({ textures, onReady }: EntrySceneOptio
   const prts = addText('PRTS', new TextStyle({ fill: 0xe8edeb, fontFamily: 'Bender, sans-serif', fontSize: 16, fontWeight: '700' }));
   const sub = addText('PERSONAL RECORD TERMINAL', new TextStyle({ fill: 0xb3bfbd, fontFamily: 'Bender, sans-serif', fontSize: 7, letterSpacing: 1.3 }));
   const sequence = addText('SYS / 00', new TextStyle({ fill: COLORS.night, fontFamily: 'Bender, sans-serif', fontSize: 7, fontWeight: '700', letterSpacing: 1.1 }));
+  const indexChip = new Container({ label: 'entry-index' });
+  const indexBg = new Graphics();
+  const indexLabel = addText('← INDEX', new TextStyle({ fill: { color: COLORS.pale, alpha: 0.95 }, fontFamily: 'Bender, sans-serif', fontSize: 9, letterSpacing: 1.2 }));
   const kicker = addText('RHODES ISLAND / OPTICAL SERVICE', new TextStyle({ fill: COLORS.teal, fontFamily: 'Bender, sans-serif', fontSize: 8, letterSpacing: 1.35 }));
   const title = addText('PRTS', new TextStyle({ fill: { color: 0x101516, alpha: 0.2 }, stroke: { color: 0xe8edeb, width: 1 }, fontFamily: 'Novecento, Bender, sans-serif', fontSize: 100, fontWeight: '700' }));
   const chinese = addText('验光终端', new TextStyle({ fill: 0xe8edeb, fontFamily: "SourceHan, 'Noto Sans SC', sans-serif", fontSize: 42, letterSpacing: 8 }));
@@ -46,9 +55,10 @@ export function createOptometryEntryScene({ textures, onReady }: EntrySceneOptio
   const optical = addText('OPTICAL', new TextStyle({ fill: 0xe8edeb, fontFamily: 'Novecento, Bender, sans-serif', fontSize: 78 }));
 
   layer.addChild(backdrop, shade, grid, rule, noise, scan, topLine, bottomLine, chrome);
-  chrome.addChild(mark, prts, sub, sequenceBg, sequence, kicker, title, chinese, intro, button, reticle, optical, footerLeft, footerRight);
+  chrome.addChild(mark, prts, sub, sequenceBg, sequence, indexChip, kicker, title, chinese, intro, button, reticle, optical, footerLeft, footerRight);
   button.addChild(buttonShadow, buttonBg, buttonIndex, buttonLabel, buttonHint, buttonArrow);
   reticle.addChild(reticleOuter, reticleInner, reticleCross);
+  indexChip.addChild(indexBg, indexLabel);
 
   let width = 1;
   let height = 1;
@@ -90,6 +100,14 @@ export function createOptometryEntryScene({ textures, onReady }: EntrySceneOptio
     buttonBg.alpha = 1;
   }
 
+  /** 总菜单入口：沿用终端的细线语言（左侧色标 + 一条底边），不做封闭卡片。 */
+  function drawIndexChip() {
+    indexBg.clear();
+    indexBg.rect(0, 18, INDEX_CHIP_WIDTH, 1).fill({ color: COLORS.pale, alpha: 0.2 });
+    indexBg.rect(0, 6, 2, 13).fill({ color: COLORS.teal, alpha: 0.9 });
+    indexLabel.anchor.set(0, 0.5);
+    indexLabel.position.set(8, 12);
+  }
   function drawGrid() {
     grid.clear();
     for (let x = 0; x <= width; x += 24) drawLine(grid, x, 0, x, height, 1, COLORS.pale, 0.07);
@@ -134,6 +152,8 @@ export function createOptometryEntryScene({ textures, onReady }: EntrySceneOptio
     sequence.anchor.set(0.5);
     sequence.style.fill = COLORS.night;
     sequenceBg.clear().rect(contentX + contentWidth - 78, 17, 58, 24).fill({ color: COLORS.yellow, alpha: 1 });
+    indexChip.position.set(contentX, INDEX_CHIP_TOP);
+    drawIndexChip();
     kicker.position.set(contentX, height * 0.27);
     title.position.set(contentX, height * 0.31);
     title.style.fontSize = titleSize;
@@ -159,7 +179,17 @@ export function createOptometryEntryScene({ textures, onReady }: EntrySceneOptio
     bootLine.rect(contentWidth * 0.21, -2, contentWidth * 0.14, 4).fill({ color: COLORS.yellow, alpha: 0.96 });
     bootLine.position.set(width / 2, height / 2);
 
-    return { buttonX: contentX, buttonY, buttonWidth };
+    return {
+      buttonX: contentX,
+      buttonY,
+      buttonWidth,
+      index: {
+        left: contentX - INDEX_HIT_INSET_X,
+        top: INDEX_CHIP_TOP - (INDEX_HIT_HEIGHT - INDEX_CHIP_HEIGHT) / 2,
+        width: INDEX_CHIP_WIDTH + INDEX_HIT_INSET_X * 2,
+        height: INDEX_HIT_HEIGHT,
+      },
+    };
   }
 
   function finishBoot() {
@@ -175,6 +205,7 @@ export function createOptometryEntryScene({ textures, onReady }: EntrySceneOptio
     chinese.alpha = 1;
     intro.alpha = 1;
     button.alpha = 1;
+    indexChip.alpha = 1;
     button.y = buttonBaseY;
     reticle.alpha = 0.82;
     reticle.scale.set(reticleBaseScale);
@@ -198,6 +229,8 @@ export function createOptometryEntryScene({ textures, onReady }: EntrySceneOptio
     chinese.alpha = boot.title;
     intro.alpha = boot.action;
     button.alpha = boot.action;
+    // 与主按钮同一拍出现：先给出「开始」，再给出「离开」
+    indexChip.alpha = boot.action;
     button.y = buttonBaseY + 14 * (1 - boot.action);
     reticle.alpha = 0.82 * boot.reticle;
     reticle.scale.set(reticleBaseScale * (0.72 + boot.reticle * 0.28));

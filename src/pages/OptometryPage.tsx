@@ -403,7 +403,9 @@ export default function OptometryPage() {
   return (
     <main className="optometry-page" data-stage={state.stage} data-reveal-phase={state.revealPhase} data-started={started} data-entry-departing={entryDeparting} aria-label="视觉筛查体验">
       <div ref={canvasHostRef} className="optometry-canvas-host" aria-hidden="true" />
-      {!started && <Link className="optometry-index-link" to="/index">← INDEX</Link>}
+      {entryReady && !started && (
+        <Link className="optometry-hit optometry-index-hit" to="/index" aria-label="返回终端目录" />
+      )}
       {(!ready || needsHide) && !error && (
         needsHide ? (
           <div className="optometry-loading optometry-loading--blocked" role="alert">
