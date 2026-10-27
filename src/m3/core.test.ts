@@ -5,7 +5,7 @@ import { createMovement, decideMovement } from './core/movement';
 import { createRun, finishStep, retryRun } from './core/progress';
 import { RULES } from './core/rules';
 import { parseLevel } from './world/level';
-import { SANDBOX_ROWS } from './world/sandbox';
+import { SANDBOX, SANDBOX_ROWS } from './world/sandbox';
 
 const idle: InputFrame = { left: false, right: false, jump: false, pressed: false, released: false };
 const jump = { ...idle, jump: true, pressed: true };
@@ -109,14 +109,20 @@ describe('M3 input and run state', () => {
 });
 
 describe('M3 ASCII levels', () => {
-  it('loads the 30×30 sandbox and rejects malformed and unsupported data', () => {
+  it('loads the 48×27 sandbox and rejects malformed and unsupported data', () => {
     expect(parseLevel(SANDBOX_ROWS).platforms.length).toBeGreaterThan(0);
-    expect(() => parseLevel(SANDBOX_ROWS.slice(1))).toThrow('30 × 30');
+    expect(() => parseLevel(SANDBOX_ROWS.slice(1))).toThrow('48 × 27');
     const invalid = [...SANDBOX_ROWS] as string[];
     invalid[0] = `X${invalid[0].slice(1)}`;
     expect(() => parseLevel(invalid)).toThrow('未实现');
     invalid[0] = `S${invalid[0].slice(1)}`;
     expect(() => parseLevel(invalid)).toThrow('唯一');
     expect(() => parseLevel(SANDBOX_ROWS.map((row) => row.replace('G', '.')))).toThrow('终点');
+  });
+  it('keeps the frame 16:9 landscape and the course left-to-right', () => {
+    expect(RULES.width / RULES.height).toBeCloseTo(16 / 9);
+    expect(RULES.width % RULES.tile).toBe(0);
+    expect(RULES.height % RULES.tile).toBe(0);
+    expect(SANDBOX.goal.x).toBeGreaterThan(SANDBOX.spawn.x);
   });
 });

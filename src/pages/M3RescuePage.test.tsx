@@ -2,16 +2,22 @@
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createM3Scene, type M3Scene } from '../m3/createM3Scene';
-import type { GameInput } from '../m3/core/input';
 import { createRun } from '../m3/core/progress';
+import type { GameInput } from '../m3/core/input';
 import M3RescuePage from './M3RescuePage';
 
 vi.mock('../m3/createM3Scene', () => ({ createM3Scene: vi.fn() }));
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 let root: Root | undefined;
 let container: HTMLDivElement | undefined;
+beforeEach(() => {
+  Object.defineProperty(window, 'matchMedia', {
+    configurable: true,
+    value: vi.fn(() => ({ addEventListener: vi.fn(), matches: false, removeEventListener: vi.fn() })),
+  });
+});
 afterEach(async () => {
   await act(async () => root?.unmount());
   container?.remove();
@@ -34,6 +40,18 @@ it('clears held keyboard input on blur and retry, focuses retry, destroys on unm
   root = createRoot(container);
   await act(async () => root!.render(<MemoryRouter><M3RescuePage /></MemoryRouter>));
   const area = container.querySelector<HTMLElement>('.m3-play')!;
+  expect(container.querySelector('.terminal-header, .terminal-footer')).toBeNull();
+  const fullscreen = container.querySelector<HTMLButtonElement>('[aria-label="切换全屏"]')!;
+  const requestFullscreen = vi.fn().mockResolvedValue(undefined);
+  Object.defineProperty(area, 'requestFullscreen', { configurable: true, value: requestFullscreen });
+  await act(async () => fullscreen.click());
+  expect(requestFullscreen).toHaveBeenCalledOnce();
+  requestFullscreen.mockRejectedValueOnce(new Error('denied'));
+  await act(async () => fullscreen.click());
+  expect(container.textContent).toContain('未能进入全屏，可横屏继续游玩。');
+  Object.defineProperty(area, 'requestFullscreen', { configurable: true, value: undefined });
+  await act(async () => fullscreen.click());
+  expect(container.textContent).toContain('当前浏览器不支持全屏，可横屏继续游玩。');
   const key = (code: string) => area.dispatchEvent(new KeyboardEvent('keydown', { code, bubbles: true }));
   key('ArrowRight'); key('Space');
   expect(input.sample()).toMatchObject({ right: true, jump: true, pressed: true });

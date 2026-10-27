@@ -1,24 +1,62 @@
-.m3-shell { width: min(100%, 620px); margin: auto; padding: max(16px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); }
-.m3-back { font: 12px var(--display); letter-spacing: .1em; }
-.m3-heading { display: flex; justify-content: space-between; align-items: end; margin: 22px 0 16px; gap: 16px; }
-.m3-heading h1 { margin: 8px 0 0; font-size: 24px; font-weight: 500; }
-.m3-heading > span { color: #b9c4bf; font-size: 11px; }
-.m3-heading .terminal-eyebrow { margin: 0; font-size: 9px; }
-.m3-play { outline-offset: 6px; }
-.m3-viewport { position: relative; width: min(100%, max(240px, calc(100svh - 320px))); margin-inline: auto; aspect-ratio: 1; border: 1px solid #66828b77; background: #151f26; }
-.m3-canvas { width: 100%; height: 100%; }
-.m3-canvas canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; }
-.m3-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 24px; background: #10171bf5; text-align: center; }
+.m3-page {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  color: #483e38;
+  background: #95d5df;
+  font-family: 'Source Han Sans SC', sans-serif;
+}
+.m3-shell, .m3-play, .m3-viewport, .m3-canvas { position: absolute; inset: 0; }
+.m3-play { outline: none; }
+.m3-play:focus-visible { outline: 3px solid #cf743a; outline-offset: -3px; }
+.m3-viewport { overflow: hidden; touch-action: none; background: linear-gradient(#82cddd, #ffedbb); }
+.m3-canvas canvas { display: block; image-rendering: pixelated; }
+
+.m3-tools { position: absolute; z-index: 5; top: max(12px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); display: flex; align-items: flex-start; gap: 8px; }
+.m3-tool, .m3-help summary {
+  display: grid; place-items: center; width: 44px; height: 44px;
+  border: 2px solid #fff7df; border-radius: 50%; background: #fff5dded;
+  color: #66503f; box-shadow: 0 3px 0 #9b785e55; font: 700 24px/1 sans-serif;
+  text-decoration: none; cursor: pointer;
+}
+.m3-help summary { list-style: none; font-size: 18px; }
+.m3-help summary::-webkit-details-marker { display: none; }
+.m3-help p { position: absolute; top: 48px; left: 0; width: 240px; padding: 16px; border-radius: 14px; background: #fff5dd; font-size: 14px; line-height: 1.9; box-shadow: 0 4px 0 #9b785e55; }
+.m3-location { position: absolute; top: max(16px, env(safe-area-inset-top)); right: max(20px, env(safe-area-inset-right)); display: grid; gap: 2px; text-align: right; color: #4c605d; pointer-events: none; text-shadow: 0 1px #fff6d9; }
+.m3-location span { font-size: 10px; font-weight: 700; letter-spacing: .14em; }
+.m3-location strong { font-size: clamp(16px, 2.5vw, 24px); }
+.m3-notice { position: absolute; z-index: 5; top: 66px; left: max(14px, env(safe-area-inset-left)); max-width: 290px; margin: 0; border-radius: 12px; padding: 12px; background: #fff5dd; font-size: 13px; }
+
+// 触控留在安全区内；键鼠设备仍可通过键盘或辅助技术激活按钮。
+.m3-controls { position: absolute; z-index: 2; bottom: max(18px, env(safe-area-inset-bottom)); display: flex; gap: 14px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.m3-controls--move { left: max(20px, env(safe-area-inset-left)); }
+.m3-controls--jump { right: max(20px, env(safe-area-inset-right)); }
+.m3-control { display: grid; place-items: center; width: clamp(56px, 9vw, 78px); height: clamp(56px, 9vw, 78px); border: 2px solid #fff9e7b8; border-radius: 24px; background: #fff2ce70; color: #574d3e; box-shadow: 0 4px 0 #6c543735; font: 700 28px sans-serif; touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
+.m3-control--jump { border-radius: 50%; background: #f8bc62b8; font-size: 16px; }
+.m3-control:active { background: #ffe3a7; box-shadow: none; }
+.m3-control:disabled { opacity: .3; cursor: default; }
+.m3-page :is(button, a, summary):focus-visible { outline: 3px solid #6c4736; outline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) {
+  .m3-controls { opacity: .32; }
+  .m3-controls:hover, .m3-controls:focus-within { opacity: 1; }
+  .m3-tool:hover, .m3-help summary:hover { background: #ffe2a1; }
+}
+
+.m3-overlay { position: absolute; inset: 0; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; background: #fff1d6f5; text-align: center; }
 .m3-overlay h2, .m3-overlay p { margin: 0; }
-.m3-overlay p { font-size: 13px; line-height: 1.8; }
-.m3-recall-image { width: 80%; max-height: 65%; image-rendering: pixelated; }
-.m3-action { padding: 12px 40px; color: #10171b; background: var(--yellow); cursor: pointer; }
-.m3-controls { display: grid; grid-template-columns: 72px 72px 1fr; gap: 16px; padding-top: 20px; touch-action: none; user-select: none; }
-.m3-control { min-height: 64px; border: 1px solid #7f979e; background: #26353b; color: #dce5e4; font-size: 24px; touch-action: none; user-select: none; -webkit-user-select: none; cursor: pointer; }
-.m3-control--jump { justify-self: end; width: 112px; color: var(--yellow); border-color: #b7a850; font-size: 16px; }
-.m3-control:active { background: #49616b; }
-.m3-control:disabled { opacity: .4; cursor: default; }
-.m3-instructions { margin: 18px 0 0; color: #a3b5bb; font-size: 11px; line-height: 1.9; }
-.m3-shell .terminal-footer { padding-top: 20px; font-size: 9px; }
-@media (max-width: 360px) { .m3-shell { padding-left: 14px; padding-right: 14px; } .m3-controls { grid-template-columns: 64px 64px 1fr; gap: 12px; } .m3-control--jump { width: 96px; } }
-@media (min-width: 800px) { .m3-shell { width: 540px; } }
+.m3-overlay h2 { font-size: clamp(24px, 4vw, 40px); color: #77523b; }
+.m3-overlay p { font-size: 14px; line-height: 1.8; }
+.m3-eyebrow { color: #94633e; font-size: 12px; font-weight: 700; letter-spacing: .12em; }
+.m3-recall-image { width: min(50%, 320px); max-height: 55%; image-rendering: pixelated; }
+.m3-action { min-height: 48px; padding: 12px 40px; border: 2px solid #805333; border-radius: 16px; color: #553b2a; background: #ffc96d; box-shadow: 0 4px 0 #805333; font: inherit; font-weight: 700; cursor: pointer; }
+.m3-action:active { box-shadow: none; }
+
+.m3-rotate { display: none; }
+@media (orientation: portrait) and (pointer: coarse) {
+  .m3-rotate { position: absolute; inset: 0; z-index: 6; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px; padding: 24px; background: #fff1d6; text-align: center; }
+  .m3-rotate p { margin: 0; font-size: 20px; font-weight: 700; }
+  .m3-rotate__phone { position: relative; display: block; width: 34px; height: 60px; border: 3px solid #b47a43; border-radius: 7px; transform: rotate(90deg); }
+  .m3-rotate__phone::after { content: ''; position: absolute; bottom: 5px; left: 50%; width: 10px; height: 3px; transform: translateX(-50%); background: #b47a43; }
+}
+.m3-instructions { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }

@@ -31,7 +31,7 @@ npm run preview      # build + wrangler dev
 npm run deploy       # build + wrangler deploy
 ```
 
-Preview target viewport: about `390×844` mobile, plus wide layout checks around `960×700+`.
+Preview target viewport: about `390×844` mobile, plus wide layout checks around `960×700+`. M3 is checked in landscape (`844×390`); its portrait touch overlay is CSS-only (`(orientation: portrait) and (pointer: coarse)`).
 
 ## Architecture
 
@@ -60,7 +60,7 @@ src/
     createOptometryScene.test.ts
   m3/
     core/                     # 手感、输入、流程（不导入 Phaser/Pixi）
-    world/                    # 30×30 ASCII 地图
+    world/                    # 48×27 横屏 ASCII 地图（768×432，16:9）
     render/                   # Phaser Graphics 占位绘制
     createM3Scene.ts          # Phaser Game / Scene、Arcade 适配和销毁
     core.test.ts
@@ -149,11 +149,13 @@ Layout helpers under test:
 - `src/m3/render/` 使用 Phaser Graphics 占位绘制；React 提供真实触控按钮和重试层，Canvas 为 `aria-hidden`。
 - Phaser 速度单位为 px/s，文档 px/帧速度乘 60、重力乘 3600；跳跃 HOLD/CUT/coyote/buffer 按物理步计时。
 - 保留 Arcade 默认垂直优先分离，`forceX=true` 会让相邻地砖接缝卡住角色。
+- M3 横屏优先：画布用 Phaser `Scale.FIT + CENTER_BOTH` 随宿主等比缩放居中；触控按钮覆盖在画面左下（←/→）与右下（跳跃）；竖屏触屏显示 `.m3-rotate` 遮罩，React 在 orientation 变化时清空输入。
+- M3 使用独立的晴天暖色舰桥美术和游戏内界面，不使用 PRTS 页眉页脚或 `terminal.scss`。页面铺满视口，左上角保留返回、可选浏览器全屏和操作说明；全屏失败时允许继续游玩。Phaser 与 SCSS 的 M3 配色独立维护。
 - M3 目前只有验证场，不包含正式六区和救援剧情；详细规划见 `docs/m3-rescue-game-design.md`。
 
 ## 跨游戏的共享边界
 
-两个游戏只在构建、路由、样式 token、字体和部署上共享，不共享运行时逻辑：
+两个游戏只在构建、路由、本地字体和部署上共享，不共享运行时逻辑：
 
 - 验光的状态机在 `src/optometry/state.ts`，M3 的流程状态在 `src/m3/core/progress.ts`，互不导入。
 - 引擎按路由 lazy 加载；总菜单不初始化任何引擎。
@@ -246,3 +248,5 @@ Prefer local assets already vendored in-repo. Remote CDN fallbacks may exist in 
 - The `← INDEX` control on `#/` is Pixi-drawn and DOM-hit-tested: keep the drawing inside `chrome` so it inherits the boot fade and handoff slide; the legacy DOM route keeps its own fixed link
 - Hash router means deep links use `#/…`
 - `verbatimModuleSyntax` / `erasableSyntaxOnly`: use `import type` for type-only imports
+
+> AI生成

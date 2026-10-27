@@ -34,7 +34,8 @@ export function createM3Scene(host: HTMLDivElement, input: GameInput, onStatus: 
           this.body = this.player.body as Phaser.Physics.Arcade.Body;
           this.body.setAllowGravity(true).setMaxVelocity(1000, RULES.maxFall * 60);
           this.body.setCollideWorldBounds(true);
-          world.setBounds(0, -480, 480, 1440, true, true, false, false);
+          // 画面上下各留一屏缓冲供跳跃/坠落越过屏幕边缘，左右则作为地图外墙。
+          world.setBounds(0, -RULES.height, RULES.width, RULES.height * 3, true, true, false, false);
           const solids = this.physics.add.staticGroup();
           const platforms = this.physics.add.staticGroup();
           for (const tile of SANDBOX.solids) {
@@ -116,7 +117,9 @@ export function createM3Scene(host: HTMLDivElement, input: GameInput, onStatus: 
     let game: Phaser.Game;
     try {
       game = new Phaser.Game({
-        type: Phaser.AUTO, parent: host, width: 480, height: 480,
+        type: Phaser.AUTO, parent: host, width: RULES.width, height: RULES.height,
+        // FIT + CENTER_BOTH：按宿主容器等比缩放居中，宽屏左右留白由宿主晴空渐变承接。
+        scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
         backgroundColor: THEME.background, pixelArt: true,
         banner: false, audio: { noAudio: true },
         physics: { default: 'arcade', arcade: { gravity: { x: 0, y: RULES.gravity * 3600 }, fixedStep: true, fps: 60, customUpdate: true } },

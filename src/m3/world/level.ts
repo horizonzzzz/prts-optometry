@@ -11,8 +11,10 @@ export type Level = Readonly<{
 
 /** 验证场只接受已实现的字符，避免将未来陷阱静默解析为空地。 */
 export function parseLevel(rows: readonly string[]): Level {
-  if (rows.length !== 30 || rows.some((row) => row.length !== 30)) {
-    throw new Error('关卡必须为 30 × 30 格');
+  const gridCols = RULES.width / RULES.tile;
+  const gridRows = RULES.height / RULES.tile;
+  if (rows.length !== gridRows || rows.some((row) => row.length !== gridCols)) {
+    throw new Error(`关卡必须为 ${gridCols} × ${gridRows} 格`);
   }
   const solids: Rect[] = [];
   const platforms: Rect[] = [];
