@@ -18,7 +18,7 @@ const SOURCES = {
 
 type AudioKey = keyof typeof SOURCES;
 
-export type VisionBattleAudio = {
+export type OptometryBattleAudio = {
   prime: () => void;
   playShot: () => void;
   playWarning: () => void;
@@ -30,7 +30,7 @@ export type VisionBattleAudio = {
   destroy: () => void;
 };
 
-export function createVisionBattleAudio(): VisionBattleAudio {
+export function createOptometryBattleAudio(): OptometryBattleAudio {
   let context: AudioContext | null = null;
   let masterGain: GainNode | null = null;
   let muted = false;

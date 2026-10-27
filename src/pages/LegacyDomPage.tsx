@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { advanceState, createInitialState, getStageCopy, type Action, type Stage } from '../state';
+import { advanceState, createInitialState, getStageCopy, type Action, type Stage } from '../optometry/state';
 import visionHouse from '../../assets/vision-house.jpg';
 import prtsClose from '../../assets/prts-close.jpg';
 import ambientAudio from '../../assets/audio/bgm.ea4286.mp3';

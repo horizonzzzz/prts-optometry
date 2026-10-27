@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './createPixiVisionScene';
-import { getInitialDriftOffset, scrambleTerminalText } from './visionSceneModel';
+import { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './createOptometryScene';
+import { getInitialDriftOffset, scrambleTerminalText } from './optometrySceneModel';
 import {
   circlesOverlap,
   getBattleTimelinePhase,
@@ -8,10 +8,10 @@ import {
   getSealProgress,
   isCircularGapIndex,
   shouldBattleExplode,
-} from './visionBattleScene';
-import { advanceDialogueCursor } from './visionDialogueScene';
-import { getOperationPanelContent } from './visionOperationPanel';
-import { getVisionProfileLayout } from './visionProfileScene';
+} from './optometryBattleScene';
+import { advanceDialogueCursor } from './optometryDialogueScene';
+import { getOperationPanelContent } from './optometryOperationPanel';
+import { getOptometryProfileLayout } from './optometryProfileScene';
 
 describe('getCopyHeight', () => {
   it('keeps the Pixi copy block aligned with the responsive DOM layout', () => {
@@ -72,9 +72,9 @@ describe('isWideLayout', () => {
 
 describe('final profile layout', () => {
   it('keeps both QR nodes inside the profile above reset on mobile and wide screens', () => {
-    const mobile = getVisionProfileLayout({ left: 20, top: 57, width: 350, height: 705, wide: false });
-    const shortMobile = getVisionProfileLayout({ left: 20, top: 57, width: 350, height: 429, wide: false });
-    const wide = getVisionProfileLayout({ left: 40, top: 70, width: 880, height: 382, wide: true });
+    const mobile = getOptometryProfileLayout({ left: 20, top: 57, width: 350, height: 705, wide: false });
+    const shortMobile = getOptometryProfileLayout({ left: 20, top: 57, width: 350, height: 429, wide: false });
+    const wide = getOptometryProfileLayout({ left: 40, top: 70, width: 880, height: 382, wide: true });
 
     expect(mobile.nodes[0].top + mobile.nodes[0].height).toBeLessThan(mobile.nodes[1].top);
     expect(mobile.nodes[1].top + mobile.nodes[1].height).toBeLessThan(mobile.footerRuleY);

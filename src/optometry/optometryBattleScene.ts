@@ -6,9 +6,9 @@ import {
   TextStyle,
   type Texture,
 } from 'pixi.js';
-import { createVisionBattleAudio } from './visionBattleAudio';
-import { addText, drawHazardStripes } from './visionSceneGraphics';
-import { COLORS } from './visionSceneModel';
+import { createOptometryBattleAudio } from './optometryBattleAudio';
+import { addText, drawHazardStripes } from './optometrySceneGraphics';
+import { COLORS } from './optometrySceneModel';
 
 // PvZ-style butter — the Priestess "butter on head" meme palette.
 const BUTTER = 0xf6df7d;
@@ -95,9 +95,9 @@ export function isCircularGapIndex(index: number, center: number, count: number)
   return Math.min(distance, count - distance) <= 1;
 }
 
-export function createVisionBattleScene(landshipTexture: Texture, portraitTexture: Texture, initialReducedMotion: boolean) {
+export function createOptometryBattleScene(landshipTexture: Texture, portraitTexture: Texture, initialReducedMotion: boolean) {
   const layer = new Container({ label: 'vision-battle' });
-  const battleAudio = createVisionBattleAudio();
+  const battleAudio = createOptometryBattleAudio();
   const field = new Graphics();
   const curtainWarningLayer = new Container();
   const enemyBulletLayer = new Container();

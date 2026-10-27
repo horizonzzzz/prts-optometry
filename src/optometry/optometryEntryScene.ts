@@ -1,14 +1,14 @@
 import { Container, Graphics, Sprite, TextStyle } from 'pixi.js';
-import type { VisionSceneTextures } from './visionSceneAssets';
-import { addText, drawDiamondStroke, drawHazardStripes, drawLine, drawPolygon, fitCover } from './visionSceneGraphics';
-import { COLORS, getEntryBootState, isWideLayout } from './visionSceneModel';
+import type { OptometrySceneTextures } from './optometrySceneAssets';
+import { addText, drawDiamondStroke, drawHazardStripes, drawLine, drawPolygon, fitCover } from './optometrySceneGraphics';
+import { COLORS, getEntryBootState, isWideLayout } from './optometrySceneModel';
 
 type EntrySceneOptions = {
-  textures: VisionSceneTextures;
+  textures: OptometrySceneTextures;
   onReady?: () => void;
 };
 
-export function createVisionEntryScene({ textures, onReady }: EntrySceneOptions) {
+export function createOptometryEntryScene({ textures, onReady }: EntrySceneOptions) {
   const layer = new Container({ label: 'entry-scene' });
   const chrome = new Container({ label: 'entry-chrome' });
   const bootCurtain = new Graphics();

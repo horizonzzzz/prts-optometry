@@ -1,16 +1,16 @@
 import { Application } from 'pixi.js';
-import type { Stage } from '../state';
-import { createVisionEntryScene } from './visionEntryScene';
-import { createVisionMainScene } from './visionMainScene';
-import { loadVisionSceneTextures } from './visionSceneAssets';
-import { setCssVar } from './visionSceneGraphics';
-import { getStageReadyTime, isCalibrationClear } from './visionSceneModel';
-import type { PixiVisionScene, SceneOptions } from './visionSceneModel';
+import type { Stage } from './state';
+import { createOptometryEntryScene } from './optometryEntryScene';
+import { createOptometryMainScene } from './optometryMainScene';
+import { loadOptometrySceneTextures } from './optometrySceneAssets';
+import { setCssVar } from './optometrySceneGraphics';
+import { getStageReadyTime, isCalibrationClear } from './optometrySceneModel';
+import type { OptometryScene, SceneOptions } from './optometrySceneModel';
 
-export { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './visionSceneModel';
-export type { DialogueSnapshot, PixiVisionScene } from './visionSceneModel';
+export { getCalibrationBlurAmount, getCopyHeight, getEntryBootState, getRevealFractureKick, getSoundBarHeights, getStageReadyTime, isCalibrationClear, isDriftAligned, isWideLayout } from './optometrySceneModel';
+export type { DialogueSnapshot, OptometryScene } from './optometrySceneModel';
 
-export async function createPixiVisionScene({ host, reducedMotion: initialReducedMotion, onEntryReady }: SceneOptions) {
+export async function createOptometryScene({ host, reducedMotion: initialReducedMotion, onEntryReady }: SceneOptions) {
   const app = new Application();
   try {
     await app.init({
@@ -33,7 +33,7 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
   let textures;
   try {
     [textures] = await Promise.all([
-      loadVisionSceneTextures(),
+      loadOptometrySceneTextures(),
       document.fonts.load('400 16px Bender', 'PRTS'),
       document.fonts.load('700 16px Bender', 'PRTS'),
       document.fonts.load('400 16px Novecento', 'OPTICAL'),
@@ -48,8 +48,8 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
     throw error;
   }
 
-  const main = createVisionMainScene({ app, textures, reducedMotion: initialReducedMotion });
-  const entry = createVisionEntryScene({ textures, onReady: onEntryReady });
+  const main = createOptometryMainScene({ app, textures, reducedMotion: initialReducedMotion });
+  const entry = createOptometryEntryScene({ textures, onReady: onEntryReady });
   app.stage.label = 'vision-terminal';
   app.stage.addChild(main.outsideBackground, main.layer, entry.layer, entry.bootCurtain, entry.bootLine, main.flash);
 
@@ -77,29 +77,29 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
 
     const mainLayout = main.layout(width, height);
     const entryLayout = entry.layout(width, height);
-    setCssVar(host, '--pixi-entry-x', entryLayout.buttonX);
-    setCssVar(host, '--pixi-entry-y', entryLayout.buttonY);
-    setCssVar(host, '--pixi-entry-width', entryLayout.buttonWidth);
-    setCssVar(host, '--pixi-entry-height', 70);
-    setCssVar(host, '--pixi-vision-left', mainLayout.visionLeft);
-    setCssVar(host, '--pixi-vision-top', mainLayout.visionTop);
-    setCssVar(host, '--pixi-vision-size', mainLayout.visionSize);
-    setCssVar(host, '--pixi-sound-left', mainLayout.soundLeft);
-    setCssVar(host, '--pixi-sound-top', mainLayout.soundTop);
-    setCssVar(host, '--pixi-sound-width', mainLayout.soundWidth);
-    setCssVar(host, '--pixi-dialogue-left', mainLayout.dialogue.left);
-    setCssVar(host, '--pixi-dialogue-top', mainLayout.dialogue.top);
-    setCssVar(host, '--pixi-dialogue-width', mainLayout.dialogue.width);
-    setCssVar(host, '--pixi-dialogue-height', mainLayout.dialogue.height);
-    setCssVar(host, '--pixi-battle-left', mainLayout.battle.left);
-    setCssVar(host, '--pixi-battle-top', mainLayout.battle.top);
-    setCssVar(host, '--pixi-battle-width', mainLayout.battle.width);
-    setCssVar(host, '--pixi-battle-height', mainLayout.battle.height);
+    setCssVar(host, '--optometry-entry-x', entryLayout.buttonX);
+    setCssVar(host, '--optometry-entry-y', entryLayout.buttonY);
+    setCssVar(host, '--optometry-entry-width', entryLayout.buttonWidth);
+    setCssVar(host, '--optometry-entry-height', 70);
+    setCssVar(host, '--optometry-vision-left', mainLayout.visionLeft);
+    setCssVar(host, '--optometry-vision-top', mainLayout.visionTop);
+    setCssVar(host, '--optometry-vision-size', mainLayout.visionSize);
+    setCssVar(host, '--optometry-sound-left', mainLayout.soundLeft);
+    setCssVar(host, '--optometry-sound-top', mainLayout.soundTop);
+    setCssVar(host, '--optometry-sound-width', mainLayout.soundWidth);
+    setCssVar(host, '--optometry-dialogue-left', mainLayout.dialogue.left);
+    setCssVar(host, '--optometry-dialogue-top', mainLayout.dialogue.top);
+    setCssVar(host, '--optometry-dialogue-width', mainLayout.dialogue.width);
+    setCssVar(host, '--optometry-dialogue-height', mainLayout.dialogue.height);
+    setCssVar(host, '--optometry-battle-left', mainLayout.battle.left);
+    setCssVar(host, '--optometry-battle-top', mainLayout.battle.top);
+    setCssVar(host, '--optometry-battle-width', mainLayout.battle.width);
+    setCssVar(host, '--optometry-battle-height', mainLayout.battle.height);
     if (mainLayout.reset) {
-      setCssVar(host, '--pixi-reset-left', mainLayout.reset.left);
-      setCssVar(host, '--pixi-reset-top', mainLayout.reset.top);
-      setCssVar(host, '--pixi-reset-width', mainLayout.reset.width);
-      setCssVar(host, '--pixi-reset-height', mainLayout.reset.height);
+      setCssVar(host, '--optometry-reset-left', mainLayout.reset.left);
+      setCssVar(host, '--optometry-reset-top', mainLayout.reset.top);
+      setCssVar(host, '--optometry-reset-width', mainLayout.reset.width);
+      setCssVar(host, '--optometry-reset-height', mainLayout.reset.height);
     }
   }
 
@@ -302,5 +302,5 @@ export async function createPixiVisionScene({ host, reducedMotion: initialReduce
       app.destroy({ removeView: true }, { children: true });
       if (host.contains(canvas)) host.removeChild(canvas);
     },
-  } satisfies PixiVisionScene;
+  } satisfies OptometryScene;
 }

@@ -1,19 +1,20 @@
 import { useEffect, useLayoutEffect, useReducer, useRef, useState, type KeyboardEvent as ReactKeyboardEvent, type MouseEvent, type PointerEvent as ReactPointerEvent } from 'react';
+import { Link } from 'react-router-dom';
 import ambientAudio from '../../assets/audio/bgm.ea4286.mp3';
 import revealAudio from '../../assets/audio/luanxu.mp3';
 import {
   advanceState,
   createInitialState,
   getStageCopy,
-} from '../state';
-import { createPixiVisionScene, type DialogueSnapshot, type PixiVisionScene } from '../pixi/createPixiVisionScene';
+} from '../optometry/state';
+import { createOptometryScene, type DialogueSnapshot, type OptometryScene } from '../optometry/createOptometryScene';
 
 const AMBIENT_VOLUME = 0.35;
 const REVEAL_VOLUME = 0.5;
 const BATTLE_REVEAL_VOLUME = 0.28;
 const SNOW_NOISE_VOLUME = 0.02;
 
-export default function PixiVisionPage() {
+export default function OptometryPage() {
   const needsHide = import.meta.env.VITE_NEED_HIDE === 'true';
   const [state, dispatch] = useReducer(advanceState, undefined, createInitialState);
   const [started, setStarted] = useState(false);
@@ -30,7 +31,7 @@ export default function PixiVisionPage() {
   const visionHitRef = useRef<HTMLButtonElement | null>(null);
   const dialogueHitRef = useRef<HTMLButtonElement | null>(null);
   const battleHitRef = useRef<HTMLButtonElement | null>(null);
-  const sceneRef = useRef<PixiVisionScene | null>(null);
+  const sceneRef = useRef<OptometryScene | null>(null);
   const reducedMotionRef = useRef(false);
   const transitionTimerRef = useRef(0);
   const driftPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
@@ -89,7 +90,7 @@ export default function PixiVisionPage() {
 
     let cancelled = false;
 
-    createPixiVisionScene({
+    createOptometryScene({
       host,
       reducedMotion: reducedMotionRef.current,
       onEntryReady: () => {
@@ -400,35 +401,36 @@ export default function PixiVisionPage() {
   }
 
   return (
-    <main className="pixi-page" data-stage={state.stage} data-reveal-phase={state.revealPhase} data-started={started} data-entry-departing={entryDeparting} aria-label="视觉筛查体验">
-      <div ref={canvasHostRef} className="pixi-canvas-host" aria-hidden="true" />
+    <main className="optometry-page" data-stage={state.stage} data-reveal-phase={state.revealPhase} data-started={started} data-entry-departing={entryDeparting} aria-label="视觉筛查体验">
+      <div ref={canvasHostRef} className="optometry-canvas-host" aria-hidden="true" />
+      {!started && <Link className="optometry-index-link" to="/index">← INDEX</Link>}
       {(!ready || needsHide) && !error && (
         needsHide ? (
-          <div className="pixi-loading pixi-loading--blocked" role="alert">
-            <div className="pixi-loading__lock">
-              <p className="pixi-loading__label">PRTS // ACCESS CONTROL</p>
-              <p className="pixi-loading__title">验光终端暂未开放使用</p>
-              <p className="pixi-loading__status">TERMINAL STATUS: LOCKED</p>
+          <div className="optometry-loading optometry-loading--blocked" role="alert">
+            <div className="optometry-loading__lock">
+              <p className="optometry-loading__label">PRTS // ACCESS CONTROL</p>
+              <p className="optometry-loading__title">验光终端暂未开放使用</p>
+              <p className="optometry-loading__status">TERMINAL STATUS: LOCKED</p>
             </div>
           </div>
-        ) : <div className="pixi-loading">PRTS // INITIALIZING OPTICAL ARRAY</div>
+        ) : <div className="optometry-loading">PRTS // INITIALIZING OPTICAL ARRAY</div>
       )}
 
-      <div className="pixi-ui">
+      <div className="optometry-ui">
         <button
-          className="pixi-sound-hit"
+          className="optometry-sound-hit"
           type="button"
           onClick={handleMute}
           aria-pressed={state.muted}
           aria-label={state.muted ? '打开声音' : '关闭声音'}
           disabled={needsHide || !started || !ready}
         >
-          <span className="pixi-sr-only">{state.muted ? '打开声音' : '关闭声音'}</span>
+          <span className="optometry-sr-only">{state.muted ? '打开声音' : '关闭声音'}</span>
         </button>
       </div>
 
       <button
-        className="pixi-hit pixi-entry-hit"
+        className="optometry-hit optometry-entry-hit"
         type="button"
         onClick={handleStart}
         disabled={needsHide || started || entryDeparting || !ready || !entryReady || Boolean(error)}
@@ -437,7 +439,7 @@ export default function PixiVisionPage() {
 
       <button
         ref={visionHitRef}
-        className="pixi-hit pixi-vision-hit"
+        className="optometry-hit optometry-vision-hit"
         type="button"
         onClick={handleVisionActivate}
         onPointerDown={handleDriftPointerDown}
@@ -454,7 +456,7 @@ export default function PixiVisionPage() {
       {battleActive && (
         <button
           ref={battleHitRef}
-          className="pixi-hit pixi-battle-hit"
+          className="optometry-hit optometry-battle-hit"
           type="button"
           onPointerDown={handleBattlePointerDown}
           onPointerMove={handleBattlePointerMove}
@@ -471,7 +473,7 @@ export default function PixiVisionPage() {
       {started && stageReady && dialogue && !dialogue.complete && (
         <button
           ref={dialogueHitRef}
-          className="pixi-hit pixi-dialogue-hit"
+          className="optometry-hit optometry-dialogue-hit"
           type="button"
           onClick={handleDialogueAdvance}
           aria-label={`推进${dialogue.speakerName}的对话`}
@@ -480,7 +482,7 @@ export default function PixiVisionPage() {
 
       {endingComplete && stageReady && (
         <button
-          className="pixi-hit pixi-reset-hit"
+          className="optometry-hit optometry-reset-hit"
           type="button"
           onClick={handleReset}
           disabled={needsHide || !ready}
@@ -488,11 +490,11 @@ export default function PixiVisionPage() {
         />
       )}
 
-      <p className="pixi-sr-only" aria-live="polite" aria-atomic="true">
+      <p className="optometry-sr-only" aria-live="polite" aria-atomic="true">
         {entryDeparting ? '正在进入验光界面。' : dialogueAnnouncement ? `${dialogueAnnouncement}${interactionMessage}` : `${copy.eyebrow}。${copy.title}。${liveNote}`}
       </p>
 
-      {error && <p className="pixi-error">{error}</p>}
+      {error && <p className="optometry-error">{error}</p>}
     </main>
   );
 }

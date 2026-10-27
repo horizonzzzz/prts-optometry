@@ -1,4 +1,4 @@
-import type { Stage } from '../state';
+import type { Stage } from './state';
 
 export const COLORS = {
   clinic: 0xdce1e2,
@@ -149,7 +149,7 @@ export type DialogueSnapshot = {
   complete: boolean;
 };
 
-export type PixiVisionScene = {
+export type OptometryScene = {
   setStarted: (started: boolean, onComplete?: () => void) => void;
   setStage: (stage: Stage, onReady?: () => void) => void;
   confirmCalibration: (bypassTiming?: boolean) => boolean;

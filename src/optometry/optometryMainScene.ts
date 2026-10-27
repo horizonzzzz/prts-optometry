@@ -9,12 +9,12 @@ import {
   TextStyle,
   type Application,
 } from 'pixi.js';
-import type { Stage } from '../state';
-import { createVisionBattleScene } from './visionBattleScene';
-import { createVisionDialogueScene } from './visionDialogueScene';
-import { createVisionOperationPanel } from './visionOperationPanel';
-import { createVisionProfileScene } from './visionProfileScene';
-import type { VisionSceneTextures } from './visionSceneAssets';
+import type { Stage } from './state';
+import { createOptometryBattleScene } from './optometryBattleScene';
+import { createOptometryDialogueScene } from './optometryDialogueScene';
+import { createOptometryOperationPanel } from './optometryOperationPanel';
+import { createOptometryProfileScene } from './optometryProfileScene';
+import type { OptometrySceneTextures } from './optometrySceneAssets';
 import {
   addText,
   drawDashedCircle,
@@ -26,7 +26,7 @@ import {
   drawPolygon,
   fitCover,
   fitStretch,
-} from './visionSceneGraphics';
+} from './optometrySceneGraphics';
 import {
   COLORS,
   getCalibrationBlurAmount,
@@ -39,25 +39,25 @@ import {
   isWideLayout,
   scrambleTerminalText,
   STAGE_META,
-} from './visionSceneModel';
+} from './optometrySceneModel';
 
 type MainSceneOptions = {
   app: Application;
-  textures: VisionSceneTextures;
+  textures: OptometrySceneTextures;
   reducedMotion: boolean;
 };
 
-export function createVisionMainScene({ app, textures, reducedMotion: initialReducedMotion }: MainSceneOptions) {
+export function createOptometryMainScene({ app, textures, reducedMotion: initialReducedMotion }: MainSceneOptions) {
   const outsideBackground = new Graphics();
   const layer = new Container({ label: 'main-scene' });
   const body = new Container({ label: 'main-body' });
   const copy = new Container({ label: 'main-copy' });
   const chrome = new Container({ label: 'main-chrome' });
   const flash = new Graphics();
-  const dialogue = createVisionDialogueScene(textures, initialReducedMotion);
-  const operation = createVisionOperationPanel();
-  const battle = createVisionBattleScene(textures.landship, textures.portrait, initialReducedMotion);
-  const profile = createVisionProfileScene([textures.qrNode01, textures.qrNode02], initialReducedMotion);
+  const dialogue = createOptometryDialogueScene(textures, initialReducedMotion);
+  const operation = createOptometryOperationPanel();
+  const battle = createOptometryBattleScene(textures.landship, textures.portrait, initialReducedMotion);
+  const profile = createOptometryProfileScene([textures.qrNode01, textures.qrNode02], initialReducedMotion);
 
   const backdrop = new Sprite(textures.grid);
   const mask = new Sprite(textures.mask);

@@ -1,4 +1,4 @@
-.pixi-page {
+.optometry-page {
   position: fixed;
   inset: 0;
   min-width: 320px;
@@ -9,7 +9,7 @@
   isolation: isolate;
 }
 
-.pixi-loading {
+.optometry-loading {
   position: fixed;
   inset: 0;
   display: grid;
@@ -24,7 +24,7 @@
   z-index: 2;
 }
 
-.pixi-loading::after {
+.optometry-loading::after {
   content: '';
   width: 178px;
   height: 5px;
@@ -32,17 +32,17 @@
   background-size: 200% 100%;
 }
 
-.pixi-loading--blocked {
+.optometry-loading--blocked {
   z-index: 6;
   padding: 20px;
   color: #e8edeb;
 }
 
-.pixi-loading--blocked::after {
+.optometry-loading--blocked::after {
   display: none;
 }
 
-.pixi-loading__lock {
+.optometry-loading__lock {
   width: min(100%, 420px);
   padding: 22px 24px 20px;
   border: 1px solid rgba(65, 185, 238, 0.72);
@@ -52,24 +52,24 @@
   clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px));
 }
 
-.pixi-loading__label,
-.pixi-loading__status,
-.pixi-loading__title {
+.optometry-loading__label,
+.optometry-loading__status,
+.optometry-loading__title {
   margin: 0;
 }
 
-.pixi-loading__label,
-.pixi-loading__status {
+.optometry-loading__label,
+.optometry-loading__status {
   font-family: var(--display);
   font-size: 9px;
   letter-spacing: 0.16em;
 }
 
-.pixi-loading__label {
+.optometry-loading__label {
   color: #41b9ee;
 }
 
-.pixi-loading__title {
+.optometry-loading__title {
   margin: 18px 0 20px;
   color: #e8edeb;
   font-family: var(--display), var(--sans);
@@ -79,25 +79,25 @@
   white-space: nowrap;
 }
 
-.pixi-loading__status {
+.optometry-loading__status {
   padding-top: 12px;
   border-top: 1px solid rgba(232, 237, 235, 0.22);
   color: #ffd802;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .pixi-loading::after {
-    animation: pixi-loading-stripes 0.9s linear infinite;
+  .optometry-loading::after {
+    animation: optometry-loading-stripes 0.9s linear infinite;
   }
 }
 
-@keyframes pixi-loading-stripes {
+@keyframes optometry-loading-stripes {
   from { background-position: 0 0; }
   to { background-position: -19.8px 0; }
 }
 
-.pixi-canvas-host,
-.pixi-canvas-host canvas {
+.optometry-canvas-host,
+.optometry-canvas-host canvas {
   position: absolute;
   inset: 0;
   display: block;
@@ -106,27 +106,47 @@
   touch-action: none;
 }
 
-.pixi-canvas-host {
+.optometry-canvas-host {
   z-index: 0;
 }
 
-.pixi-ui,
-.pixi-hit,
-.pixi-error {
+.optometry-index-link {
+  position: absolute;
+  /* 让开 Pixi 绘制的顶部标识带，避免压住 logo 与终端名 */
+  top: calc(env(safe-area-inset-top) + 56px);
+  left: 20px;
+  z-index: 4;
+  padding: 8px 10px;
+  border: 1px solid rgba(125, 155, 163, 0.47);
+  background: rgba(16, 23, 27, 0.92);
+  color: #c8dce1;
+  font: 10px var(--display);
+  letter-spacing: 0.12em;
+  text-decoration: none;
+}
+
+.optometry-index-link:focus-visible {
+  outline: 1px solid rgba(204, 46, 61, 0.78);
+  outline-offset: 4px;
+}
+
+.optometry-ui,
+.optometry-hit,
+.optometry-error {
   position: absolute;
   z-index: 3;
 }
 
-.pixi-ui {
+.optometry-ui {
   inset: 0;
   pointer-events: none;
 }
 
-.pixi-sound-hit {
+.optometry-sound-hit {
   position: absolute;
-  top: var(--pixi-sound-top, 15px);
-  left: var(--pixi-sound-left, 300px);
-  width: var(--pixi-sound-width, 58px);
+  top: var(--optometry-sound-top, 15px);
+  left: var(--optometry-sound-left, 300px);
+  width: var(--optometry-sound-width, 58px);
   height: 44px;
   padding: 0;
   border: 0;
@@ -135,17 +155,17 @@
   pointer-events: auto;
 }
 
-.pixi-sound-hit:disabled {
+.optometry-sound-hit:disabled {
   pointer-events: none;
 }
 
-.pixi-sound-hit:focus-visible,
-.pixi-hit:focus-visible {
+.optometry-sound-hit:focus-visible,
+.optometry-hit:focus-visible {
   outline: 1px solid rgba(204, 46, 61, 0.78);
   outline-offset: 5px;
 }
 
-.pixi-hit {
+.optometry-hit {
   display: block;
   padding: 0;
   border: 0;
@@ -158,94 +178,94 @@
   transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.12s ease;
 }
 
-.pixi-hit:disabled {
+.optometry-hit:disabled {
   pointer-events: none;
   cursor: default;
 }
 
-.pixi-entry-hit {
-  top: var(--pixi-entry-y, 600px);
-  left: var(--pixi-entry-x, 20px);
-  width: var(--pixi-entry-width, 350px);
-  height: var(--pixi-entry-height, 70px);
+.optometry-entry-hit {
+  top: var(--optometry-entry-y, 600px);
+  left: var(--optometry-entry-x, 20px);
+  width: var(--optometry-entry-width, 350px);
+  height: var(--optometry-entry-height, 70px);
   clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px));
 }
 
-.pixi-vision-hit {
-  top: var(--pixi-vision-top, 250px);
-  left: var(--pixi-vision-left, 35px);
-  width: var(--pixi-vision-size, 320px);
-  height: var(--pixi-vision-size, 320px);
+.optometry-vision-hit {
+  top: var(--optometry-vision-top, 250px);
+  left: var(--optometry-vision-left, 35px);
+  width: var(--optometry-vision-size, 320px);
+  height: var(--optometry-vision-size, 320px);
   border-radius: 50%;
 }
 
-.pixi-dialogue-hit {
-  top: var(--pixi-dialogue-top, 640px);
-  left: var(--pixi-dialogue-left, 20px);
-  width: var(--pixi-dialogue-width, 350px);
-  height: var(--pixi-dialogue-height, 176px);
+.optometry-dialogue-hit {
+  top: var(--optometry-dialogue-top, 640px);
+  left: var(--optometry-dialogue-left, 20px);
+  width: var(--optometry-dialogue-width, 350px);
+  height: var(--optometry-dialogue-height, 176px);
   clip-path: polygon(14px 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 18px 100%, 0 calc(100% - 18px), 0 14px);
 }
 
-.pixi-battle-hit {
-  top: var(--pixi-battle-top, 56px);
-  left: var(--pixi-battle-left, 20px);
-  width: var(--pixi-battle-width, 350px);
-  height: var(--pixi-battle-height, 770px);
+.optometry-battle-hit {
+  top: var(--optometry-battle-top, 56px);
+  left: var(--optometry-battle-left, 20px);
+  width: var(--optometry-battle-width, 350px);
+  height: var(--optometry-battle-height, 770px);
   cursor: crosshair;
   touch-action: none;
 }
 
-.pixi-battle-hit:active:not(:disabled) {
+.optometry-battle-hit:active:not(:disabled) {
   transform: none;
 }
 
-.pixi-dialogue-hit:hover:not(:disabled) {
+.optometry-dialogue-hit:hover:not(:disabled) {
   background: rgba(65, 185, 238, 0.045);
   box-shadow: inset 0 0 0 1px rgba(65, 185, 238, 0.28);
 }
 
-.pixi-reset-hit {
-  top: var(--pixi-reset-top, 700px);
-  left: var(--pixi-reset-left, 20px);
-  width: var(--pixi-reset-width, 94px);
-  height: var(--pixi-reset-height, 44px);
+.optometry-reset-hit {
+  top: var(--optometry-reset-top, 700px);
+  left: var(--optometry-reset-left, 20px);
+  width: var(--optometry-reset-width, 94px);
+  height: var(--optometry-reset-height, 44px);
   clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px));
 }
 
-.pixi-entry-hit:hover:not(:disabled),
-.pixi-reset-hit:hover:not(:disabled) {
+.optometry-entry-hit:hover:not(:disabled),
+.optometry-reset-hit:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.12);
 }
 
-.pixi-page:not([data-stage='drift']) .pixi-vision-hit:hover:not(:disabled) {
+.optometry-page:not([data-stage='drift']) .optometry-vision-hit:hover:not(:disabled) {
   box-shadow: 0 0 0 1px rgba(0, 152, 220, 0.72), 0 0 34px rgba(0, 152, 220, 0.18);
 }
 
-.pixi-page[data-stage='drift'] .pixi-vision-hit:hover:not(:disabled) {
+.optometry-page[data-stage='drift'] .optometry-vision-hit:hover:not(:disabled) {
   box-shadow: 0 0 0 1px rgba(204, 46, 61, 0.72), 0 0 42px rgba(204, 46, 61, 0.22);
 }
 
-.pixi-page[data-stage='drift'] .pixi-vision-hit:not(:disabled) {
+.optometry-page[data-stage='drift'] .optometry-vision-hit:not(:disabled) {
   touch-action: none;
   cursor: grab;
 }
 
-.pixi-page[data-stage='drift'] .pixi-vision-hit:active:not(:disabled) {
+.optometry-page[data-stage='drift'] .optometry-vision-hit:active:not(:disabled) {
   cursor: grabbing;
 }
 
-.pixi-hit:active:not(:disabled) {
+.optometry-hit:active:not(:disabled) {
   transform: scale(0.985);
 }
 
-.pixi-page[data-started='false'] .pixi-vision-hit,
-.pixi-page[data-started='true'] .pixi-entry-hit,
-.pixi-page[data-entry-departing='true'] .pixi-vision-hit {
+.optometry-page[data-started='false'] .optometry-vision-hit,
+.optometry-page[data-started='true'] .optometry-entry-hit,
+.optometry-page[data-entry-departing='true'] .optometry-vision-hit {
   pointer-events: none;
 }
 
-.pixi-error {
+.optometry-error {
   right: 18px;
   bottom: 18px;
   left: 18px;
@@ -259,7 +279,7 @@
   text-align: center;
 }
 
-.pixi-sr-only {
+.optometry-sr-only {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -271,8 +291,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pixi-hit,
-  .pixi-sound-hit {
+  .optometry-hit,
+  .optometry-sound-hit {
     transition: none;
   }
 

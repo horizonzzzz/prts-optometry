@@ -1,9 +1,9 @@
 import { gsap } from 'gsap';
 import { Container, Graphics, Sprite, TextStyle, type Texture } from 'pixi.js';
-import { addText, drawLine } from './visionSceneGraphics';
-import { COLORS } from './visionSceneModel';
+import { addText, drawLine } from './optometrySceneGraphics';
+import { COLORS } from './optometrySceneModel';
 
-export type VisionProfileBounds = {
+export type OptometryProfileBounds = {
   left: number;
   top: number;
   width: number;
@@ -21,7 +21,7 @@ type ProfileNodeLayout = {
   qrSize: number;
 };
 
-export function getVisionProfileLayout(bounds: VisionProfileBounds) {
+export function getOptometryProfileLayout(bounds: OptometryProfileBounds) {
   const panelWidth = Math.min(bounds.width, bounds.wide ? 880 : 680);
   const panel = {
     left: bounds.left + (bounds.width - panelWidth) / 2,
@@ -61,7 +61,7 @@ export function getVisionProfileLayout(bounds: VisionProfileBounds) {
   return { panel, nodes, footerRuleY };
 }
 
-export function createVisionProfileScene(qrTextures: readonly [Texture, Texture], initialReducedMotion: boolean) {
+export function createOptometryProfileScene(qrTextures: readonly [Texture, Texture], initialReducedMotion: boolean) {
   const layer = new Container({ label: 'personal-profile' });
   const field = new Graphics();
   const axis = new Graphics();
@@ -99,8 +99,8 @@ export function createVisionProfileScene(qrTextures: readonly [Texture, Texture]
   layer.visible = false;
   let reducedMotion = initialReducedMotion;
 
-  function layout(bounds: VisionProfileBounds) {
-    const profileLayout = getVisionProfileLayout(bounds);
+  function layout(bounds: OptometryProfileBounds) {
+    const profileLayout = getOptometryProfileLayout(bounds);
     const { panel, footerRuleY } = profileLayout;
     const panelRight = panel.left + panel.width;
     const panelBottom = panel.top + panel.height;

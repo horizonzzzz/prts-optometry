@@ -2,12 +2,13 @@
 
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createPixiVisionScene, type DialogueSnapshot, type PixiVisionScene } from '../pixi/createPixiVisionScene';
-import PixiVisionPage from './PixiVisionPage';
+import { createOptometryScene, type DialogueSnapshot, type OptometryScene } from '../optometry/createOptometryScene';
+import OptometryPage from './OptometryPage';
 
-vi.mock('../pixi/createPixiVisionScene', () => ({
-  createPixiVisionScene: vi.fn(),
+vi.mock('../optometry/createOptometryScene', () => ({
+  createOptometryScene: vi.fn(),
 }));
 
 (globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -15,7 +16,7 @@ vi.mock('../pixi/createPixiVisionScene', () => ({
 let root: Root | undefined;
 let container: HTMLDivElement | undefined;
 
-function createScene(): PixiVisionScene {
+function createScene(): OptometryScene {
   return {
     advanceDialogue: vi.fn(),
     confirmCalibration: vi.fn(),
@@ -41,13 +42,13 @@ async function renderPage() {
   document.body.appendChild(container);
   root = createRoot(container);
   await act(async () => {
-    root?.render(<PixiVisionPage />);
+    root?.render(<MemoryRouter><OptometryPage /></MemoryRouter>);
     await Promise.resolve();
   });
 }
 
 beforeEach(() => {
-  vi.mocked(createPixiVisionScene).mockReset();
+  vi.mocked(createOptometryScene).mockReset();
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     value: vi.fn(() => ({ addEventListener: vi.fn(), matches: false, removeEventListener: vi.fn() })),
@@ -66,11 +67,11 @@ afterEach(async () => {
   vi.restoreAllMocks();
 });
 
-describe('PixiVisionPage', () => {
+describe('OptometryPage', () => {
   it('keeps the terminal locked when VITE_NEED_HIDE is true', async () => {
     vi.stubEnv('VITE_NEED_HIDE', 'true');
     const scene = createScene();
-    vi.mocked(createPixiVisionScene).mockImplementation(async ({ onEntryReady }) => {
+    vi.mocked(createOptometryScene).mockImplementation(async ({ onEntryReady }) => {
       onEntryReady?.();
       return scene;
     });
@@ -78,7 +79,7 @@ describe('PixiVisionPage', () => {
     await renderPage();
     const start = container?.querySelector<HTMLButtonElement>('[aria-label="开始验光"]');
 
-    expect(container?.querySelector('.pixi-loading--blocked')?.textContent).toContain('验光终端暂未开放使用');
+    expect(container?.querySelector('.optometry-loading--blocked')?.textContent).toContain('验光终端暂未开放使用');
     expect(start?.disabled).toBe(true);
     start?.click();
     expect(scene.setStarted).not.toHaveBeenCalled();
@@ -86,14 +87,14 @@ describe('PixiVisionPage', () => {
 
   it('moves focus to the primary control after the entry handoff', async () => {
     const scene = createScene();
-    vi.mocked(createPixiVisionScene).mockImplementation(async ({ onEntryReady }) => {
+    vi.mocked(createOptometryScene).mockImplementation(async ({ onEntryReady }) => {
       onEntryReady?.();
       return scene;
     });
 
     await renderPage();
     const start = container?.querySelector<HTMLButtonElement>('[aria-label="开始验光"]');
-    const vision = container?.querySelector<HTMLButtonElement>('.pixi-vision-hit');
+    const vision = container?.querySelector<HTMLButtonElement>('.optometry-vision-hit');
     expect(start?.disabled).toBe(false);
 
     await act(async () => {
@@ -106,14 +107,14 @@ describe('PixiVisionPage', () => {
   });
 
   it('shows the supported fallback when Pixi initialization fails', async () => {
-    vi.mocked(createPixiVisionScene).mockRejectedValue(new Error('WebGL unavailable'));
+    vi.mocked(createOptometryScene).mockRejectedValue(new Error('WebGL unavailable'));
 
     await renderPage();
     await act(async () => {
       await Promise.resolve();
     });
 
-    expect(container?.querySelector('.pixi-error')?.textContent).toContain('WebGL');
+    expect(container?.querySelector('.optometry-error')?.textContent).toContain('WebGL');
   });
 
   it('delegates the final profile to Pixi with reset as the only DOM action', async () => {
@@ -131,7 +132,7 @@ describe('PixiVisionPage', () => {
     vi.mocked(scene.getDialogueSnapshot).mockImplementation(() => currentStage === 'reveal' ? activeDialogue : completeDialogue);
     vi.mocked(scene.advanceDialogue).mockReturnValue(completeDialogue);
     vi.mocked(scene.startBattle).mockImplementation((onComplete) => onComplete());
-    vi.mocked(createPixiVisionScene).mockImplementation(async ({ onEntryReady }) => {
+    vi.mocked(createOptometryScene).mockImplementation(async ({ onEntryReady }) => {
       onEntryReady?.();
       return scene;
     });
@@ -142,33 +143,33 @@ describe('PixiVisionPage', () => {
       await Promise.resolve();
     });
     await act(async () => {
-      container?.querySelector<HTMLButtonElement>('.pixi-vision-hit')?.click();
+      container?.querySelector<HTMLButtonElement>('.optometry-vision-hit')?.click();
       await Promise.resolve();
     });
     await act(async () => {
-      container?.querySelector<HTMLButtonElement>('.pixi-vision-hit')?.click();
+      container?.querySelector<HTMLButtonElement>('.optometry-vision-hit')?.click();
       vi.advanceTimersByTime(180);
       await Promise.resolve();
     });
     await act(async () => {
-      container?.querySelector<HTMLButtonElement>('.pixi-vision-hit')?.click();
+      container?.querySelector<HTMLButtonElement>('.optometry-vision-hit')?.click();
       vi.advanceTimersByTime(260);
       await Promise.resolve();
     });
     await act(async () => {
-      container?.querySelector<HTMLButtonElement>('.pixi-dialogue-hit')?.click();
+      container?.querySelector<HTMLButtonElement>('.optometry-dialogue-hit')?.click();
       await Promise.resolve();
     });
     await act(async () => {
-      container?.querySelector<HTMLButtonElement>('.pixi-dialogue-hit')?.click();
+      container?.querySelector<HTMLButtonElement>('.optometry-dialogue-hit')?.click();
       await Promise.resolve();
     });
 
     expect(scene.showEndingControls).toHaveBeenCalledOnce();
-    expect(container?.querySelector('.pixi-profile')).toBeNull();
-    expect(container?.querySelector('.pixi-qr-trigger')).toBeNull();
+    expect(container?.querySelector('.optometry-profile')).toBeNull();
+    expect(container?.querySelector('.optometry-qr-trigger')).toBeNull();
     expect(container?.querySelector('dialog')).toBeNull();
-    expect(container?.querySelector<HTMLButtonElement>('.pixi-reset-hit')).not.toBeNull();
+    expect(container?.querySelector<HTMLButtonElement>('.optometry-reset-hit')).not.toBeNull();
     expect(container?.querySelector('[aria-live="polite"]')?.textContent).toContain('通讯链路已解锁');
   });
 });

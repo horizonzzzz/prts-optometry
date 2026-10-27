@@ -3,9 +3,9 @@ import {
   Graphics,
   TextStyle,
 } from 'pixi.js';
-import { getStageCopyForStage, type Stage } from '../state';
-import { addText, drawPolygon } from './visionSceneGraphics';
-import { COLORS, STAGE_META } from './visionSceneModel';
+import { getStageCopyForStage, type Stage } from './state';
+import { addText, drawPolygon } from './optometrySceneGraphics';
+import { COLORS, STAGE_META } from './optometrySceneModel';
 
 export type OperationFeedbackTone = 'idle' | 'warning' | 'success' | 'error';
 
@@ -41,7 +41,7 @@ export function getOperationPanelContent(stage: Stage, feedback?: OperationFeedb
   };
 }
 
-export function createVisionOperationPanel() {
+export function createOptometryOperationPanel() {
   const layer = new Container({ label: 'operation-panel' });
   const shadow = new Graphics();
   const panel = new Graphics();

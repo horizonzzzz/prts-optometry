@@ -65,7 +65,7 @@
 | 尾巴 | 细长，带轻微摆动，是分辨动作方向的主要依据 |
 | 尺寸 | 约 16×16 px（一个瓦片），判定位略小于视觉 |
 
-M3 眼睛使用绿色 `#4ADE80`。现有 `src/pixi/visionSceneModel.ts` 的 `COLORS.originiumSoft` 是琥珀金色，不适合当作绿色来源；本作颜色在 `src/m3/render/theme.ts` 单独定义，避免误用现有 token。
+M3 眼睛使用绿色 `#4ADE80`。现有 `src/optometry/optometrySceneModel.ts` 的 `COLORS.originiumSoft` 是琥珀金色，不适合当作绿色来源；本作颜色在 `src/m3/render/theme.ts` 单独定义，避免误用现有 token。
 
 **素材与权利确认**：黑猫绿眼是社区二创方向，不是官方设定。制作前先确认具体形象的创作者、来源和许可条件；标注来源与非官方声明不能替代授权。若无法确认可用范围，改用自行设计且不直接复刻该社区形象的猫形象。
 
@@ -504,7 +504,7 @@ Phaser 接管 Scene 生命周期、资源、动画、基础物理积分和 AABB 
 **现状**（`src/main.tsx`）：
 
 ```
-#/             → PixiVisionPage
+#/             → OptometryPage
 #/legacy-dom   → LegacyDomPage
 其他           → 重定向到 #/
 ```
@@ -514,25 +514,30 @@ Phaser 接管 Scene 生命周期、资源、动画、基础物理积分和 AABB 
 本次采用方案（保留旧入口）：
 
 ```
-#/             → PixiVisionPage      （保持现状，老二维码继续有效）
+#/             → OptometryPage      （保持现状，老二维码继续有效）
 #/m3           → M3RescuePage        （新游戏）
 #/index        → IndexPage           （首页，游戏选择）
 #/legacy-dom   → LegacyDomPage
 ```
 
-并在 `PixiVisionPage` 上加一个不显眼的 `INDEX` 入口通向 `#/index`。
+并在 `OptometryPage` 的入口首页加一个不显眼的 `INDEX` 入口通向 `#/index`；进入验光流程后隐藏，避免遮挡画面。
 
 如果确认老二维码指向的是 `#/vision` 之类带路径的地址，则可以自由地把 `#/` 改成首页。
 
 ### 12.3 目录结构
 
-沿用 `src/pages/`，新游戏位于 `src/m3/`：
+沿用 `src/pages/`，M3 位于 `src/m3/`。仓库已按游戏拆分目录：验光在 `src/optometry/`（PixiJS，含 `state.ts`），M3 在 `src/m3/`（Phaser），两者只共享构建、路由与样式 token。
 
 ```text
 src/
   pages/
     IndexPage.tsx          # PRTS 总菜单，轻量 DOM
+    OptometryPage.tsx      # 验光宿主：Pixi canvas + 真实按钮
     M3RescuePage.tsx       # React 宿主、真实按钮、失败层
+  optometry/               # 验光游戏，PixiJS
+    state.ts               # 验光 stage/mute 状态机
+    createOptometryScene.ts
+    optometry*Scene.ts
   m3/
     core/
       rules.ts             # 参数与时间单位换算
@@ -682,7 +687,8 @@ PRTS // INDEX
 本次先交付 PRTS 总菜单与 Phaser 基础操作验证场，不把验证场当作正式第一区。
 
 - `#/index`：两个游戏入口与一个不可交互的 `NO SIGNAL` 槽位。
-- `#/`：保持验光入口；验光和 DOM 后备页均可返回菜单。其他未知路由跳到菜单。
+- `#/`：保持验光入口；验光入口首页左上角有返回 `#/index` 的入口，进入筛查流程后隐藏。DOM 后备页与 M3 页同样可返回菜单。其他未知路由跳到菜单。
+- 目录与命名按游戏拆分：验光在 `src/optometry/`（`PixiVisionPage` 更名 `OptometryPage`，`createPixiVisionScene` 更名 `createOptometryScene`，CSS 前缀 `pixi-` 改为 `optometry-`），M3 在 `src/m3/`；包名与 Worker 名改为 `prts-fan-games`。
 - `#/m3`：480×480 验证场，键盘与三按钮触控、60Hz 物理步、实体砖、单向平台、回收与手动重试、出口完成层。
 - 当前地图只支持 `. # = ^ S G`；其他陷阱符号未实现时显式报错，不静默忽略。
 - 角色和失败图均为程序绘制的静态占位图，不使用未确认许可的社区形象素材。
@@ -694,6 +700,7 @@ PRTS // INDEX
 
 | 日期 | 变更 |
 |---|---|
+| 2026-10-27 | 仓库语义由单体验光项目改为同人游戏合集：包名与 Worker 名改为 `prts-fan-games`，`src/pixi/` 与 `src/state.ts` 迁入 `src/optometry/`，`PixiVisionPage` 更名 `OptometryPage`，CSS 前缀 `pixi-` 改为 `optometry-`；验光入口页新增返回 `#/index` 的入口，进入流程后隐藏 |
 | 2026-10-27 | 改用 Phaser 4.2.1 + Arcade Physics；保持验光 PixiJS 与旧根路由，新增菜单和基础验证场；明确物理步、模块边界、测试范围与未实现内容 |
 | 2026-10-26 | 初稿。确定即死 + 回收、6 屏结构、单能力、倒印卡片、甲板视觉地基 |
 | 2026-10-26 | 修正：流程由 20 分钟改为 4 分钟，删除"坑只骗一次"设定、删除血量/护盾、删除存档点、删除道具系统 |

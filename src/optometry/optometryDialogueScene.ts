@@ -4,14 +4,14 @@ import {
   Sprite,
   TextStyle,
 } from 'pixi.js';
-import type { Stage } from '../state';
-import type { VisionSceneTextures } from './visionSceneAssets';
-import { addText, drawPolygon } from './visionSceneGraphics';
+import type { Stage } from './state';
+import type { OptometrySceneTextures } from './optometrySceneAssets';
+import { addText, drawPolygon } from './optometrySceneGraphics';
 import {
   COLORS,
   type DialogueSnapshot,
   type DialogueSpeaker,
-} from './visionSceneModel';
+} from './optometrySceneModel';
 
 type DialogueLine = {
   speaker: DialogueSpeaker;
@@ -98,7 +98,7 @@ export function advanceDialogueCursor(cursor: DialogueCursor, lineLength: number
   return { ...cursor, complete: true };
 }
 
-export function createVisionDialogueScene(textures: VisionSceneTextures, initialReducedMotion: boolean) {
+export function createOptometryDialogueScene(textures: OptometrySceneTextures, initialReducedMotion: boolean) {
   const layer = new Container({ label: 'dialogue-scene' });
   const panelShadow = new Graphics();
   const panel = new Graphics();

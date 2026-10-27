@@ -11,3 +11,8 @@ tsconfig.tsbuildinfo
 !.dev.vars.example
 .env*
 !.env.example
+
+# agent/tool scratch
+.pi/
+.unipi/
+.playwright-mcp/

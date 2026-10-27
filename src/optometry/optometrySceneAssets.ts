@@ -15,7 +15,7 @@ import landshipAsset from '../../assets/rhodes-landship.png';
 import houseAsset from '../../assets/vision-house.jpg';
 import { Assets, type Texture } from 'pixi.js';
 
-export async function loadVisionSceneTextures() {
+export async function loadOptometrySceneTextures() {
   const [grid, blueprint, mask, rhodes, particle, house, portrait, landship, dialogueDoctor, dialogueAmiya, dialogueKaltsit, dialoguePriestess, dialoguePriestessButter, qrNode01, qrNode02] = await Promise.all([
     Assets.load<Texture>(gridAsset),
     Assets.load<Texture>(blueprintAsset),
@@ -37,4 +37,4 @@ export async function loadVisionSceneTextures() {
   return { grid, blueprint, mask, rhodes, particle, house, portrait, landship, dialogueDoctor, dialogueAmiya, dialogueKaltsit, dialoguePriestess, dialoguePriestessButter, qrNode01, qrNode02 };
 }
 
-export type VisionSceneTextures = Awaited<ReturnType<typeof loadVisionSceneTextures>>;
+export type OptometrySceneTextures = Awaited<ReturnType<typeof loadOptometrySceneTextures>>;
