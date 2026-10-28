@@ -1,0 +1,15 @@
+[Prepend _common.txt — but for this asset ignore the "no creatures / no silhouettes of animals" line; the subject is the cat. Attach the reference image with --ref.]
+
+Asset: cat model sheet — a character design reference sheet for the player character. This is a high-resolution clean illustration for design reference, NOT the final pixel sprite. Flat solid magenta #FF00FF background (magenta must not appear in the artwork).
+
+Character (match the reference image exactly): a small black cat mascot, chibi proportions. The head is about 60-65% of the total height and merges directly into the body with no neck. Two tall, narrow, pointed ears, tilted slightly outward, with a V-shaped notch between them. The lower edge of the head flares out on both sides like small bat wings or cheek tufts, then narrows to a small body. Tiny round stub arms at the sides, two short legs, small round feet. No tail visible. No nose, no whiskers.
+
+Face: two large round bright green eyes (#4ADE80), wide-set and placed low on the face, each with a big cream-white highlight (#FFF9E6) in the upper left and a small second highlight; the lower rim of each eye drips down slightly like a teardrop (darker green #2E9B57). A thin cream wavy line (#FFF9E6) as the mouth, in a worried, innocent, slightly sad expression.
+
+Colors: body dark charcoal #202A30, outline darker #10181C, a thin lighter rim light #34444D on the upper right edge, eyes and mouth as above. No other colors. No scarf, no accessories.
+
+Layout: on one sheet, arranged in a clean grid with generous spacing: (1) front-facing neutral pose, (2) side-on body with front-facing head, facing right, standing, (3) same, mid-run pose, (4) same, jumping up with stretched body, (5) same, landing squash, (6) four face-only close-ups: worried (default), crying with tears, happy with closed ^ ^ eyes, shocked with wide open mouth. Every view must show the same character with identical proportions, ear shape, eye size and face.
+
+Style for this sheet: bold dark outline, flat color fills, minimal cel shading, hard edges. Keep the shapes simple and chunky enough to be reduced to a 16x16 pixel sprite.
+
+Forbidden: text, labels, arrows, numbers, watermark, UI, other characters, photorealism, 3D render, fur texture, realistic cat anatomy, whiskers, nose, tail, scarf.

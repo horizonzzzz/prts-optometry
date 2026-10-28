@@ -1,0 +1,9 @@
+[Prepend _common.txt]
+
+Asset: bg_hull — the Rhodes Island ship hull as a mid-distance parallax layer. Flat solid magenta #FF00FF background for later removal (magenta must not appear in the artwork).
+
+Format: wide strip, native 576x142 pixels (generate at a multiple, then nearest-neighbor downscale). Left and right edges loop seamlessly.
+
+Content: a long side view of a large ship hull and superstructure in #8DADA7 with a darker shade for shaded planes. Large simple blocks, rows of small low-contrast windows (#709595), a few thin 1-pixel masts, antennas and a crane arm, one or two abstract hull panels. No visible people, no flags with symbols, no text. The bottom edge of the artwork is a straight horizontal line at the bottom of the image, fully filled to that edge, where the deck layer will cover it.
+
+Contrast: lower than the foreground. No pure white highlights, no dark outlines, no dense small detail near the bottom 25% of the strip (the character play band sits right below it).

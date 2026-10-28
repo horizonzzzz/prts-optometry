@@ -222,6 +222,17 @@ Fan Kit / official resources are for this non-commercial fan experience. Before 
 - https://www.arknights.global/fankit
 
 Prefer local assets already vendored in-repo. Remote CDN fallbacks may exist in legacy DOM paths; the Pixi path loads local textures via `Assets.load`. AI-generated art for M3 goes to `assets/ai/` with an `ATTRIBUTIONS.md` record.
+Drafts stay in `assets/ai/_drafts/` and are ignored by Git. Visual constraints, review checklist, and prompt templates live in `docs/m3-art/style-bible.md`.
+
+### Asset sourcing order
+
+Look for an existing suitable asset before generating one: check the official Fan Kit, assets already vendored in this repo, and permissively licensed sources on the web. Confirm the license and record the source. Only generate with AI when no suitable asset exists or the existing one cannot be adapted; this keeps cost and visual drift down.
+
+Image generation uses the project-level `baoyu-image-gen` skill, with `OPENAI_BASE_URL`, `OPENAI_API_KEY`, and `OPENAI_IMAGE_MODEL` supplied by the environment. Never commit keys or write them into project files. Generated output goes to `assets/ai/` and is recorded in `ATTRIBUTIONS.md` with prompt, model, and source.
+
+### Reading image assets
+
+In this project the main agent may open local image files directly, including assets downloaded from the web and AI-generated output, instead of delegating every image to a read-only vision subagent. Judge composition, palette, and readability from the image itself. This project rule overrides the global `AGENTS.md` image-delegation rule for local asset and generation review.
 
 ## Fallback expectations
 

@@ -1,0 +1,7 @@
+Pixel art for a 2D side-scrolling platformer, Arknights-inspired sunny Rhodes Island ship setting. Crisp hard-edged pixels, limited flat palette, no anti-aliasing, no smooth gradients, no blur, no soft glow. Warm, cheerful, readable like a classic 16-bit platformer. Consistent pixel size across the whole image; every visible "pixel" is the same square size.
+
+Palette (use only these colors, plus at most one lighter and one darker shade of each): sky blue #82CDDD, warm cream #FFEDBB, cloud white #FFF9E6, sun gold #FFDB80, distant grey-green #B7C9BB, hull grey-green #8DADA7, window teal #709595, steel brown #B17E58, shadow brown #805D49, lit edge #FFDC91, deck sand #E9B976, honey yellow #FFC364, hazard ochre-red #C6674E. Overall warm and neutral; no neon, no dark vignette.
+
+Lighting: single light from the upper right. Lit edges face up and right; shade faces down and left.
+
+Forbidden: text, letters, numbers, logos, UI, watermark, characters, creatures, silhouettes of people or animals, photorealism, 3D render, vector-smooth shapes, painterly brushwork, perspective with vanishing points, dithering noise that looks like film grain.

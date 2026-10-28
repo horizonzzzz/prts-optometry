@@ -1,0 +1,38 @@
+[Prepend _common.txt — but for this asset ignore the "no creatures / no silhouettes of animals" line; the subject is the cat. Attach two references with --ref: (1) the cat master sprite scaled up 8x with nearest-neighbor, (2) a grid guide image of N cells, each 24x24 native pixels, with a baseline marked on the bottom row.]
+
+Asset: cat sprite strip — ONE action per image. Replace [ACTION] and the frame list below with one entry from the action blocks. Flat solid magenta #FF00FF background (magenta must not appear in the artwork).
+
+Task: pixel art sprite animation strip of the SAME small black cat character shown in the first reference image, drawn as [N] frames in a single horizontal row, evenly spaced on the grid in the second reference image. Each frame sits in a 24x24 pixel cell (generate at 8x, so each cell is 192x192). Identical character in every frame: same ears, same big green eyes with white highlights, same thin cream wavy mouth line, same proportions, same colors. The feet touch the same bottom baseline in every frame; the body stays horizontally centered in its cell. Side-on body with a front-facing head, facing right. The cat is about 16 pixels wide and 17 pixels tall in the idle pose; there are 6 empty rows above for ears and stretch.
+
+Style: hard-edged pixel art, 1 pixel dark outline #10181C, body #202A30, 1 pixel lighter rim light #34444D on the upper right edge, eyes #4ADE80 with #FFF9E6 highlight and #2E9B57 lower rim, mouth #FFF9E6. No anti-aliasing, no semi-transparent pixels, no gradients, no blur, no motion blur, no extra colors. Do not add effects, sparkles, tears outside the face, shadows, ground, or speech bubbles; effects are separate assets.
+
+Forbidden: text, numbers, labels, grid lines drawn in the image, watermark, UI, other characters, scarf, accessories, tail, nose, whiskers, photorealism, 3D render, painterly shading.
+
+---- Action blocks (paste one) ----
+
+[ACTION = idle, N = 4, loop]
+Frame 1: neutral standing, ears up. Frame 2: body rises 1 pixel as if inhaling, ears 1 pixel higher. Frame 3: back to neutral, both eyes blink (green replaced by a thin dark line with the cream highlight removed). Frame 4: body sinks 1 pixel, eyes open again. The sad wavy mouth stays throughout.
+
+[ACTION = tremble, N = 4, loop]
+The cat is scared and shivering, in the pose of the reference image. Eyes slightly bigger with the teardrop rim, mouth a small wobbly line. Frames alternate the whole body shifted 1 pixel left, center, 1 pixel right, center; ears flatten by 1 pixel on the shifted frames. No shiver lines drawn.
+
+[ACTION = run, N = 6, loop]
+A short stubby run cycle facing right. Frame 1: contact, front foot down. Frame 2: down, body lowest by 1 pixel. Frame 3: passing, legs together. Frame 4: contact with the other foot. Frame 5: down. Frame 6: passing. The body bobs 1 pixel up and down; the head tilts forward 1 pixel; the arm stubs swing opposite to the legs; the eyes shift 1 pixel toward the facing direction. Ears trail 1 pixel behind. The head remains front-facing.
+
+[ACTION = jump_rise, N = 2, no loop]
+Frame 1: take-off crouch, body squashed 2 pixels lower and 2 pixels wider, eyes squeezed into determined slits with the highlight kept. Frame 2: launching upward, body stretched 3 pixels taller and 1 pixel narrower, legs tucked, ears stretched upward, eyes wide open.
+
+[ACTION = jump_fall, N = 2, loop]
+Falling, a slightly alarmed pose. Frame 1: body mid-stretch, arm stubs raised to the sides, legs dangling. Frame 2: same with ears flicked up 1 pixel and arms 1 pixel higher. Eyes wide, mouth a tiny flat line.
+
+[ACTION = land, N = 3, no loop]
+Frame 1: impact, body squashed 3 pixels lower and 3 pixels wider, eyes shut tight as thin lines, ears pushed down 1 pixel. Frame 2: rebound, body stretches 1 pixel taller than idle, eyes open wide. Frame 3: settle to the neutral idle pose.
+
+[ACTION = air_jump, N = 4, no loop]
+A mid-air second jump. Frame 1: body curls into a ball shape, ears folded flat. Frame 2: ball rotated a quarter turn, only the face and ears slightly visible. Frame 3: rotated three quarters. Frame 4: unfurls to a stretched pose like jump_rise frame 2. Keep a recognizable face with green eyes at least in frames 1 and 4.
+
+[ACTION = recall, N = 6, no loop]
+The cat gets "recalled" after failing. Frame 1: shocked, eyes huge, mouth open as a small O. Frame 2: eyes teary, pupils shaking, ears drooped. Frame 3: body starts to fade — only the outline and eyes are fully drawn, the body fill reduced to a checkerboard dither pattern of #202A30. Frame 4: smaller and more transparent-looking via heavier checkerboard dither, still the same size cell. Frame 5: shrunk to about half size, only the green eyes and a few dither pixels remain. Frame 6: shrunk to a tiny cream-white (#FFF9E6) pixel sparkle, 3x3 pixels, centered at the baseline. Never use semi-transparent pixels; use dither only.
+
+[ACTION = cheer, N = 6, loop]
+The cat is happy at the goal. Eyes are closed upward-curving arcs (^ ^) in #4ADE80 with no highlight, the mouth is a small upward smile in #FFF9E6. Frames 1-3: a small hop (1, 3, 5 pixels off the ground) with arm stubs raised, ears up. Frames 4-6: come back down (3, 1, 0 pixels), with a squash on frame 6 (1 pixel lower, 1 pixel wider). The feet baseline for the grounded frames is the same as in all other actions.

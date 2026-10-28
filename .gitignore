@@ -16,3 +16,6 @@ tsconfig.tsbuildinfo
 .pi/
 .unipi/
 .playwright-mcp/
+
+# AI art drafts; finals live in assets/ai/
+assets/ai/_drafts/

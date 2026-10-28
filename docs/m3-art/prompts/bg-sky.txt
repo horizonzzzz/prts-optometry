@@ -1,0 +1,7 @@
+[Prepend _common.txt]
+
+Asset: bg_sky — the farthest background layer. Opaque, 16:9, native 384x216 pixels (generate larger, then nearest-neighbor downscale).
+
+Content: only a vertical sky. Five to six clearly visible horizontal color bands stepping from #82CDDD at the top to #FFEDBB near the bottom, with a thin ordered-dither transition (checkerboard pattern) between neighboring bands. Nothing else: no sun, no clouds, no hills, no ground, no birds.
+
+The lowest 35% of the image is the warmest, lowest-contrast cream tone so that the horizon region stays calm.

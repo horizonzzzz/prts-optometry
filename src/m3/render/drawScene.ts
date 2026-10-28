@@ -79,5 +79,8 @@ export function drawScene(scene: Phaser.Scene, level: Level) {
   player.fillStyle(THEME.yellow).fillTriangle(0, 7, -6, 5, -4, 10).fillRect(0, 6, 12, 2);
   player.lineStyle(3, THEME.cat).lineBetween(-1, 10, -6, 8).lineBetween(-6, 8, -7, 2);
   player.fillStyle(THEME.cat).fillRect(0, 12, 4, 3).fillRect(8, 12, 4, 3);
-  return (x: number, y: number) => { player.setPosition(Math.round(x), Math.round(y)); };
+  // 临时角色的绘制范围约为 x:-7..15、y:-9..15，按碰撞盒中心和脚底定位。
+  const playerOffsetX = RULES.bodyWidth / 2 - 4;
+  const playerOffsetY = RULES.bodyHeight - 15;
+  return (x: number, y: number) => { player.setPosition(Math.round(x + playerOffsetX), Math.round(y + playerOffsetY)); };
 }

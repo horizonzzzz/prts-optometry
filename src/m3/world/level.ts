@@ -30,7 +30,10 @@ export function parseLevel(rows: readonly string[]): Level {
       case '^': hazards.push(rect); break;
       case 'S':
         if (spawn) throw new Error('出生点必须唯一');
-        spawn = { x: rect.x + 2, y: rect.y + 2 };
+        spawn = {
+          x: rect.x + (RULES.tile - RULES.bodyWidth) / 2,
+          y: rect.y + RULES.tile - RULES.bodyHeight,
+        };
         break;
       case 'G':
         if (goal) throw new Error('终点必须唯一');

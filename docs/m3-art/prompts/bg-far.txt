@@ -1,0 +1,11 @@
+[Prepend _common.txt]
+
+Asset: bg_far (clouds + distant hills) — parallax layer(s). Generate clouds and hills as two separate images, each on a flat solid magenta #FF00FF background for later removal (magenta must not appear in the artwork).
+
+Common: wide strip, native 576x142 pixels (generate at a multiple, then nearest-neighbor downscale). Left and right edges must loop seamlessly: the artwork at the far left continues exactly from the far right.
+
+A) bg_clouds: five to seven flat blocky clouds of different sizes, spread horizontally with generous gaps, in the upper two thirds of the strip. Cloud white #FFF9E6, bottom shade slightly darker cream #FFEDBB, lit edge on the upper right. Chunky stepped pixel outlines, no dark outline.
+
+B) bg_far: a low, soft-silhouette range of distant hills and rocky islands in #B7C9BB with one slightly darker shade for layering. Flat shapes only; stepped pixel contours; no detail texture, no trees, no buildings. The bottom edge of the artwork is a straight horizontal line at the bottom of the image (the horizon), fully filled to that edge. Low contrast against the sky.
+
+Separate small asset, bg_sun: a round pixel sun about 64x64 pixels, #FFDB80 disc with a 2-step stepped halo of #FFEDBB, on magenta background.

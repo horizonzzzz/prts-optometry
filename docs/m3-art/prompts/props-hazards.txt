@@ -1,0 +1,11 @@
+[Prepend _common.txt]
+
+Asset: prop_*, hazard_*, goal_* — standalone sprites. One sheet per category, each sprite on a flat solid magenta #FF00FF background (magenta must not appear in the artwork), with at least 8 px of empty space between sprites. Side view, flat, 1 px outline #805D49, hard pixel edges.
+
+A) props (each up to 128x128 native pixels): [orange-brown cargo crate, stacked crates pair, coiled rope, life ring, mooring bollard, small signal lamp post]. Crate colors #B17E58 / #805D49 with #FFDC91 lit edge; keep shapes simple and chunky.
+
+B) hazards (each up to 64x64 native pixels): [row of triangular spikes, striped warning barrier, hanging cargo box on a cable]. Use hazard #C6674E together with striped pattern and sharp triangular or boxed shapes; must remain distinguishable in grayscale (shape + stripe pattern, not color alone). No glow, no fire effects.
+
+C) goal (up to 96x128 native pixels): [a small abstract Rhodes Island style beacon or checkpoint flag post]. Abstract marker only, no text, no real logos, no characters. Cream #FFF9E6 and honey #FFC364 with a #805D49 pole.
+
+Rules: no characters or animals anywhere on the sheet; a small cat-shaped or person-shaped silhouette must not appear. Keep the number of colors per sprite at 6 or fewer.

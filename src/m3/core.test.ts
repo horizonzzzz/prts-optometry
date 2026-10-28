@@ -125,4 +125,11 @@ describe('M3 ASCII levels', () => {
     expect(RULES.height % RULES.tile).toBe(0);
     expect(SANDBOX.goal.x).toBeGreaterThan(SANDBOX.spawn.x);
   });
+
+  it('centers the 20×26 collision body on the spawn tile and seats it above the floor', () => {
+    expect(RULES.bodyWidth).toBe(20);
+    expect(RULES.bodyHeight).toBe(26);
+    expect(SANDBOX.spawn.x + RULES.bodyWidth / 2).toBe(2.5 * RULES.tile);
+    expect(SANDBOX.spawn.y + RULES.bodyHeight).toBe(25 * RULES.tile);
+  });
 });

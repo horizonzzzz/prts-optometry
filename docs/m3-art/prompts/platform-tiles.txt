@@ -1,0 +1,9 @@
+[Prepend _common.txt]
+
+Asset: tiles_deck and tiles_platform — walkable surfaces. Flat solid magenta #FF00FF background for later removal (magenta must not appear in the artwork). Strictly side view, flat horizontal and vertical edges, no perspective, grid of 8x8 native pixels per cell.
+
+A) tiles_platform: a horizontal strip of five segments, each 2 cells (16 px) tall and 4 cells wide, on a pixel grid with 1 px gap: left end cap, two interchangeable middle segments, right end cap, one hanging variant with two thin cables going up from the top corners. Honey-yellow #FFC364 plate, 1 px lit top edge #FFDC91, 2 px shadow underside #805D49, 1 px outline #805D49, two or three small rivets. Middle segments must connect seamlessly on their left and right edges.
+
+B) tiles_deck: a horizontal strip of four seamless deck tiles, each 4 cells wide and 2 cells tall. Top row: deck surface — sand #E9B976 plate with 1 px lit top edge #FFDC91, a seam line every 8 px, a few rivets, light wear. Bottom row: body fill — steel brown #B17E58 with #805D49 seams and shading, repeatable vertically. Left and right edges of each tile connect seamlessly. Provide one variant with a small hatch, one with a slightly worn patch.
+
+Constraints: hard pixel edges, no rounded outer corners, no semi-transparent pixels, no gradient, no text.
